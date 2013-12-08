@@ -14,21 +14,28 @@ import (
 const (
 	delay = 20
 
-	slaveCmd = 0x0703
-	rdrwCmd  = 0x0707
+	slaveCmd = 0x0703 // Cmd to set slave address
+	rdrwCmd  = 0x0707 // Cmd to read/write data together
 
-	I2C_M_RD = 0x0001
+	rd = 0x0001
 )
 
 type Bus interface {
+	// Read a byte from the given address.
 	ReadByte(addr byte) (value byte, err error)
+	// Write a byte to the given address.
 	WriteByte(addr, value byte) error
+	// Write a bunch of bytes ot the given address.
 	WriteBytes(addr byte, value []byte) error
 
+	// Read a bunch of bytes (len(value)) from the given address and register.
 	ReadFromReg(addr, reg byte, value []byte) (err error)
+	// Read a byte from the given address and register.
 	ReadByteFromReg(addr, reg byte) (value byte, err error)
+	// Read a int from the given address and register.
 	ReadInt(addr, reg byte) (value int, err error)
 
+	// Write a byte to the given address and register.
 	WriteToReg(addr, reg, value byte) error
 }
 
@@ -46,6 +53,8 @@ type i2c_rdwr_ioctl_data struct {
 
 var busMap map[byte]*bus
 var busMapLock sync.Mutex
+
+// Default instance of the i2c bus
 var Default Bus
 
 type bus struct {
@@ -180,7 +189,7 @@ func (b *bus) ReadFromReg(addr, reg byte, value []byte) (err error) {
 	messages[0].buf = uintptr(unsafe.Pointer(&reg))
 
 	messages[1].addr = uint16(addr)
-	messages[1].flags = I2C_M_RD
+	messages[1].flags = rd
 	messages[1].len = uint16(len(value))
 	messages[1].buf = uintptr(unsafe.Pointer(hdrp.Data))
 
