@@ -20,6 +20,7 @@ const (
 	rd = 0x0001
 )
 
+// A Bus implements access to the I2C two wire bus.
 type Bus interface {
 	// Read a byte from the given address.
 	ReadByte(addr byte) (value byte, err error)
