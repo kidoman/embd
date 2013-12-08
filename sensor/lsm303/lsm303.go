@@ -15,25 +15,25 @@ const (
 
 	magConfigRegA = 0x00
 
-	MagHz75         = 0x00
-	Mag1Hz5         = 0x04
-	Mag3Hz          = 0x08
-	Mag7Hz5         = 0x0C
-	Mag15Hz         = 0x10
-	Mag30Hz         = 0x14
-	Mag75Hz         = 0x18
-	MagNormal       = 0x00
-	MagPositiveBias = 0x01
-	MagNegativeBias = 0x02
+	MagHz75         = 0x00 // ODR = 0.75 Hz
+	Mag1Hz5         = 0x04 // ODR = 1.5 Hz
+	Mag3Hz          = 0x08 // ODR = 3 Hz
+	Mag7Hz5         = 0x0C // ODR = 7.5 Hz
+	Mag15Hz         = 0x10 // ODR = 15 Hz
+	Mag30Hz         = 0x14 // ODR = 30 Hz
+	Mag75Hz         = 0x18 // ODR = 75 Hz
+	MagNormal       = 0x00 // Normal mode
+	MagPositiveBias = 0x01 // Positive bias mode
+	MagNegativeBias = 0x02 // Negative bias mode
 
-	MagCRADefault = Mag15Hz | MagNormal
+	MagCRADefault = Mag15Hz | MagNormal // 15 Hz and normal mode is the default
 
 	magModeReg = 0x02
 
-	MagContinuous = 0x00
-	MagSleep      = 0x03
+	MagContinuous = 0x00 // Continuous conversion mode
+	MagSleep      = 0x03 // Sleep mode
 
-	MagMRDefault = MagContinuous
+	MagMRDefault = MagContinuous // Continuous conversion is the default
 
 	magDataSignal = 0x02
 	magData       = 0x03
@@ -41,12 +41,17 @@ const (
 	pollDelay = 250
 )
 
+// A LSM303 implements access to a LSM303 sensor.
 type LSM303 interface {
+	// SetPollDelay sets the delay between runs of the data acquisition loop.
 	SetPollDelay(delay int)
 
+	// Heading returns the current heading [0, 360).
 	Heading() (heading float64, err error)
 
+	// Run starts the sensor data acquisition loop.
 	Run() error
+	// Close closes the sensor data acquisition loop and put the LSM303 into sleep mode.
 	Close() error
 }
 
@@ -64,6 +69,7 @@ type lsm303 struct {
 	debug bool
 }
 
+// Default instance of the LSM303 sensor.
 var Default = New(i2c.Default)
 
 // New creates a new LSM303 interface. The bus variable controls
@@ -126,7 +132,7 @@ func (d *lsm303) measureHeading() (heading float64, err error) {
 	return
 }
 
-// Return heading [0, 360).
+// Heading returns the current heading [0, 360).
 func (d *lsm303) Heading() (heading float64, err error) {
 	select {
 	case heading = <-d.headings:
@@ -139,7 +145,7 @@ func (d *lsm303) Heading() (heading float64, err error) {
 	}
 }
 
-// Start the sensor data acquisition loop.
+// Run starts the sensor data acquisition loop.
 func (d *lsm303) Run() (err error) {
 	go func() {
 		d.quit = make(chan struct{})
@@ -179,17 +185,22 @@ func (d *lsm303) Close() (err error) {
 	return
 }
 
-// Return heading [0, 360).
+// SetPollDelay sets the delay between runs of the data acquisition loop.
+func SetPollDelay(delay int) {
+	Default.SetPollDelay(delay)
+}
+
+// Heading returns the current heading [0, 360).
 func Heading() (heading float64, err error) {
 	return Default.Heading()
 }
 
-// Start the sensor data acquisition loop.
+// Run starts the sensor data acquisition loop.
 func Run() (err error) {
 	return Default.Run()
 }
 
-// Close the sensor data acquisition loop and put the LSM303 into sleep mode.
+// Close closes the sensor data acquisition loop and put the LSM303 into sleep mode.
 func Close() (err error) {
 	return Default.Close()
 }

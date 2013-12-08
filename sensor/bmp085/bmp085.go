@@ -38,14 +38,21 @@ const (
 	pollDelay = 250
 )
 
+// A BMP085 implements access to the Bosch BMP085 sensor.
 type BMP085 interface {
+	// SetPollDelay sets the delay between runs of the data acquisition loop.
 	SetPollDelay(delay int)
 
+	// Temperature returns the current temperature reading.
 	Temperature() (temp float64, err error)
+	// Pressure returns the current pressure reading.
 	Pressure() (pressure int, err error)
+	// Altitude returns the current altitude reading.
 	Altitude() (altitude float64, err error)
 
+	// Run starts the sensor data acquisition loop.
 	Run() error
+	// Close.
 	Close()
 }
 
@@ -69,6 +76,7 @@ type bmp085 struct {
 	debug bool
 }
 
+// Default instance of the BMP085 sensor.
 var Default = New(i2c.Default)
 
 // New creates a new BMP085 interface. The bus variable controls
@@ -220,7 +228,7 @@ func (d *bmp085) measureTemp() (temp uint16, err error) {
 	return
 }
 
-// Return temperature reading.
+// Temperature returns the current temperature reading.
 func (d *bmp085) Temperature() (temp float64, err error) {
 
 	select {
@@ -340,7 +348,7 @@ func (d *bmp085) measurePressureAndAltitude() (pressure int32, altitude float64,
 	return
 }
 
-// Return pressure reading.
+// Pressure returns the current pressure reading.
 func (d *bmp085) Pressure() (pressure int, err error) {
 	if err = d.calibrate(); err != nil {
 		return
@@ -364,7 +372,7 @@ func (d *bmp085) Pressure() (pressure int, err error) {
 	}
 }
 
-// Return altitude reading.
+// Altitude returns the current altitude reading.
 func (d *bmp085) Altitude() (altitude float64, err error) {
 	if err = d.calibrate(); err != nil {
 		return
@@ -385,7 +393,7 @@ func (d *bmp085) Altitude() (altitude float64, err error) {
 	}
 }
 
-// Start the sensor data acquisition loop.
+// Run starts the sensor data acquisition loop.
 func (d *bmp085) Run() (err error) {
 	go func() {
 		d.quit = make(chan struct{})
@@ -436,22 +444,27 @@ func (d *bmp085) Close() {
 	}
 }
 
-// Return temperature reading.
+// SetPollDelay sets the delay between runs of the data acquisition loop.
+func SetPollDelay(delay int) {
+	Default.SetPollDelay(delay)
+}
+
+// Temperature returns the current temperature reading.
 func Temperature() (temp float64, err error) {
 	return Default.Temperature()
 }
 
-// Return pressure reading.
+// Pressure returns the current pressure reading.
 func Pressure() (pressure int, err error) {
 	return Default.Pressure()
 }
 
-// Return altitude reading.
+// Altitude returns the current altitude reading.
 func Altitude() (altitude float64, err error) {
 	return Default.Altitude()
 }
 
-// Start the sensor data acquisition loop.
+// Run starts the sensor data acquisition loop.
 func Run() (err error) {
 	return Default.Run()
 }
