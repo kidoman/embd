@@ -31,6 +31,7 @@ const (
 	magModeReg = 0x02
 
 	MagContinuous = 0x00 // Continuous conversion mode
+	MagSingle     = 0x01 // Single conversion mode
 	MagSleep      = 0x03 // Sleep mode
 
 	MagMRDefault = MagContinuous // Continuous conversion is the default
