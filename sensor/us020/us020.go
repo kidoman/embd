@@ -2,6 +2,7 @@
 package us020
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -29,6 +30,8 @@ type us020 struct {
 
 	initialized bool
 	mu          *sync.RWMutex
+
+	debug bool
 }
 
 // New creates a new US020 interface. The bus variable controls
@@ -55,11 +58,18 @@ func (d *us020) setup() (err error) {
 	d.echoPin = rpio.Pin(d.echoPinNumber)       // ECHO port on the US020
 	d.triggerPin = rpio.Pin(d.triggerPinNumber) // TRIGGER port on the US020
 
+	d.echoPin.Input()
+	d.triggerPin.Output()
+
 	temp, err := bmp085.Temperature()
 	if err != nil {
 		d.speedSound = 340
 	} else {
 		d.speedSound = 331.4 + 0.606*temp
+
+		if d.debug {
+			log.Printf("read a temperature of %v, so speed of sound = %v", temp, d.speedSound)
+		}
 	}
 
 	d.initialized = true
@@ -73,16 +83,28 @@ func (d *us020) Distance() (distance float64, err error) {
 		return
 	}
 
+	if d.debug {
+		log.Print("trigetting pulse")
+	}
+
 	// Generate a TRIGGER pulse
 	d.triggerPin.High()
 	time.Sleep(pulseDelay)
 	d.triggerPin.Low()
+
+	if d.debug {
+		log.Print("waiting for echo to go high")
+	}
 
 	// Wait until ECHO goes high
 	for d.echoPin.Read() == rpio.Low {
 	}
 
 	startTime := time.Now() // Record time when ECHO goes high
+
+	if d.debug {
+		log.Print("waiting for echo to go low")
+	}
 
 	// Wait until ECHO goes low
 	for d.echoPin.Read() == rpio.High {
