@@ -25,3 +25,9 @@ Use various sensors on the RaspberryPi with Golang (like a ninja!)
   Accelerometer and magnetometer
 
   [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/lsm303) [Datasheet](https://www.sparkfun.com/datasheets/Sensors/Magneto/LSM303%20Datasheet.pdf)
+
+### US020
+
+  Ultrasonic proximity sensor
+
+  [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/us020) [Product Page](http://www.digibay.in/sensor/object-detection-and-proximity?product_id=239)
