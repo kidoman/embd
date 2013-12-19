@@ -1,4 +1,4 @@
-// Package BH1750FVI allows interfacing with the BH1750FVI ambient light sensor through I2C protocol
+// Package BH1750FVI allows interfacing with the BH1750FVI ambient light sensor through I2C protocol.
 package bh1750Fvi
 
 import (
@@ -9,28 +9,34 @@ import (
 	"github.com/kid0m4n/go-rpi/i2c"
 )
 
+//accuracy = sensorValue/actualValue] (min = 0.96, typ = 1.2, max = 1.44
 const (
-	measurementAcuuracy = 1.2 // [accuracy = sensorValue/actualValue] (min = 0.96, typ = 1.2, max = 1.44)
+	High  = "H"
+	High2 = "H2"
 
-	highResolutionReadAddress   = 0x23
-	highResolutionOperationCode = 0x10
+	measurementAcuuracy = 1.2
+	defReadReg          = 0x00
 
-	lowResolutionReadAddress   = 0x5c
-	lowResolutionOperationCode = 0x23
+	sensorI2cAddr = 0x23
 
-	highResolutionMode2ReadAddress   = 0x23
-	highResolutionMode2OperationCode = 0x11
+	highResOpCode      = 0x10
+	highResMode2OpCode = 0x11
 
 	pollDelay = 150
 )
 
+// A BH1750VI interface implements access to the sensor.
 type BH1750VI interface {
-	Start() error
+	// Run starts continuous sensor data acquisition loop.
+	Run() error
 
+	// Lighting returns the ambient lighting in lx.
 	Lighting() (lighting float64, err error)
 
+	// Close.
 	Close()
 
+	// SetPollDelay sets the delay between run of data acquisition loop.
 	SetPollDelay(delay int)
 }
 
@@ -41,105 +47,89 @@ type bh1750vi struct {
 	lightingReadings chan float64
 	quit             chan bool
 
-	ready bool
-
-	readRegisterAddress byte
-	operationCode       byte
-
-	continuousMode bool
+	i2cAddr       byte
+	operationCode byte
 
 	poll int
 }
 
-var Default = New("H", i2c.Default)
+// Default instance for BH1750FVI sensor
+var Default = New(High, i2c.Default)
 
+// Supports three modes:
+// "H" -> High resolution mode (1lx), takes 120ms (recommended).
+// "H2" -> High resolution mode 2 (0.5lx), takes 120ms (only use for low light).
+
+// New creates a new BH1750FVI interface according to the mode passed.
 func New(mode string, bus i2c.Bus) BH1750VI {
-
-	/*
-		Supports three modes:
-		"L" -> Low resolution mode (4lx), takes 16ms
-		"H" -> High resolution mode (1lx), takes 120ms (recommended)
-		"H2" -> High resolution mode 2 (0.5lx), takes 120ms (only use for low light)
-	*/
-
 	switch mode {
-	case "L":
-		return &bh1750vi{bus: bus, readRegisterAddress: lowResolutionReadAddress, operationCode: lowResolutionOperationCode, continuousMode: false}
-	case "H":
-		return &bh1750vi{bus: bus, readRegisterAddress: highResolutionReadAddress, operationCode: highResolutionOperationCode, continuousMode: true}
-	case "H2":
-		return &bh1750vi{bus: bus, readRegisterAddress: highResolutionMode2ReadAddress, operationCode: highResolutionMode2OperationCode, continuousMode: true}
+	case High:
+		return &bh1750vi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, mu: new(sync.RWMutex)}
+	case High2:
+		return &bh1750vi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResMode2OpCode, mu: new(sync.RWMutex)}
 	default:
-		return &bh1750vi{bus: bus, readRegisterAddress: highResolutionReadAddress, operationCode: highResolutionOperationCode, continuousMode: true}
+		return &bh1750vi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, mu: new(sync.RWMutex)}
 	}
 }
 
-func (sensor *bh1750vi) setup() (err error) {
-	sensor.mu.Lock()
+// NewHighMode returns a BH1750FVI inteface on high resolution mode (1lx resolution)
+func NewHighMode(bus i2c.Bus) BH1750VI {
+	return New(High, bus)
+}
 
-	if sensor.ready && sensor.continuousMode { //for Low resolution mode sensor has to be initialized for every read.
-		sensor.mu.Unlock()
-		return
-	}
+// NewHighMode returns a BH1750FVI inteface on high resolution mode2 (0.5lx resolution)
+func NewHigh2Mode(bus i2c.Bus) BH1750VI {
+	return New(High2, bus)
+}
 
-	defer sensor.mu.Unlock()
-
-	err = sensor.bus.WriteByte(sensor.readRegisterAddress, sensor.operationCode)
+func (d *bh1750vi) measureLighting() (lighting float64, err error) {
+	err = d.bus.WriteByte(d.i2cAddr, d.operationCode)
 	if err != nil {
 		log.Print("bh1750vi: Failed to initialize sensor")
 		return
 	}
+	time.Sleep(180 * time.Millisecond)
 
-	sensor.ready = true
-	return
-}
-
-func (sensor *bh1750vi) measureLighting() (lighting float64, err error) {
-	if err = sensor.setup(); err != nil {
+	var sensorReading int
+	if sensorReading, err = d.bus.ReadInt(d.i2cAddr, defReadReg); err != nil {
 		return
 	}
 
-	sensorData := make([]byte, 2)
-	if err = sensor.bus.ReadFromReg(sensor.readRegisterAddress, sensor.operationCode, sensorData); err != nil {
-		return
-	}
-
-	sensorReading := (int16(sensorData[0] << 8)) | (int16(sensorData[1]))
 	lighting = float64(sensorReading) / measurementAcuuracy
-
 	return
 }
 
-func (sensor *bh1750vi) Lighting() (lighting float64, err error) {
+// Lighting returns the ambient lighting in lx.
+func (d *bh1750vi) Lighting() (lighting float64, err error) {
 	select {
-	case lighting = <-sensor.lightingReadings:
+	case lighting = <-d.lightingReadings:
 		return
 	default:
-		return sensor.measureLighting()
-
+		return d.measureLighting()
 	}
 }
 
-func (sensor *bh1750vi) Start() (err error) {
+// Run starts continuous sensor data acquisition loop.
+func (d *bh1750vi) Run() (err error) {
 	go func() {
-		sensor.quit = make(chan bool)
+		d.quit = make(chan bool)
 
-		timer := time.Tick(time.Duration(sensor.poll) * time.Millisecond)
+		timer := time.Tick(time.Duration(d.poll) * time.Millisecond)
 
 		var lighting float64
 
 		for {
 			select {
-			case sensor.lightingReadings <- lighting:
+			case d.lightingReadings <- lighting:
 			case <-timer:
-				if l, err := sensor.measureLighting(); err == nil {
+				if l, err := d.measureLighting(); err == nil {
 					lighting = l
 				}
-				if err == nil && sensor.lightingReadings == nil {
-					sensor.lightingReadings = make(chan float64)
+				if err == nil && d.lightingReadings == nil {
+					d.lightingReadings = make(chan float64)
 				}
-			case <-sensor.quit:
-				sensor.lightingReadings = nil
+			case <-d.quit:
+				d.lightingReadings = nil
 				return
 			}
 		}
@@ -147,29 +137,35 @@ func (sensor *bh1750vi) Start() (err error) {
 	return
 }
 
-func (sensor *bh1750vi) Close() {
-	if sensor.quit != nil {
-		sensor.quit <- true
+// Close.
+func (d *bh1750vi) Close() {
+	if d.quit != nil {
+		d.quit <- true
 	}
 	return
 }
 
-func (sensor *bh1750vi) SetPollDelay(delay int) {
-	sensor.poll = delay
+// SetPollDelay sets the delay between run of data acquisition loop.
+func (d *bh1750vi) SetPollDelay(delay int) {
+	d.poll = delay
 }
 
+// SetPollDelay sets the delay between run of data acquisition loop.
 func SetPollDelay(delay int) {
 	Default.SetPollDelay(delay)
 }
 
+// Lighting returns the ambient lighting in lx.
 func Lighting() (lighting float64, err error) {
 	return Default.Lighting()
 }
 
-func Start() (err error) {
-	return Default.Start()
+// Run starts continuous sensor data acquisition loop.
+func Run() (err error) {
+	return Default.Run()
 }
 
+// Close.
 func Close() {
 	Default.Close()
 }
