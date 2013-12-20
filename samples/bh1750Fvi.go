@@ -14,8 +14,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	lightingSensor := bh1750Fvi.New("H", bus)
-
+	lightingSensor := bh1750Fvi.New(bh1750Fvi.High, bus)
 	defer lightingSensor.Close()
 
 	for {
@@ -23,7 +22,8 @@ func main() {
 		if err != nil {
 			log.Panic(err)
 		}
-		log.Printf("Lighting is %v", lighting, "lx")
+		log.Printf("Lighting is %v lx", lighting)
+
 		time.Sleep(500 * time.Millisecond)
 	}
 }
