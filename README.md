@@ -15,13 +15,13 @@ Use various sensors on the RaspberryPi with Golang (like a ninja!)
 ## Sensors supported
 
 ### BMP085
-  
+
   Barometric pressure sensor
 
   [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/bmp085) [Datasheet](https://www.sparkfun.com/datasheets/Components/General/BST-BMP085-DS000-05.pdf)
 
 ### LSM303
-  
+
   Accelerometer and magnetometer
 
   [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/lsm303) [Datasheet](https://www.sparkfun.com/datasheets/Sensors/Magneto/LSM303%20Datasheet.pdf)
@@ -31,3 +31,9 @@ Use various sensors on the RaspberryPi with Golang (like a ninja!)
   Ultrasonic proximity sensor
 
   [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/us020) [Product Page](http://www.digibay.in/sensor/object-detection-and-proximity?product_id=239)
+
+### BH1750FVI
+
+  Luminosity sensor
+
+  [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/us020) [Datasheet](http://www.elechouse.com/elechouse/images/product/Digital%20light%20Sensor/bh1750fvi-e.pdf)
