@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/kid0m4n/go-rpi/i2c"
-	"github.com/kid0m4n/go-rpi/sensor/bh1750Fvi"
+	"github.com/kid0m4n/go-rpi/sensor/bh1750fvi"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	lightingSensor := bh1750Fvi.New(bh1750Fvi.High, bus)
+	lightingSensor := bh1750fvi.New(bh1750fvi.High, bus)
 	defer lightingSensor.Close()
 
 	for {

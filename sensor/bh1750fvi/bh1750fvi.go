@@ -1,5 +1,5 @@
 // Package BH1750FVI allows interfacing with the BH1750FVI ambient light sensor through I2C protocol.
-package bh1750Fvi
+package bh1750fvi
 
 import (
 	"log"
@@ -25,8 +25,8 @@ const (
 	pollDelay = 150
 )
 
-// A BH1750VI interface implements access to the sensor.
-type BH1750VI interface {
+// A BH1750FVI interface implements access to the sensor.
+type BH1750FVI interface {
 	// Run starts continuous sensor data acquisition loop.
 	Run() error
 
@@ -40,7 +40,7 @@ type BH1750VI interface {
 	SetPollDelay(delay int)
 }
 
-type bh1750vi struct {
+type bh1750fvi struct {
 	bus i2c.Bus
 	mu  *sync.RWMutex
 
@@ -61,31 +61,31 @@ var Default = New(High, i2c.Default)
 // "H2" -> High resolution mode 2 (0.5lx), takes 120ms (only use for low light).
 
 // New creates a new BH1750FVI interface according to the mode passed.
-func New(mode string, bus i2c.Bus) BH1750VI {
+func New(mode string, bus i2c.Bus) BH1750FVI {
 	switch mode {
 	case High:
-		return &bh1750vi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, mu: new(sync.RWMutex)}
+		return &bh1750fvi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, mu: new(sync.RWMutex)}
 	case High2:
-		return &bh1750vi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResMode2OpCode, mu: new(sync.RWMutex)}
+		return &bh1750fvi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResMode2OpCode, mu: new(sync.RWMutex)}
 	default:
-		return &bh1750vi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, mu: new(sync.RWMutex)}
+		return &bh1750fvi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, mu: new(sync.RWMutex)}
 	}
 }
 
 // NewHighMode returns a BH1750FVI inteface on high resolution mode (1lx resolution)
-func NewHighMode(bus i2c.Bus) BH1750VI {
+func NewHighMode(bus i2c.Bus) BH1750FVI {
 	return New(High, bus)
 }
 
 // NewHighMode returns a BH1750FVI inteface on high resolution mode2 (0.5lx resolution)
-func NewHigh2Mode(bus i2c.Bus) BH1750VI {
+func NewHigh2Mode(bus i2c.Bus) BH1750FVI {
 	return New(High2, bus)
 }
 
-func (d *bh1750vi) measureLighting() (lighting float64, err error) {
+func (d *bh1750fvi) measureLighting() (lighting float64, err error) {
 	err = d.bus.WriteByte(d.i2cAddr, d.operationCode)
 	if err != nil {
-		log.Print("bh1750vi: Failed to initialize sensor")
+		log.Print("bh1750fvi: Failed to initialize sensor")
 		return
 	}
 	time.Sleep(180 * time.Millisecond)
@@ -100,7 +100,7 @@ func (d *bh1750vi) measureLighting() (lighting float64, err error) {
 }
 
 // Lighting returns the ambient lighting in lx.
-func (d *bh1750vi) Lighting() (lighting float64, err error) {
+func (d *bh1750fvi) Lighting() (lighting float64, err error) {
 	select {
 	case lighting = <-d.lightingReadings:
 		return
@@ -110,7 +110,7 @@ func (d *bh1750vi) Lighting() (lighting float64, err error) {
 }
 
 // Run starts continuous sensor data acquisition loop.
-func (d *bh1750vi) Run() (err error) {
+func (d *bh1750fvi) Run() (err error) {
 	go func() {
 		d.quit = make(chan bool)
 
@@ -138,7 +138,7 @@ func (d *bh1750vi) Run() (err error) {
 }
 
 // Close.
-func (d *bh1750vi) Close() {
+func (d *bh1750fvi) Close() {
 	if d.quit != nil {
 		d.quit <- true
 	}
@@ -146,7 +146,7 @@ func (d *bh1750vi) Close() {
 }
 
 // SetPollDelay sets the delay between run of data acquisition loop.
-func (d *bh1750vi) SetPollDelay(delay int) {
+func (d *bh1750fvi) SetPollDelay(delay int) {
 	d.poll = delay
 }
 
