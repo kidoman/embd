@@ -84,7 +84,7 @@ func (d *us020) Distance() (distance float64, err error) {
 	}
 
 	if d.debug {
-		log.Print("trigetting pulse")
+		log.Print("trigerring pulse")
 	}
 
 	// Generate a TRIGGER pulse
