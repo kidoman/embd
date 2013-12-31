@@ -20,6 +20,12 @@ Use various sensors on the RaspberryPi with Golang (like a ninja!)
 
   [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/bmp085) [Datasheet](https://www.sparkfun.com/datasheets/Components/General/BST-BMP085-DS000-05.pdf)
 
+### BMP180
+
+  Barometric pressure sensor
+
+  [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/bmp180) [Datasheet](http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf)
+
 ### LSM303
 
   Accelerometer and magnetometer
