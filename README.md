@@ -32,6 +32,12 @@ Use various sensors on the RaspberryPi with Golang (like a ninja!)
 
   [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/lsm303) [Datasheet](https://www.sparkfun.com/datasheets/Sensors/Magneto/LSM303%20Datasheet.pdf)
 
+### L3GD20
+
+  Gyroscope
+
+  [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/l3gd20) [Datasheet](http://www.adafruit.com/datasheets/L3GD20.pdf)
+
 ### US020
 
   Ultrasonic proximity sensor
