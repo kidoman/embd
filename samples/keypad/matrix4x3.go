@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kid0m4n/go-rpi/sensor/keypad/matrix4x3"
+	"github.com/kid0m4n/go-rpi/interface/keypad/matrix4x3"
 )
 
 func main() {
