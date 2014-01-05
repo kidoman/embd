@@ -52,7 +52,7 @@ type LSM303 interface {
 
 	// Run starts the sensor data acquisition loop.
 	Run() error
-	// Close closes the sensor data acquisition loop and put the LSM303 into sleep mode.
+	// Close closes the sensor data acquisition loop and puts the LSM303 into sleep mode.
 	Close() error
 }
 
@@ -91,10 +91,10 @@ func (d *lsm303) setup() (err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if err = d.bus.WriteToReg(magAddress, magConfigRegA, MagCRADefault); err != nil {
+	if err = d.bus.WriteByteToReg(magAddress, magConfigRegA, MagCRADefault); err != nil {
 		return
 	}
-	if err = d.bus.WriteToReg(magAddress, magModeReg, MagMRDefault); err != nil {
+	if err = d.bus.WriteByteToReg(magAddress, magModeReg, MagMRDefault); err != nil {
 		return
 	}
 
@@ -182,7 +182,7 @@ func (d *lsm303) Close() (err error) {
 	if d.quit != nil {
 		d.quit <- struct{}{}
 	}
-	err = d.bus.WriteToReg(magAddress, magModeReg, MagSleep)
+	err = d.bus.WriteByteToReg(magAddress, magModeReg, MagSleep)
 	return
 }
 

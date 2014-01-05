@@ -90,12 +90,12 @@ func (d *bh1750fvi) measureLighting() (lighting float64, err error) {
 	}
 	time.Sleep(180 * time.Millisecond)
 
-	var sensorReading int
-	if sensorReading, err = d.bus.ReadInt(d.i2cAddr, defReadReg); err != nil {
+	var reading uint16
+	if reading, err = d.bus.ReadWordFromReg(d.i2cAddr, defReadReg); err != nil {
 		return
 	}
 
-	lighting = float64(sensorReading) / measurementAcuuracy
+	lighting = float64(int16(reading)) / measurementAcuuracy
 	return
 }
 

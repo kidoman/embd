@@ -102,8 +102,8 @@ func (d *bmp085) calibrate() (err error) {
 	defer d.cmu.Unlock()
 
 	readInt16 := func(reg byte) (value int16, err error) {
-		var v int
-		if v, err = d.bus.ReadInt(address, reg); err != nil {
+		var v uint16
+		if v, err = d.bus.ReadWordFromReg(address, reg); err != nil {
 			return
 		}
 		value = int16(v)
@@ -111,8 +111,8 @@ func (d *bmp085) calibrate() (err error) {
 	}
 
 	readUInt16 := func(reg byte) (value uint16, err error) {
-		var v int
-		if v, err = d.bus.ReadInt(address, reg); err != nil {
+		var v uint16
+		if v, err = d.bus.ReadWordFromReg(address, reg); err != nil {
 			return
 		}
 		value = uint16(v)
@@ -185,16 +185,13 @@ func (d *bmp085) calibrate() (err error) {
 }
 
 func (d *bmp085) readUncompensatedTemp() (temp uint16, err error) {
-	if err = d.bus.WriteToReg(address, control, readTempCmd); err != nil {
+	if err = d.bus.WriteByteToReg(address, control, readTempCmd); err != nil {
 		return
 	}
 	time.Sleep(tempReadDelay)
-	var t int
-	t, err = d.bus.ReadInt(address, tempData)
-	if err != nil {
+	if temp, err = d.bus.ReadWordFromReg(address, tempData); err != nil {
 		return
 	}
-	temp = uint16(t)
 	return
 }
 
@@ -250,7 +247,7 @@ func (d *bmp085) Temperature() (temp float64, err error) {
 }
 
 func (d *bmp085) readUncompensatedPressure() (pressure uint32, err error) {
-	if err = d.bus.WriteToReg(address, control, byte(readPressureCmd+(d.oss<<6))); err != nil {
+	if err = d.bus.WriteByteToReg(address, control, byte(readPressureCmd+(d.oss<<6))); err != nil {
 		return
 	}
 	time.Sleep(time.Duration(2+(3<<d.oss)) * time.Millisecond)

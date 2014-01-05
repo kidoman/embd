@@ -14,11 +14,11 @@ func main() {
 		log.Panic(err)
 	}
 
-	lightingSensor := bh1750fvi.New(bh1750fvi.High, bus)
-	defer lightingSensor.Close()
+	sensor := bh1750fvi.New(bh1750fvi.High, bus)
+	defer sensor.Close()
 
 	for {
-		lighting, err := lightingSensor.Lighting()
+		lighting, err := sensor.Lighting()
 		if err != nil {
 			log.Panic(err)
 		}

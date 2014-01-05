@@ -22,22 +22,26 @@ const (
 
 // A Bus implements access to the I2C two wire bus.
 type Bus interface {
-	// Read a byte from the given address.
+	// ReadByte reads a byte from the given address.
 	ReadByte(addr byte) (value byte, err error)
-	// Write a byte to the given address.
+	// WriteByte writes a byte to the given address.
 	WriteByte(addr, value byte) error
-	// Write a bunch of bytes ot the given address.
+	// WriteBytes writes a slice bytes to the given address.
 	WriteBytes(addr byte, value []byte) error
 
-	// Read a bunch of bytes (len(value)) from the given address and register.
-	ReadFromReg(addr, reg byte, value []byte) (err error)
-	// Read a byte from the given address and register.
+	// ReadFromReg reads n (len(value)) bytes from the given address and register.
+	ReadFromReg(addr, reg byte, value []byte) error
+	// ReadByteFromReg reads a byte from the given address and register.
 	ReadByteFromReg(addr, reg byte) (value byte, err error)
-	// Read a int from the given address and register.
-	ReadInt(addr, reg byte) (value int, err error)
+	// ReadU16FromReg reads a unsigned 16 bit integer from the given address and register.
+	ReadWordFromReg(addr, reg byte) (value uint16, err error)
 
-	// Write a byte to the given address and register.
-	WriteToReg(addr, reg, value byte) error
+	// WriteToReg writes len(value) bytes to the given address and register.
+	WriteToReg(addr, reg byte, value []byte) error
+	// WriteByteToReg writes a byte to the given address and register.
+	WriteByteToReg(addr, reg, value byte) error
+	// WriteU16ToReg
+	WriteWordToReg(addr, reg byte, value uint16) error
 }
 
 type i2c_msg struct {
@@ -108,7 +112,6 @@ func (b *bus) setAddress(addr byte) (err error) {
 	return
 }
 
-// Read a byte from the given address.
 func (b *bus) ReadByte(addr byte) (value byte, err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -129,7 +132,6 @@ func (b *bus) ReadByte(addr byte) (value byte, err error) {
 	return
 }
 
-// Write a byte to the given address.
 func (b *bus) WriteByte(addr, value byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -147,7 +149,6 @@ func (b *bus) WriteByte(addr, value byte) (err error) {
 	return
 }
 
-// Write a bunch of bytes ot the given address.
 func (b *bus) WriteBytes(addr byte, value []byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -172,7 +173,6 @@ func (b *bus) WriteBytes(addr byte, value []byte) error {
 	return nil
 }
 
-// Read a bunch of bytes (len(value)) from the given address and register.
 func (b *bus) ReadFromReg(addr, reg byte, value []byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -206,7 +206,6 @@ func (b *bus) ReadFromReg(addr, reg byte, value []byte) (err error) {
 	return nil
 }
 
-// Read a byte from the given address and register.
 func (b *bus) ReadByteFromReg(addr, reg byte) (value byte, err error) {
 	buf := make([]byte, 1)
 	if err = b.ReadFromReg(addr, reg, buf); err != nil {
@@ -216,18 +215,16 @@ func (b *bus) ReadByteFromReg(addr, reg byte) (value byte, err error) {
 	return
 }
 
-// Read a int from the given address and register.
-func (b *bus) ReadInt(addr, reg byte) (value int, err error) {
-	var buf = make([]byte, 2)
+func (b *bus) ReadWordFromReg(addr, reg byte) (value uint16, err error) {
+	buf := make([]byte, 2)
 	if err = b.ReadFromReg(addr, reg, buf); err != nil {
 		return
 	}
-	value = int((int(buf[0]) << 8) | int(buf[1]))
+	value = uint16((uint16(buf[0]) << 8) | uint16(buf[1]))
 	return
 }
 
-// Write a byte to the given address and register.
-func (b *bus) WriteToReg(addr, reg, value byte) (err error) {
+func (b *bus) WriteToReg(addr, reg byte, value []byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -235,15 +232,80 @@ func (b *bus) WriteToReg(addr, reg, value byte) (err error) {
 		return
 	}
 
-	var outbuf [2]byte
+	outbuf := append([]byte{reg}, value...)
+
+	hdrp := (*reflect.SliceHeader)(unsafe.Pointer(&outbuf))
+
+	var message i2c_msg
+	message.addr = uint16(addr)
+	message.flags = 0
+	message.len = uint16(len(outbuf))
+	message.buf = uintptr(unsafe.Pointer(&hdrp.Data))
+
+	var packets i2c_rdwr_ioctl_data
+
+	packets.msgs = uintptr(unsafe.Pointer(&message))
+	packets.nmsg = 1
+
+	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), rdrwCmd, uintptr(unsafe.Pointer(&packets))); errno != 0 {
+		err = syscall.Errno(errno)
+		return
+	}
+
+	return
+}
+
+func (b *bus) WriteByteToReg(addr, reg, value byte) (err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if err = b.setAddress(addr); err != nil {
+		return
+	}
+
+	outbuf := [...]byte{
+		reg,
+		value,
+	}
+
+	var message i2c_msg
+	message.addr = uint16(addr)
+	message.flags = 0
+	message.len = uint16(len(outbuf))
+	message.buf = uintptr(unsafe.Pointer(&outbuf))
+
+	var packets i2c_rdwr_ioctl_data
+
+	packets.msgs = uintptr(unsafe.Pointer(&message))
+	packets.nmsg = 1
+
+	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), rdrwCmd, uintptr(unsafe.Pointer(&packets))); errno != 0 {
+		err = syscall.Errno(errno)
+		return
+	}
+
+	return
+}
+
+func (b *bus) WriteWordToReg(addr, reg byte, value uint16) (err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if err = b.setAddress(addr); err != nil {
+		return
+	}
+
+	outbuf := [...]byte{
+		reg,
+		byte(value >> 8),
+		byte(value),
+	}
+
 	var messages i2c_msg
 	messages.addr = uint16(addr)
 	messages.flags = 0
 	messages.len = uint16(len(outbuf))
 	messages.buf = uintptr(unsafe.Pointer(&outbuf))
-
-	outbuf[0] = reg
-	outbuf[1] = value
 
 	var packets i2c_rdwr_ioctl_data
 
@@ -258,37 +320,47 @@ func (b *bus) WriteToReg(addr, reg, value byte) (err error) {
 	return
 }
 
-// Read a byte from the given address.
+// ReadByte reads a byte from the given address.
 func ReadByte(addr byte) (value byte, err error) {
 	return Default.ReadByte(addr)
 }
 
-// Write a byte to the given address.
-func WriteByte(addr, value byte) (err error) {
+// WriteByte writes a byte to the given address.
+func WriteByte(addr, value byte) error {
 	return Default.WriteByte(addr, value)
 }
 
-// Write a bunch of bytes ot the given address.
+// WriteBytes writes a slice bytes to the given address.
 func WriteBytes(addr byte, value []byte) error {
 	return Default.WriteBytes(addr, value)
 }
 
-// Read a bunch of bytes (len(value)) from the given address and register.
-func ReadFromReg(addr, reg byte, value []byte) (err error) {
+// ReadFromReg reads n (len(value)) bytes from the given address and register.
+func ReadFromReg(addr, reg byte, value []byte) error {
 	return Default.ReadFromReg(addr, reg, value)
 }
 
-// Read a byte from the given address and register.
+// ReadByteFromReg reads a byte from the given address and register.
 func ReadByteFromReg(addr, reg byte) (value byte, err error) {
 	return Default.ReadByteFromReg(addr, reg)
 }
 
-// Read a int from the given address and register.
-func ReadInt(addr, reg byte) (value int, err error) {
-	return Default.ReadInt(addr, reg)
+// ReadU16FromReg reads a unsigned 16 bit integer from the given address and register.
+func ReadWordFromReg(addr, reg byte) (value uint16, err error) {
+	return Default.ReadWordFromReg(addr, reg)
 }
 
-// Write a byte to the given address and register.
-func WriteToReg(addr, reg, value byte) (err error) {
+// WriteToReg writes len(value) bytes to the given address and register.
+func WriteToReg(addr, reg byte, value []byte) error {
 	return Default.WriteToReg(addr, reg, value)
+}
+
+// WriteByteToReg writes a byte to the given address and register.
+func WriteByteToReg(addr, reg, value byte) error {
+	return Default.WriteByteToReg(addr, reg, value)
+}
+
+// WriteU16ToReg
+func WriteWordToReg(addr, reg byte, value uint16) error {
+	return Default.WriteWordToReg(addr, reg, value)
 }

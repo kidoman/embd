@@ -213,10 +213,10 @@ func (d *l3gd20) setup() (err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if err = d.bus.WriteToReg(address, ctrlReg1, ctrlReg1Default); err != nil {
+	if err = d.bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Default); err != nil {
 		return
 	}
-	if err = d.bus.WriteToReg(address, ctrlReg4, d.rng.value); err != nil {
+	if err = d.bus.WriteByteToReg(address, ctrlReg4, d.rng.value); err != nil {
 		return
 	}
 
@@ -370,5 +370,5 @@ func (d *l3gd20) Close() (err error) {
 	if d.quit != nil {
 		d.quit <- struct{}{}
 	}
-	return d.bus.WriteToReg(address, ctrlReg1, ctrlReg1Finished)
+	return d.bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Finished)
 }
