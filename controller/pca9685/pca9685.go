@@ -95,7 +95,7 @@ func (d *pca9685) setup() (err error) {
 		return
 	}
 
-	if err = d.bus.WriteToReg(d.addr, preScaleRegAddr, byte(preScaleValue)); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, preScaleRegAddr, byte(preScaleValue)); err != nil {
 		return
 	}
 	if d.debug {
@@ -107,7 +107,7 @@ func (d *pca9685) setup() (err error) {
 	}
 
 	newmode := ((mode1Reg | 0x01) & 0xDF)
-	if err = d.bus.WriteToReg(d.addr, mode1RegAddr, newmode); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, mode1RegAddr, newmode); err != nil {
 		return
 	}
 	if d.debug {
@@ -137,7 +137,7 @@ func (d *pca9685) SetPwm(n, onTime, offTime int) (err error) {
 	offTimeLow := byte(offTime & 0xFF)
 	offTimeHigh := byte(offTime >> 8)
 
-	if err = d.bus.WriteToReg(d.addr, onTimeLowReg, onTimeLow); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, onTimeLowReg, onTimeLow); err != nil {
 		return
 	}
 	if d.debug {
@@ -145,7 +145,7 @@ func (d *pca9685) SetPwm(n, onTime, offTime int) (err error) {
 	}
 
 	onTimeHighReg := onTimeLowReg + 1
-	if err = d.bus.WriteToReg(d.addr, onTimeHighReg, onTimeHighReg); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, onTimeHighReg, onTimeHighReg); err != nil {
 		return
 	}
 	if d.debug {
@@ -153,7 +153,7 @@ func (d *pca9685) SetPwm(n, onTime, offTime int) (err error) {
 	}
 
 	offTimeLowReg := onTimeHighReg + 1
-	if err = d.bus.WriteToReg(d.addr, offTimeLowReg, offTimeLow); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, offTimeLowReg, offTimeLow); err != nil {
 		return
 	}
 	if d.debug {
@@ -161,7 +161,7 @@ func (d *pca9685) SetPwm(n, onTime, offTime int) (err error) {
 	}
 
 	offTimeHighReg := offTimeLowReg + 1
-	if err = d.bus.WriteToReg(d.addr, offTimeHighReg, offTimeHigh); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, offTimeHighReg, offTimeHigh); err != nil {
 		return
 	}
 	if d.debug {
@@ -185,7 +185,7 @@ func (d *pca9685) Close() (err error) {
 		log.Println("pca9685: reset request received")
 	}
 
-	if err = d.bus.WriteToReg(d.addr, mode1RegAddr, 0x00); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, mode1RegAddr, 0x00); err != nil {
 		return
 	}
 
@@ -194,7 +194,7 @@ func (d *pca9685) Close() (err error) {
 	}
 
 	for regAddr := 0x0; regAddr <= 0x45; regAddr++ {
-		if err = d.bus.WriteToReg(d.addr, byte(regAddr), 0x00); err != nil {
+		if err = d.bus.WriteByteToReg(d.addr, byte(regAddr), 0x00); err != nil {
 			return
 		}
 	}
@@ -220,7 +220,7 @@ func (d *pca9685) sleep() (err error) {
 		return
 	}
 	sleepmode := (mode1Reg & 0x7F) | 0x10
-	if err = d.bus.WriteToReg(d.addr, mode1RegAddr, sleepmode); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, mode1RegAddr, sleepmode); err != nil {
 		return
 	}
 	if d.debug {
@@ -254,7 +254,7 @@ func (d *pca9685) wake() (err error) {
 	}
 	wakeMode := mode1Reg & 0xEF
 	if (mode1Reg & 0x80) == 0x80 {
-		if err = d.bus.WriteToReg(d.addr, mode1RegAddr, wakeMode); err != nil {
+		if err = d.bus.WriteByteToReg(d.addr, mode1RegAddr, wakeMode); err != nil {
 			return
 		}
 		if d.debug {
@@ -265,7 +265,7 @@ func (d *pca9685) wake() (err error) {
 	}
 
 	restartOpCode := wakeMode | 0x80
-	if err = d.bus.WriteToReg(d.addr, mode1RegAddr, restartOpCode); err != nil {
+	if err = d.bus.WriteByteToReg(d.addr, mode1RegAddr, restartOpCode); err != nil {
 		return
 	}
 	if d.debug {
