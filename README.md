@@ -50,8 +50,16 @@ Use various sensors on the RaspberryPi with Golang (like a ninja!)
 
   [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/us020) [Datasheet](http://www.elechouse.com/elechouse/images/product/Digital%20light%20Sensor/bh1750fvi-e.pdf)
 
-##Interfaces
+## Interfaces
 
-###Keypad(4x3)
+### Keypad(4x3)
 
   [Product Page](http://www.adafruit.com/products/419#Learn)
+
+## Controllers
+
+### PCA9685
+  16-channel, 12-bit PWM Controller with I2C protocol
+
+  [Datasheet] (http://www.adafruit.com/datasheets/PCA9685.pdf)
+  [Product Page] (http://www.adafruit.com/products/815)
