@@ -3,59 +3,49 @@ package servo
 
 import (
 	"log"
+
+	"github.com/kid0m4n/go-rpi/util"
 )
 
 // A PWM interface implements access to a pwm controller.
 type PWM interface {
-	SetPwm(n int, onTime int, offTime int) error
+	SetPwm(channel int, onTime int, offTime int) error
 }
 
-// A SERVO interface implements access to the servo.
-type Servo interface {
-	SetAngle(angle int) error
+type Servo struct {
+	PWM     PWM
+	Freq    int
+	Channel int
 
-	SetDebug(v bool)
+	Minms, Maxms float64
+
+	Debug bool
 }
 
-type servo struct {
-	pwm  PWM
-	freq int
-	n    int
-
-	minms, maxms float64
-
-	debug bool
-}
-
-// New creates a new SERVO interface.
+// New creates a new Servo interface.
 // pwm: instance of a PWM controller.
 // freq: Frequency of pwm signal (typically 50Hz)
-// n: PWM channel of the pwm controller to be used
+// channel: PWM channel of the pwm controller to be used
 // minms: Pulse width corresponding to servo position of 0deg
 // maxms: Pulse width corresponding to servo position of 180deg
-func New(pwm PWM, freq int, n int, minms, maxms float64) Servo {
-	return &servo{
-		pwm:   pwm,
-		freq:  freq,
-		n:     n,
-		minms: minms,
-		maxms: maxms,
+func New(pwm PWM, freq, channel int, minms, maxms float64) *Servo {
+	return &Servo{
+		PWM:     pwm,
+		Freq:    freq,
+		Channel: channel,
+		Minms:   minms,
+		Maxms:   maxms,
 	}
-}
-
-// SetDebug is used to enable logging (debug mode).
-func (s *servo) SetDebug(v bool) {
-	s.debug = v
 }
 
 // SetAngle sets the servo angle.
-func (s *servo) SetAngle(angle int) error {
-	ms := s.minms + float64(angle)*(s.maxms-s.minms)/180
-	offTime := int(ms * float64(s.freq) * 4096 / 1000)
+func (s *Servo) SetAngle(angle int) error {
+	us := util.Map(int64(angle), 0, 180, int64(s.Minms*1000), int64(s.Maxms*1000))
+	offTime := int(us) * s.Freq * 4096 / 1000000
 
-	if s.debug {
-		log.Printf("servo: given angle %v calculated ms %2.2f offTime %v", angle, ms, offTime)
+	if s.Debug {
+		log.Printf("servo: given angle %v calculated %v us offTime %v", angle, us, offTime)
 	}
 
-	return s.pwm.SetPwm(s.n, 0, offTime)
+	return s.PWM.SetPwm(s.Channel, 0, offTime)
 }
