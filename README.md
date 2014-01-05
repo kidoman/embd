@@ -14,6 +14,12 @@ Use various sensors on the RaspberryPi with Golang (like a ninja!)
 
 ## Sensors supported
 
+### TMP006
+
+  Thermopile sensor
+
+  [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/sensor/tmp006) [Datasheet](http://www.adafruit.com/datasheets/tmp006.pdf) [Userguide](http://www.adafruit.com/datasheets/tmp006ug.pdf)
+
 ### BMP085
 
   Barometric pressure sensor
