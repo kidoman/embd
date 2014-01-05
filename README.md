@@ -65,7 +65,13 @@ Use various sensors on the RaspberryPi with Golang (like a ninja!)
 ## Controllers
 
 ### PCA9685
+
   16-channel, 12-bit PWM Controller with I2C protocol
 
-  [Datasheet] (http://www.adafruit.com/datasheets/PCA9685.pdf)
-  [Product Page] (http://www.adafruit.com/products/815)
+  [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/controller/pca9685) [Datasheet](http://www.adafruit.com/datasheets/PCA9685.pdf) [Product Page](http://www.adafruit.com/products/815)
+
+### MCP4725
+
+  12-bit DAC
+
+  [Documentation](http://godoc.org/github.com/kid0m4n/go-rpi/controller/mcp4725) [Datasheet](http://www.adafruit.com/datasheets/mcp4725.pdf) [Product Page](http://www.adafruit.com/products/935)
