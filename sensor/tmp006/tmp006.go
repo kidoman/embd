@@ -1,3 +1,4 @@
+// Package tmp006 allows interfacing with the TMP006 thermopile.
 package tmp006
 
 import (
@@ -50,8 +51,8 @@ var (
 	SR16 = &SampleRate{0x0800, 16, 4}   // 16 samples, 4 seconds between measurements.
 )
 
-// Device represents a TMP006 thermopile sensor.
-type Device struct {
+// TMP006 represents a TMP006 thermopile sensor.
+type TMP006 struct {
 	// Bus to communicate over.
 	Bus i2c.Bus
 	// Addr of the sensor.
@@ -70,14 +71,14 @@ type Device struct {
 }
 
 // New creates a new TMP006 sensor.
-func New(bus i2c.Bus, addr byte) *Device {
-	return &Device{
+func New(bus i2c.Bus, addr byte) *TMP006 {
+	return &TMP006{
 		Bus:  bus,
 		Addr: addr,
 	}
 }
 
-func (d *Device) validate() error {
+func (d *TMP006) validate() error {
 	if d.Bus == nil {
 		return errors.New("tmp006: bus is nil")
 	}
@@ -88,7 +89,7 @@ func (d *Device) validate() error {
 }
 
 // Close puts the device into low power mode.
-func (d *Device) Close() (err error) {
+func (d *TMP006) Close() (err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
@@ -107,7 +108,7 @@ func (d *Device) Close() (err error) {
 }
 
 // Present checks if the device is present at the given address.
-func (d *Device) Present() (status bool, err error) {
+func (d *TMP006) Present() (status bool, err error) {
 	if err = d.validate(); err != nil {
 		return
 	}
@@ -138,7 +139,7 @@ func (d *Device) Present() (status bool, err error) {
 	return
 }
 
-func (d *Device) setup() (err error) {
+func (d *TMP006) setup() (err error) {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
@@ -170,7 +171,7 @@ func (d *Device) setup() (err error) {
 	return
 }
 
-func (d *Device) measureRawDieTemp() (temp float64, err error) {
+func (d *TMP006) measureRawDieTemp() (temp float64, err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
@@ -188,7 +189,7 @@ func (d *Device) measureRawDieTemp() (temp float64, err error) {
 	return
 }
 
-func (d *Device) measureRawVoltage() (volt int16, err error) {
+func (d *TMP006) measureRawVoltage() (volt int16, err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
@@ -203,7 +204,7 @@ func (d *Device) measureRawVoltage() (volt int16, err error) {
 	return
 }
 
-func (d *Device) measureObjTemp() (temp float64, err error) {
+func (d *TMP006) measureObjTemp() (temp float64, err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
@@ -244,7 +245,7 @@ func (d *Device) measureObjTemp() (temp float64, err error) {
 }
 
 // RawDieTemp returns the current raw die temp reading.
-func (d *Device) RawDieTemp() (temp float64, err error) {
+func (d *TMP006) RawDieTemp() (temp float64, err error) {
 	select {
 	case temp = <-d.rawDieTemps:
 		return
@@ -254,12 +255,12 @@ func (d *Device) RawDieTemp() (temp float64, err error) {
 }
 
 // RawDieTemps returns a channel to get future raw die temps from.
-func (d *Device) RawDieTemps() <-chan float64 {
+func (d *TMP006) RawDieTemps() <-chan float64 {
 	return d.rawDieTemps
 }
 
 // ObjTemp returns the current obj temp reading.
-func (d *Device) ObjTemp() (temp float64, err error) {
+func (d *TMP006) ObjTemp() (temp float64, err error) {
 	select {
 	case temp = <-d.objTemps:
 		return
@@ -269,12 +270,12 @@ func (d *Device) ObjTemp() (temp float64, err error) {
 }
 
 // ObjTemps returns a channel to fetch obj temps from.
-func (d *Device) ObjTemps() <-chan float64 {
+func (d *TMP006) ObjTemps() <-chan float64 {
 	return d.objTemps
 }
 
 // Start starts the data acquisition loop.
-func (d *Device) Start() (err error) {
+func (d *TMP006) Start() (err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
