@@ -58,7 +58,7 @@ func (d *PCA9685) setup() (err error) {
 
 	preScaleValue := byte(math.Floor(float64(clockFreq/(pwmControlPoints*d.Freq))+float64(0.5)) - 1)
 	if d.Debug {
-		log.Printf("pca9685: calculated Prescale value = %#02x", preScaleValue)
+		log.Printf("pca9685: calculated prescale value = %#02x", preScaleValue)
 	}
 
 	mode1Reg, err := d.mode1Reg()
@@ -119,7 +119,7 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 		return
 	}
 	if d.Debug {
-		log.Printf("pca9685: writing On-Time Low [%#02x] to CHAN%v_ON_L reg [RegAddr: %#02x]", onTimeLow, channel, onTimeLowReg)
+		log.Printf("pca9685: writing on-time low [%#02x] to CHAN%v_ON_L reg [reg: %#02x]", onTimeLow, channel, onTimeLowReg)
 	}
 
 	onTimeHighReg := onTimeLowReg + 1
@@ -127,7 +127,7 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 		return
 	}
 	if d.Debug {
-		log.Printf("pca9685: writing On-Time High [%#02x] to CHAN%v_ON_H reg [RegAddr: %#02x]", onTimeHigh, channel, onTimeHighReg)
+		log.Printf("pca9685: writing on-time high [%#02x] to CHAN%v_ON_H reg [reg: %#02x]", onTimeHigh, channel, onTimeHighReg)
 	}
 
 	offTimeLowReg := onTimeHighReg + 1
@@ -135,7 +135,7 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 		return
 	}
 	if d.Debug {
-		log.Printf("pca9685: writing Off-Time Low [%#02x] to CHAN%v_OFF_L reg [RegAddr: %#02x]", offTimeLow, channel, offTimeLowReg)
+		log.Printf("pca9685: writing off-time low [%#02x] to CHAN%v_OFF_L reg [reg: %#02x]", offTimeLow, channel, offTimeLowReg)
 	}
 
 	offTimeHighReg := offTimeLowReg + 1
@@ -143,7 +143,7 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 		return
 	}
 	if d.Debug {
-		log.Printf("pca9685: writing Off-Time High [%#02x] to CHAN%v_OFF_H reg [RegAddr: %#02x]", offTimeHigh, channel, offTimeHighReg)
+		log.Printf("pca9685: writing off-time high [%#02x] to CHAN%v_OFF_H reg [reg: %#02x]", offTimeHigh, channel, offTimeHighReg)
 	}
 
 	return
