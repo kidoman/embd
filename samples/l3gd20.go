@@ -17,10 +17,10 @@ func main() {
 	defer gyro.Close()
 
 	x, y, z := 0.0, 0.0, 0.0
-	dt := 0.02
+	dt := 0.1 // Seconds
 
 	for {
-		dx, dy, dz, err := gyro.Orientation()
+		dx, dy, dz, err := gyro.OrientationDelta()
 		if err != nil {
 			log.Panic(err)
 		}
@@ -29,14 +29,7 @@ func main() {
 		y += dy * dt
 		z += dz * dt
 
-		log.Printf("Orientation is (%v, %v, %v)", x, y, z)
-
-		temp, err := gyro.Temperature()
-		if err != nil {
-			log.Panic(err)
-		}
-
-		log.Printf("Temperature is %v", temp)
+		log.Printf("%v", z)
 
 		time.Sleep(time.Duration(dt*1000) * time.Millisecond)
 	}

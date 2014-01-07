@@ -90,7 +90,7 @@ var (
 // A L3GD20 implements access to the L3GD20 sensor.
 type L3GD20 interface {
 	// Orientation returns the current orientation reading.
-	Orientation() (x, y, z float64, err error)
+	OrientationDelta() (x, y, z float64, err error)
 	// Temperature returns the current temperature reading.
 	Temperature() (temp int, err error)
 
@@ -114,7 +114,7 @@ func (ac axisCalibration) String() string {
 }
 
 type data struct {
-	x, y, z float64
+	dx, dy, dz float64
 }
 
 type l3gd20 struct {
@@ -290,28 +290,28 @@ func (d *l3gd20) calibratedOrientation(a *axis) (value float64, err error) {
 	return
 }
 
-func (d *l3gd20) measureOrientation() (x, y, z float64, err error) {
+func (d *l3gd20) measureOrientation() (dx, dy, dz float64, err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
 
-	if x, err = d.calibratedOrientation(ax); err != nil {
+	if dx, err = d.calibratedOrientation(ax); err != nil {
 		return
 	}
-	if y, err = d.calibratedOrientation(ay); err != nil {
+	if dy, err = d.calibratedOrientation(ay); err != nil {
 		return
 	}
-	if z, err = d.calibratedOrientation(az); err != nil {
+	if dz, err = d.calibratedOrientation(az); err != nil {
 		return
 	}
 
 	return
 }
 
-func (d *l3gd20) Orientation() (x, y, z float64, err error) {
+func (d *l3gd20) OrientationDelta() (dx, dy, dz float64, err error) {
 	select {
 	case data := <-d.orientations:
-		x, y, z = data.x, data.y, data.z
+		dx, dy, dz = data.dx, data.dy, data.dz
 		return
 	default:
 		if d.debug {
@@ -350,7 +350,7 @@ func (d *l3gd20) Run() (err error) {
 			select {
 			case <-timer:
 				var err error
-				dt.x, dt.y, dt.z, err = d.measureOrientation()
+				dt.dx, dt.dy, dt.dz, err = d.measureOrientation()
 				if err == nil && d.orientations == nil {
 					d.orientations = make(chan data)
 				}
