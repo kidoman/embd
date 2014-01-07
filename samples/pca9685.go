@@ -20,7 +20,7 @@ func main() {
 	pca9685.Debug = true
 	defer pca9685.Close()
 
-	if err := pca9685.SetPwm(15, 0, 1000); err != nil {
+	if err := pca9685.SetPwm(15, 0, 2000); err != nil {
 		log.Panic(err)
 	}
 
