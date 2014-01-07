@@ -17,10 +17,12 @@ func main() {
 		log.Panic(err)
 	}
 
-	pwm := pca9685.New(bus, 0x42, 50)
+	pwm := pca9685.New(bus, 0x41, 50)
+	pwm.Debug = true
 	defer pwm.Close()
 
-	servo := servo.New(pwm, 50, 0, 1, 2.5)
+	servo := servo.New(pwm, 50, 15, 1, 2.5)
+	servo.Debug = true
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)
