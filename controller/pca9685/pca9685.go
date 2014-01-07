@@ -103,12 +103,12 @@ func (d *PCA9685) setup() (err error) {
 // SetPwm sets the ON and OFF time registers for pwm signal shaping.
 // channel: 0-15
 // onTime/offTime: 0-4095
-func (d *PCA9685) SetPwm(n, onTime, offTime int) (err error) {
+func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
 
-	onTimeLowReg := byte(pwm0OnLowReg + (4 * n))
+	onTimeLowReg := byte(pwm0OnLowReg + (4 * channel))
 
 	onTimeLow := byte(onTime & 0xFF)
 	onTimeHigh := byte(onTime >> 8)
@@ -119,7 +119,7 @@ func (d *PCA9685) SetPwm(n, onTime, offTime int) (err error) {
 		return
 	}
 	if d.Debug {
-		log.Printf("pca9685: writing On-Time Low [%#02x] to CHAN%v_ON_L reg [RegAddr: %#02x]", onTimeLow, n, onTimeLowReg)
+		log.Printf("pca9685: writing On-Time Low [%#02x] to CHAN%v_ON_L reg [RegAddr: %#02x]", onTimeLow, channel, onTimeLowReg)
 	}
 
 	onTimeHighReg := onTimeLowReg + 1
@@ -127,7 +127,7 @@ func (d *PCA9685) SetPwm(n, onTime, offTime int) (err error) {
 		return
 	}
 	if d.Debug {
-		log.Printf("pca9685: writing On-Time High [%#02x] to CHAN%v_ON_H reg [RegAddr: %#02x]", onTimeHigh, n, onTimeHighReg)
+		log.Printf("pca9685: writing On-Time High [%#02x] to CHAN%v_ON_H reg [RegAddr: %#02x]", onTimeHigh, channel, onTimeHighReg)
 	}
 
 	offTimeLowReg := onTimeHighReg + 1
@@ -135,7 +135,7 @@ func (d *PCA9685) SetPwm(n, onTime, offTime int) (err error) {
 		return
 	}
 	if d.Debug {
-		log.Printf("pca9685: writing Off-Time Low [%#02x] to CHAN%v_OFF_L reg [RegAddr: %#02x]", offTimeLow, n, offTimeLowReg)
+		log.Printf("pca9685: writing Off-Time Low [%#02x] to CHAN%v_OFF_L reg [RegAddr: %#02x]", offTimeLow, channel, offTimeLowReg)
 	}
 
 	offTimeHighReg := offTimeLowReg + 1
@@ -143,7 +143,7 @@ func (d *PCA9685) SetPwm(n, onTime, offTime int) (err error) {
 		return
 	}
 	if d.Debug {
-		log.Printf("pca9685: writing Off-Time High [%#02x] to CHAN%v_OFF_H reg [RegAddr: %#02x]", offTimeHigh, n, offTimeHighReg)
+		log.Printf("pca9685: writing Off-Time High [%#02x] to CHAN%v_OFF_H reg [RegAddr: %#02x]", offTimeHigh, channel, offTimeHighReg)
 	}
 
 	return
