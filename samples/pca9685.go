@@ -17,7 +17,7 @@ func main() {
 	}
 
 	pca9685 := pca9685.New(bus, 0x41, 1000)
-	pca9685.SetDebug(true)
+	pca9685.Debug = true
 	defer pca9685.Close()
 
 	if err := pca9685.SetPwm(15, 0, 1000); err != nil {
