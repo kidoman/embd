@@ -87,17 +87,6 @@ var (
 	az = &axis{name: "Z", lowReg: zlReg, highReg: zhReg, availableMask: 0x04}
 )
 
-// A L3GD20 implements access to the L3GD20 sensor.
-type L3GD20 interface {
-	// Orientation returns the current orientation reading.
-	OrientationDelta() (x, y, z float64, err error)
-	// Temperature returns the current temperature reading.
-	Temperature() (temp int, err error)
-
-	// Close.
-	Close() error
-}
-
 type axisCalibration struct {
 	min, max, mean float64
 }
@@ -113,35 +102,36 @@ func (ac axisCalibration) String() string {
 	return fmt.Sprintf("%v, %v, %v", ac.min, ac.max, ac.mean)
 }
 
-type data struct {
-	dx, dy, dz float64
+type Orientation struct {
+	X, Y, Z float64
 }
 
-type l3gd20 struct {
-	bus i2c.Bus
-	rng *Range
+// L3GD20 represents a L3GD20 3-axis gyroscope.
+type L3GD20 struct {
+	Bus   i2c.Bus
+	Range *Range
 
-	poll int
+	Poll int
 
 	initialized bool
 	mu          sync.RWMutex
 
 	xac, yac, zac axisCalibration
 
-	orientations chan data
-	quit         chan struct{}
+	orientations chan Orientation
+	closing      chan chan struct{}
 
-	debug bool
+	Debug bool
 }
 
 // New creates a new L3GD20 interface. The bus variable controls
 // the I2C bus used to communicate with the device.
-func New(bus i2c.Bus, rng *Range) L3GD20 {
-	return &l3gd20{
-		bus:   bus,
-		rng:   rng,
-		poll:  pollDelay,
-		debug: false,
+func New(bus i2c.Bus, Range *Range) *L3GD20 {
+	return &L3GD20{
+		Bus:   bus,
+		Range: Range,
+		Poll:  pollDelay,
+		Debug: false,
 	}
 }
 
@@ -171,8 +161,8 @@ func (vs values) mean() float64 {
 	return sum / float64(len(vs))
 }
 
-func (d *l3gd20) calibrate(a *axis) (ac axisCalibration, err error) {
-	if d.debug {
+func (d *L3GD20) calibrate(a *axis) (ac axisCalibration, err error) {
+	if d.Debug {
 		log.Printf("l3gd20: calibrating %v axis", a)
 	}
 
@@ -188,21 +178,21 @@ func (d *l3gd20) calibrate(a *axis) (ac axisCalibration, err error) {
 			goto again
 		}
 		var value float64
-		if value, err = d.readOrientation(a); err != nil {
+		if value, err = d.readOrientationDelta(a); err != nil {
 			return
 		}
 		values = append(values, value)
 	}
 	ac.min, ac.max, ac.mean = values.min(), values.max(), values.mean()
 
-	if d.debug {
+	if d.Debug {
 		log.Printf("l3gd20: %v axis calibration (%v)", a, ac)
 	}
 
 	return
 }
 
-func (d *l3gd20) setup() (err error) {
+func (d *L3GD20) setup() (err error) {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
@@ -213,10 +203,12 @@ func (d *l3gd20) setup() (err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if err = d.bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Default); err != nil {
+	d.orientations = make(chan Orientation)
+
+	if err = d.Bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Default); err != nil {
 		return
 	}
-	if err = d.bus.WriteByteToReg(address, ctrlReg4, d.rng.value); err != nil {
+	if err = d.Bus.WriteByteToReg(address, ctrlReg4, d.Range.value); err != nil {
 		return
 	}
 
@@ -236,13 +228,9 @@ func (d *l3gd20) setup() (err error) {
 	return
 }
 
-func (d *l3gd20) SetPollDelay(delay int) {
-	d.poll = delay
-}
-
-func (d *l3gd20) axisStatus(a *axis) (available bool, err error) {
+func (d *L3GD20) axisStatus(a *axis) (available bool, err error) {
 	var data byte
-	if data, err = d.bus.ReadByteFromReg(address, statusReg); err != nil {
+	if data, err = d.Bus.ReadByteFromReg(address, statusReg); err != nil {
 		return
 	}
 
@@ -255,26 +243,26 @@ func (d *l3gd20) axisStatus(a *axis) (available bool, err error) {
 	return
 }
 
-func (d *l3gd20) readOrientation(a *axis) (value float64, err error) {
+func (d *L3GD20) readOrientationDelta(a *axis) (value float64, err error) {
 	rl, rh := a.regs()
 	var l, h byte
-	if l, err = d.bus.ReadByteFromReg(address, rl); err != nil {
+	if l, err = d.Bus.ReadByteFromReg(address, rl); err != nil {
 		return
 	}
-	if h, err = d.bus.ReadByteFromReg(address, rh); err != nil {
+	if h, err = d.Bus.ReadByteFromReg(address, rh); err != nil {
 		return
 	}
 
 	value = float64(int16(h)<<8 | int16(l))
 
-	sensitivity := d.rng.sensitivity
+	sensitivity := d.Range.sensitivity
 	value *= sensitivity
 
 	return
 }
 
-func (d *l3gd20) calibratedOrientation(a *axis) (value float64, err error) {
-	if value, err = d.readOrientation(a); err != nil {
+func (d *L3GD20) calibratedOrientationDelta(a *axis) (value float64, err error) {
+	if value, err = d.readOrientationDelta(a); err != nil {
 		return
 	}
 
@@ -290,46 +278,37 @@ func (d *l3gd20) calibratedOrientation(a *axis) (value float64, err error) {
 	return
 }
 
-func (d *l3gd20) measureOrientation() (dx, dy, dz float64, err error) {
+func (d *L3GD20) measureOrientationDelta() (dx, dy, dz float64, err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
 
-	if dx, err = d.calibratedOrientation(ax); err != nil {
+	if dx, err = d.calibratedOrientationDelta(ax); err != nil {
 		return
 	}
-	if dy, err = d.calibratedOrientation(ay); err != nil {
+	if dy, err = d.calibratedOrientationDelta(ay); err != nil {
 		return
 	}
-	if dz, err = d.calibratedOrientation(az); err != nil {
+	if dz, err = d.calibratedOrientationDelta(az); err != nil {
 		return
 	}
 
 	return
 }
 
-func (d *l3gd20) OrientationDelta() (dx, dy, dz float64, err error) {
-	select {
-	case data := <-d.orientations:
-		dx, dy, dz = data.dx, data.dy, data.dz
-		return
-	default:
-		if d.debug {
-			log.Printf("l3gd20: no orientation available... measuring")
-		}
-		return d.measureOrientation()
-	}
-
-	panic("cannot reach here")
+// Orientation returns the current orientation reading.
+func (d *L3GD20) OrientationDelta() (dx, dy, dz float64, err error) {
+	return d.measureOrientationDelta()
 }
 
-func (d *l3gd20) Temperature() (temp int, err error) {
+// Temperature returns the current temperature reading.
+func (d *L3GD20) Temperature() (temp int, err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
 
 	var data byte
-	if data, err = d.bus.ReadByteFromReg(address, tempData); err != nil {
+	if data, err = d.Bus.ReadByteFromReg(address, tempData); err != nil {
 		return
 	}
 
@@ -338,25 +317,50 @@ func (d *l3gd20) Temperature() (temp int, err error) {
 	return
 }
 
-func (d *l3gd20) Run() (err error) {
+func (d *L3GD20) Orientations() (orientations <-chan Orientation, err error) {
+	if err = d.setup(); err != nil {
+		return
+	}
+
+	orientations = d.orientations
+
+	return
+}
+
+// Start starts the data acquisition loop.
+func (d *L3GD20) Start() (err error) {
+	if err = d.setup(); err != nil {
+		return
+	}
+
+	d.closing = make(chan chan struct{})
+
 	go func() {
-		d.quit = make(chan struct{})
+		var x, y, z float64
+		var orientations chan Orientation
+		oldTime := time.Now()
 
-		timer := time.Tick(time.Duration(d.poll) * time.Millisecond)
-
-		var dt data
+		timer := time.Tick(time.Duration(d.Poll) * time.Millisecond)
 
 		for {
 			select {
-			case <-timer:
-				var err error
-				dt.dx, dt.dy, dt.dz, err = d.measureOrientation()
-				if err == nil && d.orientations == nil {
-					d.orientations = make(chan data)
+			case currTime := <-timer:
+				dx, dy, dz, err := d.measureOrientationDelta()
+				if err != nil {
+					log.Printf("l3gd20: %v", err)
+				} else {
+					timeElapsed := currTime.Sub(oldTime)
+					mult := timeElapsed.Seconds()
+					x += dx * mult
+					y += dy * mult
+					z += dz * mult
+					orientations = d.orientations
 				}
-			case d.orientations <- dt:
-			case <-d.quit:
-				d.orientations = nil
+				oldTime = currTime
+			case orientations <- Orientation{x, y, z}:
+			case waitc := <-d.closing:
+				waitc <- struct{}{}
+				close(d.orientations)
 				return
 			}
 
@@ -366,9 +370,12 @@ func (d *l3gd20) Run() (err error) {
 	return
 }
 
-func (d *l3gd20) Close() (err error) {
-	if d.quit != nil {
-		d.quit <- struct{}{}
+// Close.
+func (d *L3GD20) Close() (err error) {
+	if d.closing != nil {
+		waitc := make(chan struct{})
+		d.closing <- waitc
+		<-waitc
 	}
-	return d.bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Finished)
+	return d.Bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Finished)
 }
