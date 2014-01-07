@@ -123,7 +123,7 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 	}
 
 	onTimeHighReg := onTimeLowReg + 1
-	if err = d.Bus.WriteByteToReg(d.Addr, onTimeHighReg, onTimeHighReg); err != nil {
+	if err = d.Bus.WriteByteToReg(d.Addr, onTimeHighReg, onTimeHigh); err != nil {
 		return
 	}
 	if d.Debug {
@@ -171,7 +171,7 @@ func (d *PCA9685) Close() (err error) {
 		log.Printf("pca9685: cleaning up all PWM control registers")
 	}
 
-	for regAddr := 0x0; regAddr <= 0x45; regAddr++ {
+	for regAddr := 0x06; regAddr <= 0x45; regAddr++ {
 		if err = d.Bus.WriteByteToReg(d.Addr, byte(regAddr), 0x00); err != nil {
 			return
 		}
