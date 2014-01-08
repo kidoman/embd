@@ -15,6 +15,7 @@ func main() {
 		log.Panic(err)
 	}
 	gyro := l3gd20.New(bus, l3gd20.R250DPS)
+	gyro.Poll = 50
 	defer gyro.Close()
 
 	gyro.Start()

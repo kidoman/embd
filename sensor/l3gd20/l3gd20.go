@@ -358,6 +358,7 @@ func (d *L3GD20) Start() (err error) {
 				}
 				oldTime = currTime
 			case orientations <- Orientation{x, y, z}:
+				orientations = nil
 			case waitc := <-d.closing:
 				waitc <- struct{}{}
 				close(d.orientations)
