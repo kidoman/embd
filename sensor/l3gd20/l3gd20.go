@@ -338,7 +338,11 @@ func (d *L3GD20) Start() (err error) {
 		var orientations chan Orientation
 		oldTime := time.Now()
 
-		timer := time.Tick(time.Duration(d.Poll) * time.Millisecond)
+		var timer <-chan time.Time
+		resetTimer := func() {
+			timer = time.After(time.Duration(d.Poll) * time.Millisecond)
+		}
+		resetTimer()
 
 		for {
 			select {
@@ -355,6 +359,7 @@ func (d *L3GD20) Start() (err error) {
 					orientations = d.orientations
 				}
 				oldTime = currTime
+				resetTimer()
 			case orientations <- Orientation{x, y, z}:
 				orientations = nil
 			case waitc := <-d.closing:
@@ -374,6 +379,7 @@ func (d *L3GD20) Stop() (err error) {
 		waitc := make(chan struct{})
 		d.closing <- waitc
 		<-waitc
+		d.closing = nil
 	}
 	if err = d.Bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Finished); err != nil {
 		return
