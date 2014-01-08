@@ -6,24 +6,32 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kid0m4n/go-rpi/sensor/bmp085"
 	"github.com/stianeikeland/go-rpio"
 )
 
 const (
-	pulseDelay = 30000 * time.Nanosecond
+	pulseDelay  = 30000 * time.Nanosecond
+	defaultTemp = 25
 )
 
-// A US020 implements access to a US020 ultrasonic range finder.
-type US020 interface {
-	// Distance computes the distance of the bot from the closest obstruction.
-	Distance() (float64, error)
-
-	Close()
+type Thermometer interface {
+	Temperature() (float64, error)
 }
 
-type us020 struct {
-	echoPinNumber, triggerPinNumber int
+type nullThermometer struct {
+}
+
+func (*nullThermometer) Temperature() (float64, error) {
+	return defaultTemp, nil
+}
+
+var NullThermometer = &nullThermometer{}
+
+// US020 represents a US020 ultrasonic range finder.
+type US020 struct {
+	EchoPinNumber, TriggerPinNumber int
+
+	Thermometer Thermometer
 
 	echoPin    rpio.Pin
 	triggerPin rpio.Pin
@@ -31,18 +39,18 @@ type us020 struct {
 	speedSound float64
 
 	initialized bool
-	mu          *sync.RWMutex
+	mu          sync.RWMutex
 
-	debug bool
+	Debug bool
 }
 
 // New creates a new US020 interface. The bus variable controls
 // the I2C bus used to communicate with the device.
-func New(e, t int) US020 {
-	return &us020{echoPinNumber: e, triggerPinNumber: t, mu: new(sync.RWMutex)}
+func New(e, t int, thermometer Thermometer) *US020 {
+	return &US020{EchoPinNumber: e, TriggerPinNumber: t, Thermometer: thermometer}
 }
 
-func (d *us020) setup() (err error) {
+func (d *US020) setup() (err error) {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
@@ -57,35 +65,38 @@ func (d *us020) setup() (err error) {
 		return
 	}
 
-	d.echoPin = rpio.Pin(d.echoPinNumber)       // ECHO port on the US020
-	d.triggerPin = rpio.Pin(d.triggerPinNumber) // TRIGGER port on the US020
+	d.echoPin = rpio.Pin(d.EchoPinNumber)       // ECHO port on the US020
+	d.triggerPin = rpio.Pin(d.TriggerPinNumber) // TRIGGER port on the US020
 
 	d.echoPin.Input()
 	d.triggerPin.Output()
 
-	temp, err := bmp085.Temperature()
-	if err != nil {
-		d.speedSound = 340
-	} else {
-		d.speedSound = 331.4 + 0.606*temp
+	if d.Thermometer == nil {
+		d.Thermometer = NullThermometer
+	}
 
-		if d.debug {
+	if temp, err := d.Thermometer.Temperature(); err == nil {
+		d.speedSound = 331.3 + 0.606*temp
+
+		if d.Debug {
 			log.Printf("read a temperature of %v, so speed of sound = %v", temp, d.speedSound)
 		}
+	} else {
+		d.speedSound = 340
 	}
 
 	d.initialized = true
 
-	return nil
+	return
 }
 
 // Distance computes the distance of the bot from the closest obstruction.
-func (d *us020) Distance() (distance float64, err error) {
+func (d *US020) Distance() (distance float64, err error) {
 	if err = d.setup(); err != nil {
 		return
 	}
 
-	if d.debug {
+	if d.Debug {
 		log.Print("us020: trigerring pulse")
 	}
 
@@ -94,7 +105,7 @@ func (d *us020) Distance() (distance float64, err error) {
 	time.Sleep(pulseDelay)
 	d.triggerPin.Low()
 
-	if d.debug {
+	if d.Debug {
 		log.Print("us020: waiting for echo to go high")
 	}
 
@@ -104,7 +115,7 @@ func (d *us020) Distance() (distance float64, err error) {
 
 	startTime := time.Now() // Record time when ECHO goes high
 
-	if d.debug {
+	if d.Debug {
 		log.Print("us020: waiting for echo to go low")
 	}
 
@@ -120,7 +131,8 @@ func (d *us020) Distance() (distance float64, err error) {
 	return
 }
 
-func (d *us020) Close() {
+// Close.
+func (d *US020) Close() {
 	d.echoPin.Output()
 	rpio.Close()
 }

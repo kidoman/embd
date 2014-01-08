@@ -8,11 +8,11 @@ import (
 )
 
 func main() {
-	rangeFinder := us020.New(10, 9)
-	defer rangeFinder.Close()
+	rf := us020.New(10, 9, nil)
+	defer rf.Close()
 
 	for {
-		distance, err := rangeFinder.Distance()
+		distance, err := rf.Distance()
 		if err != nil {
 			log.Panic(err)
 		}
