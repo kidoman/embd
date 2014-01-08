@@ -16,11 +16,11 @@ func main() {
 		log.Panic(err)
 	}
 
-	pca9685 := pca9685.New(bus, 0x42, 1000)
+	pca9685 := pca9685.New(bus, 0x41, 1000)
 	pca9685.Debug = true
 	defer pca9685.Close()
 
-	if err := pca9685.SetPwm(0, 0, 2000); err != nil {
+	if err := pca9685.SetPwm(15, 0, 2000); err != nil {
 		log.Panic(err)
 	}
 

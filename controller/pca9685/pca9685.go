@@ -149,6 +149,11 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 	return
 }
 
+func (d *PCA9685) SetMicroseconds(channel, us int) (err error) {
+	offTime := us * d.Freq * pwmControlPoints / 1000000
+	return d.SetPwm(channel, 0, offTime)
+}
+
 // Close stops the controller and resets mode and pwm controller registers.
 func (d *PCA9685) Close() (err error) {
 	if err = d.setup(); err != nil {

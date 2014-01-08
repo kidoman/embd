@@ -6,22 +6,16 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/kid0m4n/go-rpi/controller/pca9685"
-	"github.com/kid0m4n/go-rpi/i2c"
+	"github.com/kid0m4n/go-rpi/controller/servoblaster"
 	"github.com/kid0m4n/go-rpi/motion/servo"
 )
 
 func main() {
-	bus, err := i2c.NewBus(1)
-	if err != nil {
-		log.Panic(err)
-	}
+	sb := servoblaster.New()
+	sb.Debug = true
+	defer sb.Close()
 
-	pwm := pca9685.New(bus, 0x41, 50)
-	pwm.Debug = true
-	defer pwm.Close()
-
-	servo := servo.New(pwm, 0, 500, 2500)
+	servo := servo.New(sb, 0, 500, 2500)
 	servo.Debug = true
 
 	c := make(chan os.Signal, 1)
@@ -39,11 +33,15 @@ func main() {
 		select {
 		case <-turnTimer:
 			left = !left
+			var err error
 			switch left {
 			case true:
-				servo.SetAngle(70)
+				err = servo.SetAngle(45)
 			case false:
-				servo.SetAngle(110)
+				err = servo.SetAngle(135)
+			}
+			if err != nil {
+				log.Panic(err)
 			}
 		case <-c:
 			return
