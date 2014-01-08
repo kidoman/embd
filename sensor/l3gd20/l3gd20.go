@@ -370,12 +370,20 @@ func (d *L3GD20) Start() (err error) {
 	return
 }
 
-// Close.
-func (d *L3GD20) Close() (err error) {
+func (d *L3GD20) Stop() (err error) {
 	if d.closing != nil {
 		waitc := make(chan struct{})
 		d.closing <- waitc
 		<-waitc
 	}
-	return d.Bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Finished)
+	if err = d.Bus.WriteByteToReg(address, ctrlReg1, ctrlReg1Finished); err != nil {
+		return
+	}
+	d.initialized = false
+	return
+}
+
+// Close.
+func (d *L3GD20) Close() (err error) {
+	return d.Stop()
 }
