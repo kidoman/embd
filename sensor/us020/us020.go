@@ -18,6 +18,8 @@ const (
 type US020 interface {
 	// Distance computes the distance of the bot from the closest obstruction.
 	Distance() (float64, error)
+
+	Close()
 }
 
 type us020 struct {
@@ -116,4 +118,9 @@ func (d *us020) Distance() (distance float64, err error) {
 	distance = float64(duration.Nanoseconds()) / 10000000 * (d.speedSound / 2)
 
 	return
+}
+
+func (d *us020) Close() {
+	d.echoPin.Output()
+	rpio.Close()
 }

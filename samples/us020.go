@@ -9,6 +9,7 @@ import (
 
 func main() {
 	rangeFinder := us020.New(10, 9)
+	defer rangeFinder.Close()
 
 	for {
 		distance, err := rangeFinder.Distance()
