@@ -254,9 +254,7 @@ func (d *L3GD20) readOrientationDelta(a *axis) (value float64, err error) {
 	}
 
 	value = float64(int16(h)<<8 | int16(l))
-
-	sensitivity := d.Range.sensitivity
-	value *= sensitivity
+	value *= d.Range.sensitivity
 
 	return
 }
