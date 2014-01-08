@@ -33,22 +33,26 @@ const (
 	zlReg = 0x2C
 	zhReg = 0x2D
 
-	xEnabled  = 0x01
-	xDisabled = 0x00
-	yEnabled  = 0x02
-	yDisabled = 0x00
-	zEnabled  = 0x04
-	zDisabled = 0x00
+	dr95  = 0x00
+	dr190 = 0x40
+	dr380 = 0x80
+	dr760 = 0xC0
 
-	powerOn   = 0x08
-	powerDown = 0x00
+	xEnabled = 0x01
+	yEnabled = 0x02
+	zEnabled = 0x04
 
-	ctrlReg1Default  = xEnabled | yEnabled | zEnabled | powerOn
-	ctrlReg1Finished = xDisabled | yDisabled | zDisabled | powerDown
+	powerOn  = 0x08
+	powerOff = 0x00
+
+	ctrlReg1Default  = powerOn | xEnabled | yEnabled | zEnabled
+	ctrlReg1Finished = powerOff | xEnabled | yEnabled | zEnabled
 
 	zyxAvailable = 0x08
 
-	pollDelay = 100
+	odr       = 95
+	mult      = 1.0 / odr
+	pollDelay = mult * 1000 * 1000
 )
 
 // Range represents a L3GD20 range setting.
@@ -111,8 +115,6 @@ type L3GD20 struct {
 	Bus   i2c.Bus
 	Range *Range
 
-	Poll int
-
 	initialized bool
 	mu          sync.RWMutex
 
@@ -130,7 +132,6 @@ func New(bus i2c.Bus, Range *Range) *L3GD20 {
 	return &L3GD20{
 		Bus:   bus,
 		Range: Range,
-		Poll:  pollDelay,
 		Debug: false,
 	}
 }
@@ -336,30 +337,21 @@ func (d *L3GD20) Start() (err error) {
 	go func() {
 		var x, y, z float64
 		var orientations chan Orientation
-		oldTime := time.Now()
 
-		var timer <-chan time.Time
-		resetTimer := func() {
-			timer = time.After(time.Duration(d.Poll) * time.Millisecond)
-		}
-		resetTimer()
+		timer := time.Tick(time.Duration(math.Floor(pollDelay)) * time.Microsecond)
 
 		for {
 			select {
-			case currTime := <-timer:
+			case <-timer:
 				dx, dy, dz, err := d.measureOrientationDelta()
 				if err != nil {
 					log.Printf("l3gd20: %v", err)
 				} else {
-					timeElapsed := currTime.Sub(oldTime)
-					mult := timeElapsed.Seconds()
 					x += dx * mult
 					y += dy * mult
 					z += dz * mult
 					orientations = d.orientations
 				}
-				oldTime = currTime
-				resetTimer()
 			case orientations <- Orientation{x, y, z}:
 				orientations = nil
 			case waitc := <-d.closing:

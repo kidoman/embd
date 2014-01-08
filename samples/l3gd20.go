@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/kid0m4n/go-rpi/i2c"
 	"github.com/kid0m4n/go-rpi/sensor/l3gd20"
@@ -15,7 +16,7 @@ func main() {
 		log.Panic(err)
 	}
 	gyro := l3gd20.New(bus, l3gd20.R250DPS)
-	gyro.Poll = 50
+	gyro.Debug = true
 	defer gyro.Close()
 
 	gyro.Start()
@@ -28,9 +29,12 @@ func main() {
 		log.Panic(err)
 	}
 
+	timer := time.Tick(250 * time.Millisecond)
+
 	for {
 		select {
-		case orientation := <-orientations:
+		case <-timer:
+			orientation := <-orientations
 			log.Printf("x: %v, y: %v, z: %v", orientation.X, orientation.Y, orientation.Z)
 		case <-quit:
 			return
