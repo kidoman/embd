@@ -7,6 +7,11 @@ import (
 	"github.com/kid0m4n/go-rpi/util"
 )
 
+const (
+	minus = 544
+	maxus = 2400
+)
+
 // A PWM interface implements access to a pwm controller.
 type PWM interface {
 	SetMicroseconds(channel int, us int) error
@@ -22,7 +27,7 @@ type Servo struct {
 }
 
 // New creates a new Servo interface.
-func New(pwm PWM, channel int, minus, maxus int) *Servo {
+func New(pwm PWM, channel int) *Servo {
 	return &Servo{
 		PWM:     pwm,
 		Channel: channel,

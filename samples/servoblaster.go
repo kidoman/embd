@@ -15,7 +15,7 @@ func main() {
 	sb.Debug = true
 	defer sb.Close()
 
-	servo := servo.New(sb, 0, 500, 2500)
+	servo := servo.New(sb, 0)
 	servo.Debug = true
 
 	c := make(chan os.Signal, 1)

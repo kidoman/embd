@@ -21,7 +21,7 @@ func main() {
 	pwm.Debug = true
 	defer pwm.Close()
 
-	servo := servo.New(pwm, 0, 500, 2500)
+	servo := servo.New(pwm, 0)
 	servo.Debug = true
 
 	c := make(chan os.Signal, 1)
