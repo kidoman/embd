@@ -86,7 +86,7 @@ func (d *us020) Distance() (distance float64, err error) {
 	}
 
 	if d.debug {
-		log.Print("trigerring pulse")
+		log.Print("us020: trigerring pulse")
 	}
 
 	// Generate a TRIGGER pulse
@@ -95,7 +95,7 @@ func (d *us020) Distance() (distance float64, err error) {
 	d.triggerPin.Low()
 
 	if d.debug {
-		log.Print("waiting for echo to go high")
+		log.Print("us020: waiting for echo to go high")
 	}
 
 	// Wait until ECHO goes high
@@ -105,7 +105,7 @@ func (d *us020) Distance() (distance float64, err error) {
 	startTime := time.Now() // Record time when ECHO goes high
 
 	if d.debug {
-		log.Print("waiting for echo to go low")
+		log.Print("us020: waiting for echo to go low")
 	}
 
 	// Wait until ECHO goes low
