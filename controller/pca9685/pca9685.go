@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/kid0m4n/go-rpi/i2c"
+	"github.com/kid0m4n/go-rpi/util"
 )
 
 const (
@@ -18,6 +19,9 @@ const (
 	preScaleRegAddr = 0xFE
 
 	pwm0OnLowReg = 0x6
+
+	minAnalogValue = 0
+	maxAnalogValue = 255
 )
 
 // PCA9685 represents a PCA9685 PWM generator.
@@ -152,6 +156,11 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 func (d *PCA9685) SetMicroseconds(channel, us int) (err error) {
 	offTime := us * d.Freq * pwmControlPoints / 1000000
 	return d.SetPwm(channel, 0, offTime)
+}
+
+func (d *PCA9685) SetAnalog(channel int, value byte) (err error) {
+	offTime := util.Map(int64(value), minAnalogValue, maxAnalogValue, 0, pwmControlPoints-1)
+	return d.SetPwm(channel, 0, int(offTime))
 }
 
 // Close stops the controller and resets mode and pwm controller registers.
