@@ -22,6 +22,8 @@ const (
 
 	minAnalogValue = 0
 	maxAnalogValue = 255
+
+	defaultFreq = 490
 )
 
 // PCA9685 represents a PCA9685 PWM generator.
@@ -72,6 +74,9 @@ func (d *PCA9685) setup() (err error) {
 		return
 	}
 
+	if d.Freq == 0 {
+		d.Freq = defaultFreq
+	}
 	preScaleValue := byte(math.Floor(float64(clockFreq/(pwmControlPoints*d.Freq))+float64(0.5)) - 1)
 	if d.Debug {
 		log.Printf("pca9685: calculated prescale value = %#02x", preScaleValue)
