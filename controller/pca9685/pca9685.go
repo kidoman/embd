@@ -39,11 +39,10 @@ type PCA9685 struct {
 }
 
 // New creates a new PCA9685 interface.
-func New(bus i2c.Bus, addr byte, freq int) *PCA9685 {
+func New(bus i2c.Bus, addr byte) *PCA9685 {
 	return &PCA9685{
 		Bus:  bus,
 		Addr: addr,
-		Freq: freq,
 	}
 }
 
