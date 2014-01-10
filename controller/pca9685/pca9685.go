@@ -60,11 +60,6 @@ func (d *PCA9685) setup() (err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	preScaleValue := byte(math.Floor(float64(clockFreq/(pwmControlPoints*d.Freq))+float64(0.5)) - 1)
-	if d.Debug {
-		log.Printf("pca9685: calculated prescale value = %#02x", preScaleValue)
-	}
-
 	mode1Reg, err := d.mode1Reg()
 	if err != nil {
 		return
@@ -77,6 +72,10 @@ func (d *PCA9685) setup() (err error) {
 		return
 	}
 
+	preScaleValue := byte(math.Floor(float64(clockFreq/(pwmControlPoints*d.Freq))+float64(0.5)) - 1)
+	if d.Debug {
+		log.Printf("pca9685: calculated prescale value = %#02x", preScaleValue)
+	}
 	if err = d.Bus.WriteByteToReg(d.Addr, preScaleRegAddr, byte(preScaleValue)); err != nil {
 		return
 	}
