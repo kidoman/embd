@@ -5,11 +5,15 @@ import (
 	"time"
 
 	"github.com/kid0m4n/go-rpi/interface/keypad/matrix4x3"
+	"github.com/stianeikeland/go-rpio"
 )
 
 func main() {
 	rowPins := []int{4, 17, 27, 22}
 	colPins := []int{23, 24, 25}
+
+	rpio.Open()
+	defer rpio.Close()
 
 	keypad := matrix4x3.New(rowPins, colPins)
 

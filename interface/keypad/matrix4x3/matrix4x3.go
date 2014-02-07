@@ -78,7 +78,7 @@ type Matrix4x3 interface {
 	PressedKey() (Key, error)
 
 	// Close.
-	Close() error
+	Close()
 }
 
 type matrix4x3 struct {
@@ -126,10 +126,6 @@ func (d *matrix4x3) setup() (err error) {
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
-
-	if err = rpio.Open(); err != nil {
-		return
-	}
 
 	for i := 0; i < rows; i++ {
 		d.rpioRowPins[i].Input()
@@ -210,12 +206,8 @@ func (d *matrix4x3) Run() {
 }
 
 // Close.
-func (d *matrix4x3) Close() (err error) {
+func (d *matrix4x3) Close() {
 	if d.quit != nil {
 		d.quit <- true
 	}
-
-	rpio.Close()
-
-	return
 }
