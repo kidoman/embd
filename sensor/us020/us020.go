@@ -61,10 +61,6 @@ func (d *US020) setup() (err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if err = rpio.Open(); err != nil {
-		return
-	}
-
 	d.echoPin = rpio.Pin(d.EchoPinNumber)       // ECHO port on the US020
 	d.triggerPin = rpio.Pin(d.TriggerPinNumber) // TRIGGER port on the US020
 
@@ -134,5 +130,4 @@ func (d *US020) Distance() (distance float64, err error) {
 // Close.
 func (d *US020) Close() {
 	d.echoPin.Output()
-	rpio.Close()
 }

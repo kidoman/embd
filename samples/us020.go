@@ -5,9 +5,13 @@ import (
 	"time"
 
 	"github.com/kid0m4n/go-rpi/sensor/us020"
+	"github.com/stianeikeland/go-rpio"
 )
 
 func main() {
+	rpio.Open()
+	defer rpio.Close()
+
 	rf := us020.New(10, 9, nil)
 	defer rf.Close()
 
