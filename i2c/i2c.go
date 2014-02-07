@@ -63,6 +63,7 @@ var busMapLock sync.Mutex
 var Default Bus
 
 type bus struct {
+	l    byte
 	file *os.File
 	addr byte
 	mu   sync.Mutex
@@ -70,33 +71,37 @@ type bus struct {
 
 func init() {
 	busMap = make(map[byte]*bus)
-	var err error
-	Default, err = NewBus(1)
-	if err != nil {
-		panic(err)
-	}
+	Default = NewBus(1)
 }
 
 // NewBus creates a new I2C bus interface. The l variable
 // controls which bus we connect to.
 //
 // For the newer RaspberryPi, the number is 1 (earlier model uses 0.)
-func NewBus(l byte) (Bus, error) {
+func NewBus(l byte) Bus {
 	busMapLock.Lock()
 	defer busMapLock.Unlock()
 
 	var b *bus
 
 	if b = busMap[l]; b == nil {
-		b = new(bus)
-		var err error
-		if b.file, err = os.OpenFile(fmt.Sprintf("/dev/i2c-%v", l), os.O_RDWR, os.ModeExclusive); err != nil {
-			return nil, err
-		}
+		b = &bus{l: l}
 		busMap[l] = b
 	}
 
-	return b, nil
+	return b
+}
+
+func (b *bus) init() (err error) {
+	if b.file != nil {
+		return
+	}
+
+	if b.file, err = os.OpenFile(fmt.Sprintf("/dev/i2c-%v", b.l), os.O_RDWR, os.ModeExclusive); err != nil {
+		return
+	}
+
+	return
 }
 
 func (b *bus) setAddress(addr byte) (err error) {
@@ -115,6 +120,10 @@ func (b *bus) setAddress(addr byte) (err error) {
 func (b *bus) ReadByte(addr byte) (value byte, err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	if err = b.init(); err != nil {
+		return
+	}
 
 	if err = b.setAddress(addr); err != nil {
 		return
@@ -136,6 +145,10 @@ func (b *bus) WriteByte(addr, value byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	if err = b.init(); err != nil {
+		return
+	}
+
 	if err = b.setAddress(addr); err != nil {
 		return
 	}
@@ -149,11 +162,15 @@ func (b *bus) WriteByte(addr, value byte) (err error) {
 	return
 }
 
-func (b *bus) WriteBytes(addr byte, value []byte) error {
+func (b *bus) WriteBytes(addr byte, value []byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if err := b.setAddress(addr); err != nil {
+	if err = b.init(); err != nil {
+		return
+	}
+
+	if err = b.setAddress(addr); err != nil {
 		return err
 	}
 
@@ -176,6 +193,10 @@ func (b *bus) WriteBytes(addr byte, value []byte) error {
 func (b *bus) ReadFromReg(addr, reg byte, value []byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	if err = b.init(); err != nil {
+		return
+	}
 
 	if err = b.setAddress(addr); err != nil {
 		return
@@ -228,6 +249,10 @@ func (b *bus) WriteToReg(addr, reg byte, value []byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	if err = b.init(); err != nil {
+		return
+	}
+
 	if err = b.setAddress(addr); err != nil {
 		return
 	}
@@ -258,6 +283,10 @@ func (b *bus) WriteToReg(addr, reg byte, value []byte) (err error) {
 func (b *bus) WriteByteToReg(addr, reg, value byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	if err = b.init(); err != nil {
+		return
+	}
 
 	if err = b.setAddress(addr); err != nil {
 		return
@@ -290,6 +319,10 @@ func (b *bus) WriteByteToReg(addr, reg, value byte) (err error) {
 func (b *bus) WriteWordToReg(addr, reg byte, value uint16) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	if err = b.init(); err != nil {
+		return
+	}
 
 	if err = b.setAddress(addr); err != nil {
 		return
