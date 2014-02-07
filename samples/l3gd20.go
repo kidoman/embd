@@ -11,10 +11,8 @@ import (
 )
 
 func main() {
-	bus, err := i2c.NewBus(1)
-	if err != nil {
-		log.Panic(err)
-	}
+	bus := i2c.NewBus(1)
+
 	gyro := l3gd20.New(bus, l3gd20.R250DPS)
 	gyro.Debug = true
 	defer gyro.Close()

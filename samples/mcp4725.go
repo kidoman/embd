@@ -11,10 +11,7 @@ import (
 )
 
 func main() {
-	bus, err := i2c.NewBus(1)
-	if err != nil {
-		log.Panic(err)
-	}
+	bus := i2c.NewBus(1)
 
 	dac := mcp4725.New(bus, 0x62)
 	defer dac.Close()

@@ -11,10 +11,7 @@ import (
 )
 
 func main() {
-	bus, err := i2c.NewBus(1)
-	if err != nil {
-		log.Panic(err)
-	}
+	bus := i2c.NewBus(1)
 
 	pca9685 := pca9685.New(bus, 0x41, 1000)
 	pca9685.Debug = true

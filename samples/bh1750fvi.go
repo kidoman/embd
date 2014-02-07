@@ -9,10 +9,7 @@ import (
 )
 
 func main() {
-	bus, err := i2c.NewBus(1)
-	if err != nil {
-		log.Panic(err)
-	}
+	bus := i2c.NewBus(1)
 
 	sensor := bh1750fvi.New(bh1750fvi.High, bus)
 	defer sensor.Close()

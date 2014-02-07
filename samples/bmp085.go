@@ -9,10 +9,8 @@ import (
 )
 
 func main() {
-	bus, err := i2c.NewBus(1)
-	if err != nil {
-		log.Panic(err)
-	}
+	bus := i2c.NewBus(1)
+
 	baro := bmp085.New(bus)
 	defer baro.Close()
 
