@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/kid0m4n/go-rpi/i2c"
-	"github.com/kid0m4n/go-rpi/sensor/tmp006"
+	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd/sensor/tmp006"
 )
 
 func main() {

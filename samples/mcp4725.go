@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/kid0m4n/go-rpi/controller/mcp4725"
-	"github.com/kid0m4n/go-rpi/i2c"
+	"github.com/kidoman/embd/controller/mcp4725"
+	"github.com/kidoman/embd/i2c"
 )
 
 func main() {

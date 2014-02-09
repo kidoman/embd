@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/kid0m4n/go-rpi/i2c"
-	"github.com/kid0m4n/go-rpi/sensor/bh1750fvi"
+	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd/sensor/bh1750fvi"
 )
 
 func main() {

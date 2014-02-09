@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/kid0m4n/go-rpi/spi"
+	"github.com/kidoman/embd/spi"
 )
 
 func main() {

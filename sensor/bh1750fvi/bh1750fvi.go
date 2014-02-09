@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kid0m4n/go-rpi/i2c"
+	"github.com/kidoman/embd/i2c"
 )
 
 //accuracy = sensorValue/actualValue] (min = 0.96, typ = 1.2, max = 1.44

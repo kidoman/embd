@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kid0m4n/go-rpi/interface/keypad/matrix4x3"
+	"github.com/kidoman/embd/interface/keypad/matrix4x3"
 	"github.com/stianeikeland/go-rpio"
 )
 

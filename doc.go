@@ -3,7 +3,7 @@ Package rpi provides modules which will help gophers deal with various sensors.
 
 Use the default i2c bus to read/write data:
 
-	import "github.com/kid0m4n/go-rpi/i2c"
+	import "github.com/kidoman/embd/i2c"
 	...
 	value, err := i2c.ReadInt(0x1E, 0x03)
 	...
@@ -14,7 +14,7 @@ Use the default i2c bus to read/write data:
 
 Read data from the BMP085 sensor:
 
-	import "github.com/kid0m4n/go-rpi/sensor/bmp085"
+	import "github.com/kidoman/embd/sensor/bmp085"
 	...
 	temp, err := bmp085.Temperature()
 	...
@@ -22,7 +22,7 @@ Read data from the BMP085 sensor:
 
 Find out the heading from the LSM303 magnetometer:
 
-	import "github.com/kid0m4n/go-rpi/sensor/lsm303"
+	import "github.com/kidoman/embd/sensor/lsm303"
 	...
 	heading, err := lsm303.Heading()
 */

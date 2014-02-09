@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/kid0m4n/go-rpi/controller/pca9685"
-	"github.com/kid0m4n/go-rpi/i2c"
+	"github.com/kidoman/embd/controller/pca9685"
+	"github.com/kidoman/embd/i2c"
 )
 
 func main() {

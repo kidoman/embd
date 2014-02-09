@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/kid0m4n/go-rpi/controller/servoblaster"
-	"github.com/kid0m4n/go-rpi/motion/servo"
+	"github.com/kidoman/embd/controller/servoblaster"
+	"github.com/kidoman/embd/motion/servo"
 )
 
 func main() {
