@@ -12,12 +12,12 @@ var rev1Pins = pinMap{
 	&pinDesc{22, []string{"P1_15", "GPIO_22"}, normal},
 	&pinDesc{23, []string{"P1_16", "GPIO_23"}, normal},
 	&pinDesc{24, []string{"P1_18", "GPIO_24"}, normal},
-	&pinDesc{10, []string{"P1_19", "GPIO_10", "MOSI"}, normal | spi},
-	&pinDesc{9, []string{"P1_21", "GPIO_9", "MISO"}, normal | spi},
+	&pinDesc{10, []string{"P1_19", "GPIO_10", "MOSI", "SPI0_MOSI"}, normal | spi},
+	&pinDesc{9, []string{"P1_21", "GPIO_9", "MISO", "SPI0_MISO"}, normal | spi},
 	&pinDesc{25, []string{"P1_22", "GPIO_25"}, normal},
-	&pinDesc{11, []string{"P1_23", "GPIO_11", "SCLK"}, normal | spi},
-	&pinDesc{8, []string{"P1_24", "GPIO_8", "CE0"}, normal | spi},
-	&pinDesc{7, []string{"P1_26", "GPIO_7", "CE1"}, normal | spi},
+	&pinDesc{11, []string{"P1_23", "GPIO_11", "SCLK", "SPI0_SCLK"}, normal | spi},
+	&pinDesc{8, []string{"P1_24", "GPIO_8", "CE0", "SPI0_CE0_N"}, normal | spi},
+	&pinDesc{7, []string{"P1_26", "GPIO_7", "CE1", "SPI0_CE1_N"}, normal | spi},
 }
 
 var rev2Pins = pinMap{
