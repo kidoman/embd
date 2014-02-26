@@ -11,7 +11,7 @@ type descriptor struct {
 }
 
 func (d *descriptor) GPIO() gpio.GPIO {
-	return lgpio.New(Pins)
+	return lgpio.New(pins)
 }
 
 func (d *descriptor) I2C() i2c.I2C {

@@ -4,7 +4,7 @@ import (
 	"github.com/kidoman/embd/host/generic/linux/gpio"
 )
 
-var Pins = gpio.PinMap{
+var pins = gpio.PinMap{
 	&gpio.PinDesc{66, []string{"P8_07", "GPIO_66", "TIMER4"}, gpio.Normal | gpio.GPMC},
 	&gpio.PinDesc{67, []string{"P8_08", "GPIO_67", "TIMER7"}, gpio.Normal | gpio.GPMC},
 	&gpio.PinDesc{69, []string{"P8_09", "GPIO_69", "TIMER5"}, gpio.Normal | gpio.GPMC},
