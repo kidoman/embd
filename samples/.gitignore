@@ -1,2 +1,15 @@
+bh1750fvi
+bmp085
+bmp180
 gpio
 gpiodetect
+l3gd20
+lsm303
+mcp4725
+pca9685
+servo
+servoblaster
+spi
+tmp006
+us020
+watersensor
