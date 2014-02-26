@@ -10,9 +10,11 @@ import (
 type Host int
 
 const (
-	Null Host = iota
-	RPi
-	BBB
+	HostNull Host = iota
+	HostRPi
+	HostBBB
+	HostCubieTruck
+	HostGalileo
 )
 
 func execOutput(name string, arg ...string) (output string, err error) {
@@ -67,9 +69,9 @@ func DetectHost() (host Host, rev int, err error) {
 
 	switch node {
 	case "raspberrypi":
-		host = RPi
+		host = HostRPi
 	case "beaglebone":
-		host = BBB
+		host = HostBBB
 	default:
 		err = fmt.Errorf("embd: your host %q is not supported at this moment. please request support at https://github.com/kidoman/embd/issues", node)
 	}

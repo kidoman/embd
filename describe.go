@@ -20,7 +20,7 @@ func describeHost() (descriptor, error) {
 	}
 
 	switch host {
-	case RPi:
+	case HostRPi:
 		return rpi.Descriptor(rev), nil
 	default:
 		return nil, errors.New("host: invalid host")

@@ -15,9 +15,9 @@ func main() {
 	var pinNo interface{}
 
 	switch h {
-	case embd.BBB:
+	case embd.HostBBB:
 		pinNo = "P9_31"
-	case embd.RPi:
+	case embd.HostRPi:
 		pinNo = 10
 	default:
 		panic("host not supported (yet :P)")
