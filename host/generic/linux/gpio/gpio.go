@@ -14,6 +14,9 @@ const (
 	I2C
 	UART
 	SPI
+	GPMC
+	LCD
+	PWM
 )
 
 type PinDesc struct {

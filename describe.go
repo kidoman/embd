@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/kidoman/embd/gpio"
+	"github.com/kidoman/embd/host/bbb"
 	"github.com/kidoman/embd/host/rpi"
 	"github.com/kidoman/embd/i2c"
 )
@@ -22,6 +23,8 @@ func describeHost() (descriptor, error) {
 	switch host {
 	case HostRPi:
 		return rpi.Descriptor(rev), nil
+	case HostBBB:
+		return bbb.Descriptor(rev), nil
 	default:
 		return nil, errors.New("host: invalid host")
 	}

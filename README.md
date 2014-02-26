@@ -6,6 +6,11 @@ Golang Embedded Programming Framework
 
 [![GoDoc](http://godoc.org/github.com/kidoman/embd?status.png)](http://godoc.org/github.com/kidoman/embd)
 
+## Hosts supported
+
+* [RaspberryPi](http://www.raspberrypi.org/)
+* [BeagleBone Black](http://beagleboard.org/Products/BeagleBone%20Black)
+
 ## Protocols supported
 
 * **I2C** [Documentation](http://godoc.org/github.com/kidoman/embd/i2c)
