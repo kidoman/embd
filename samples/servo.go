@@ -1,20 +1,25 @@
 package main
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/controller/pca9685"
-	"github.com/kidoman/embd/i2c"
 	"github.com/kidoman/embd/motion/servo"
 )
 
 func main() {
-	bus := i2c.NewBus(1)
+	i2c, err := embd.NewI2C()
+	if err != nil {
+		panic(err)
+	}
 
-	pwm := pca9685.New(bus, 0x41, 50)
+	bus := i2c.Bus(1)
+
+	pwm := pca9685.New(bus, 0x41)
+	pwm.Freq = 50
 	pwm.Debug = true
 	defer pwm.Close()
 

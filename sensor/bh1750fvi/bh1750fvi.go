@@ -53,9 +53,6 @@ type bh1750fvi struct {
 	poll int
 }
 
-// Default instance for BH1750FVI sensor
-var Default = New(High, i2c.Default)
-
 // Supports three modes:
 // "H" -> High resolution mode (1lx), takes 120ms (recommended).
 // "H2" -> High resolution mode 2 (0.5lx), takes 120ms (only use for low light).
@@ -148,24 +145,4 @@ func (d *bh1750fvi) Close() {
 // SetPollDelay sets the delay between run of data acquisition loop.
 func (d *bh1750fvi) SetPollDelay(delay int) {
 	d.poll = delay
-}
-
-// SetPollDelay sets the delay between run of data acquisition loop.
-func SetPollDelay(delay int) {
-	Default.SetPollDelay(delay)
-}
-
-// Lighting returns the ambient lighting in lx.
-func Lighting() (lighting float64, err error) {
-	return Default.Lighting()
-}
-
-// Run starts continuous sensor data acquisition loop.
-func Run() (err error) {
-	return Default.Run()
-}
-
-// Close.
-func Close() {
-	Default.Close()
 }

@@ -6,7 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/stianeikeland/go-rpio"
+	"github.com/kidoman/embd"
+	"github.com/kidoman/embd/gpio"
 )
 
 const (
@@ -29,12 +30,9 @@ var NullThermometer = &nullThermometer{}
 
 // US020 represents a US020 ultrasonic range finder.
 type US020 struct {
-	EchoPinNumber, TriggerPinNumber int
+	EchoPin, TriggerPin gpio.DigitalPin
 
 	Thermometer Thermometer
-
-	echoPin    rpio.Pin
-	triggerPin rpio.Pin
 
 	speedSound float64
 
@@ -46,8 +44,8 @@ type US020 struct {
 
 // New creates a new US020 interface. The bus variable controls
 // the I2C bus used to communicate with the device.
-func New(e, t int, thermometer Thermometer) *US020 {
-	return &US020{EchoPinNumber: e, TriggerPinNumber: t, Thermometer: thermometer}
+func New(echoPin, triggerPin gpio.DigitalPin, thermometer Thermometer) *US020 {
+	return &US020{EchoPin: echoPin, TriggerPin: triggerPin, Thermometer: thermometer}
 }
 
 func (d *US020) setup() (err error) {
@@ -61,11 +59,8 @@ func (d *US020) setup() (err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	d.echoPin = rpio.Pin(d.EchoPinNumber)       // ECHO port on the US020
-	d.triggerPin = rpio.Pin(d.TriggerPinNumber) // TRIGGER port on the US020
-
-	d.echoPin.Input()
-	d.triggerPin.Output()
+	d.TriggerPin.SetDir(embd.Out)
+	d.EchoPin.SetDir(embd.In)
 
 	if d.Thermometer == nil {
 		d.Thermometer = NullThermometer
@@ -97,16 +92,24 @@ func (d *US020) Distance() (distance float64, err error) {
 	}
 
 	// Generate a TRIGGER pulse
-	d.triggerPin.High()
+	d.TriggerPin.Write(gpio.High)
 	time.Sleep(pulseDelay)
-	d.triggerPin.Low()
+	d.TriggerPin.Write(gpio.Low)
 
 	if d.Debug {
 		log.Print("us020: waiting for echo to go high")
 	}
 
 	// Wait until ECHO goes high
-	for d.echoPin.Read() == rpio.Low {
+	for {
+		v, err := d.EchoPin.Read()
+		if err != nil {
+			return 0, err
+		}
+
+		if v != embd.Low {
+			break
+		}
 	}
 
 	startTime := time.Now() // Record time when ECHO goes high
@@ -116,7 +119,15 @@ func (d *US020) Distance() (distance float64, err error) {
 	}
 
 	// Wait until ECHO goes low
-	for d.echoPin.Read() == rpio.High {
+	for {
+		v, err := d.EchoPin.Read()
+		if err != nil {
+			return 0, err
+		}
+
+		if v != embd.High {
+			break
+		}
 	}
 
 	duration := time.Since(startTime) // Calculate time lapsed for ECHO to transition from high to low
@@ -129,5 +140,5 @@ func (d *US020) Distance() (distance float64, err error) {
 
 // Close.
 func (d *US020) Close() {
-	d.echoPin.Output()
+	d.EchoPin.SetDir(embd.Out)
 }

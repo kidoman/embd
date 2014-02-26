@@ -70,9 +70,6 @@ type lsm303 struct {
 	debug bool
 }
 
-// Default instance of the LSM303 sensor.
-var Default = New(i2c.Default)
-
 // New creates a new LSM303 interface. The bus variable controls
 // the I2C bus used to communicate with the device.
 func New(bus i2c.Bus) LSM303 {
@@ -184,24 +181,4 @@ func (d *lsm303) Close() (err error) {
 	}
 	err = d.bus.WriteByteToReg(magAddress, magModeReg, MagSleep)
 	return
-}
-
-// SetPollDelay sets the delay between runs of the data acquisition loop.
-func SetPollDelay(delay int) {
-	Default.SetPollDelay(delay)
-}
-
-// Heading returns the current heading [0, 360).
-func Heading() (heading float64, err error) {
-	return Default.Heading()
-}
-
-// Run starts the sensor data acquisition loop.
-func Run() (err error) {
-	return Default.Run()
-}
-
-// Close closes the sensor data acquisition loop and put the LSM303 into sleep mode.
-func Close() (err error) {
-	return Default.Close()
 }

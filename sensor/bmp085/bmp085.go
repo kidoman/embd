@@ -76,9 +76,6 @@ type bmp085 struct {
 	debug bool
 }
 
-// Default instance of the BMP085 sensor.
-var Default = New(i2c.Default)
-
 // New creates a new BMP085 interface. The bus variable controls
 // the I2C bus used to communicate with the device.
 func New(bus i2c.Bus) BMP085 {
@@ -439,34 +436,4 @@ func (d *bmp085) Close() {
 	if d.quit != nil {
 		d.quit <- struct{}{}
 	}
-}
-
-// SetPollDelay sets the delay between runs of the data acquisition loop.
-func SetPollDelay(delay int) {
-	Default.SetPollDelay(delay)
-}
-
-// Temperature returns the current temperature reading.
-func Temperature() (temp float64, err error) {
-	return Default.Temperature()
-}
-
-// Pressure returns the current pressure reading.
-func Pressure() (pressure int, err error) {
-	return Default.Pressure()
-}
-
-// Altitude returns the current altitude reading.
-func Altitude() (altitude float64, err error) {
-	return Default.Altitude()
-}
-
-// Run starts the sensor data acquisition loop.
-func Run() (err error) {
-	return Default.Run()
-}
-
-// Close.
-func Close() {
-	Default.Close()
 }

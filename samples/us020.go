@@ -4,15 +4,27 @@ import (
 	"log"
 	"time"
 
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/us020"
-	"github.com/stianeikeland/go-rpio"
 )
 
 func main() {
-	rpio.Open()
-	defer rpio.Close()
+	gpio, err := embd.NewGPIO()
+	if err != nil {
+		panic(err)
+	}
+	defer gpio.Close()
 
-	rf := us020.New(10, 9, nil)
+	echoPin, err := gpio.DigitalPin(10)
+	if err != nil {
+		panic(err)
+	}
+	triggerPin, err := gpio.DigitalPin(9)
+	if err != nil {
+		panic(err)
+	}
+
+	rf := us020.New(echoPin, triggerPin, nil)
 	defer rf.Close()
 
 	for {

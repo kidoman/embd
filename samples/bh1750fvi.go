@@ -3,13 +3,17 @@ package main
 import (
 	"log"
 	"time"
-
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/bh1750fvi"
 )
 
 func main() {
-	bus := i2c.NewBus(1)
+	i2c, err := embd.NewI2C()
+	if err != nil {
+		panic(err)
+	}
+
+	bus := i2c.Bus(1)
 
 	sensor := bh1750fvi.New(bh1750fvi.High, bus)
 	defer sensor.Close()

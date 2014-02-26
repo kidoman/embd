@@ -26,4 +26,4 @@ Find out the heading from the LSM303 magnetometer:
 	...
 	heading, err := lsm303.Heading()
 */
-package rpi
+package embd
