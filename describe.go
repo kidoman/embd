@@ -1,4 +1,4 @@
-package host
+package embd
 
 import (
 	"errors"
@@ -8,13 +8,13 @@ import (
 	"github.com/kidoman/embd/i2c"
 )
 
-type Descriptor interface {
+type descriptor interface {
 	GPIO() gpio.GPIO
 	I2C() i2c.I2C
 }
 
-func Describe() (Descriptor, error) {
-	host, rev, err := Detect()
+func describeHost() (descriptor, error) {
+	host, rev, err := DetectHost()
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package host
+package embd
 
 import (
 	"fmt"
@@ -49,7 +49,7 @@ func kernelVersion() (major, minor, patch int, err error) {
 	return
 }
 
-func Detect() (host Host, rev int, err error) {
+func DetectHost() (host Host, rev int, err error) {
 	major, minor, patch, err := kernelVersion()
 	if err != nil {
 		return
