@@ -1,9 +1,9 @@
 package bbb
 
 import (
+	lgpio "github.com/kidoman/embd/driver/linux/gpio"
+	li2c "github.com/kidoman/embd/driver/linux/i2c"
 	"github.com/kidoman/embd/gpio"
-	lgpio "github.com/kidoman/embd/host/generic/linux/gpio"
-	li2c "github.com/kidoman/embd/host/generic/linux/i2c"
 	"github.com/kidoman/embd/i2c"
 )
 

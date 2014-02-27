@@ -1,7 +1,7 @@
 package bbb
 
 import (
-	"github.com/kidoman/embd/host/generic/linux/gpio"
+	"github.com/kidoman/embd/driver/linux/gpio"
 )
 
 var pins = gpio.PinMap{

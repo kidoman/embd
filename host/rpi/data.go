@@ -1,7 +1,7 @@
 package rpi
 
 import (
-	"github.com/kidoman/embd/host/generic/linux/gpio"
+	"github.com/kidoman/embd/driver/linux/gpio"
 )
 
 var rev1Pins = gpio.PinMap{
