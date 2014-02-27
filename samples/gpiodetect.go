@@ -4,10 +4,11 @@ import (
 	"time"
 
 	"github.com/kidoman/embd"
+	"github.com/kidoman/embd/host"
 )
 
 func main() {
-	h, _, err := embd.DetectHost()
+	h, _, err := host.Detect()
 	if err != nil {
 		return
 	}
@@ -15,9 +16,9 @@ func main() {
 	var pinNo interface{}
 
 	switch h {
-	case embd.HostBBB:
+	case host.BBB:
 		pinNo = "P9_31"
-	case embd.HostRPi:
+	case host.RPi:
 		pinNo = 10
 	default:
 		panic("host not supported (yet :P)")

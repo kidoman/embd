@@ -2,6 +2,7 @@ package embd
 
 import (
 	"github.com/kidoman/embd/gpio"
+	"github.com/kidoman/embd/host"
 	"github.com/kidoman/embd/i2c"
 )
 
@@ -16,7 +17,7 @@ const (
 )
 
 func NewGPIO() (gpio.GPIO, error) {
-	desc, err := describeHost()
+	desc, err := host.Describe()
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +26,7 @@ func NewGPIO() (gpio.GPIO, error) {
 }
 
 func NewI2C() (i2c.I2C, error) {
-	desc, err := describeHost()
+	desc, err := host.Describe()
 	if err != nil {
 		return nil, err
 	}

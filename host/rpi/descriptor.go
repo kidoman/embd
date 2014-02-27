@@ -7,23 +7,20 @@ import (
 	"github.com/kidoman/embd/i2c"
 )
 
-type descriptor struct {
-	rev int
+func init() {
+	host.Describers[host.RPi] = describer
 }
 
-func (d *descriptor) GPIO() gpio.GPIO {
+func describer(rev int) *host.Descriptor {
 	var pins = rev1Pins
 	if d.rev > 1 {
 		pins = rev2Pins
 	}
 
-	return lgpio.New(pins)
-}
-
-func (d *descriptor) I2C() i2c.I2C {
-	return li2c.New()
-}
-
-func Descriptor(rev int) *descriptor {
-	return &descriptor{rev}
+	return &host.Descriptor{
+		GPIO: func() gpio.GPIO {
+			return lgpio.New(pins)
+		},
+		I2C: li2c.New,
+	}
 }

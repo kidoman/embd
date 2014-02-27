@@ -1,4 +1,4 @@
-package embd
+package host
 
 import (
 	"fmt"
@@ -10,11 +10,11 @@ import (
 type Host int
 
 const (
-	HostNull Host = iota
-	HostRPi
-	HostBBB
-	HostCubieTruck
-	HostGalileo
+	Null Host = iota
+	RPi
+	BBB
+	CubieTruck
+	Galileo
 )
 
 func execOutput(name string, arg ...string) (output string, err error) {
@@ -51,7 +51,7 @@ func kernelVersion() (major, minor, patch int, err error) {
 	return
 }
 
-func DetectHost() (host Host, rev int, err error) {
+func Detect() (host Host, rev int, err error) {
 	major, minor, patch, err := kernelVersion()
 	if err != nil {
 		return
@@ -69,9 +69,9 @@ func DetectHost() (host Host, rev int, err error) {
 
 	switch node {
 	case "raspberrypi":
-		host = HostRPi
+		host = RPi
 	case "beaglebone":
-		host = HostBBB
+		host = BBB
 	default:
 		err = fmt.Errorf("embd: your host %q is not supported at this moment. please request support at https://github.com/kidoman/embd/issues", node)
 	}
