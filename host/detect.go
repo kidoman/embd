@@ -30,25 +30,34 @@ func nodeName() (string, error) {
 	return execOutput("uname", "-n")
 }
 
+func parseVersion(str string) (major, minor, patch int, err error) {
+	parts := strings.Split(str, ".")
+	len := len(parts)
+
+	if major, err = strconv.Atoi(parts[0]); err != nil {
+		return 0, 0, 0, err
+	}
+	if minor, err = strconv.Atoi(parts[1]); err != nil {
+		return 0, 0, 0, err
+	}
+	if len > 2 {
+		part := parts[2]
+		part = strings.TrimSuffix(part, "+")
+		if patch, err = strconv.Atoi(part); err != nil {
+			return 0, 0, 0, err
+		}
+	}
+
+	return major, minor, patch, err
+}
+
 func kernelVersion() (major, minor, patch int, err error) {
 	output, err := execOutput("uname", "-r")
 	if err != nil {
-		return
+		return 0, 0, 0, err
 	}
 
-	parts := strings.Split(output, ".")
-
-	if major, err = strconv.Atoi(parts[0]); err != nil {
-		return
-	}
-	if minor, err = strconv.Atoi(parts[1]); err != nil {
-		return
-	}
-	if patch, err = strconv.Atoi(parts[2]); err != nil {
-		return
-	}
-
-	return
+	return parseVersion(output)
 }
 
 func Detect() (Host, int, error) {
