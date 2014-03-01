@@ -51,21 +51,24 @@ func kernelVersion() (major, minor, patch int, err error) {
 	return
 }
 
-func Detect() (host Host, rev int, err error) {
+func Detect() (Host, int, error) {
 	major, minor, patch, err := kernelVersion()
 	if err != nil {
-		return
+		return Null, 0, err
 	}
 
 	if major < 3 || (major == 3 && minor < 8) {
 		err = fmt.Errorf("embd: linux kernel versions lower than 3.8 are not supported. you have %v.%v.%v", major, minor, patch)
-		return
+		return Null, 0, err
 	}
 
 	node, err := nodeName()
 	if err != nil {
-		return
+		return Null, 0, err
 	}
+
+	var host Host
+	var rev int
 
 	switch node {
 	case "raspberrypi":
@@ -74,7 +77,8 @@ func Detect() (host Host, rev int, err error) {
 		host = BBB
 	default:
 		err = fmt.Errorf("embd: your host %q is not supported at this moment. please request support at https://github.com/kidoman/embd/issues", node)
+		return Null, 0, err
 	}
 
-	return
+	return host, rev, nil
 }
