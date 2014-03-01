@@ -17,24 +17,27 @@ type digitalPin struct {
 	edge      *os.File
 }
 
-func newDigitalPin(n int) (p *digitalPin, err error) {
+func newDigitalPin(n int) (*digitalPin, error) {
 	p = &digitalPin{n: n}
-	err = p.init()
-	return
+	if err := p.init(); err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
-func (p *digitalPin) init() (err error) {
+func (p *digitalPin) init() error {
+	var err error
 	if p.dir, err = p.directionFile(); err != nil {
-		return
+		return err
 	}
 	if p.val, err = p.valueFile(); err != nil {
-		return
+		return err
 	}
 	if p.activeLow, err = p.activeLowFile(); err != nil {
-		return
+		return err
 	}
 
-	return
+	return nil
 }
 
 func (p *digitalPin) basePath() string {
@@ -57,43 +60,43 @@ func (p *digitalPin) activeLowFile() (*os.File, error) {
 	return p.openFile(path.Join(p.basePath(), "active_low"))
 }
 
-func (p *digitalPin) SetDir(dir gpio.Direction) (err error) {
+func (p *digitalPin) SetDirection(dir gpio.Direction) error {
 	str := "in"
 	if dir == gpio.Out {
 		str = "out"
 	}
-	_, err = p.dir.WriteString(str)
+	_, err := p.dir.WriteString(str)
 	return
 }
 
-func (p *digitalPin) Read() (val int, err error) {
+func (p *digitalPin) Read() (int, error) {
 	buf := make([]byte, 1)
-	if _, err = p.val.Read(buf); err != nil {
-		return
+	if _, err := p.val.Read(buf); err != nil {
+		return 0, err
 	}
-	val = 0
+	var val int
 	if buf[0] == '1' {
 		val = 1
 	}
-	return
+	return val, nil
 }
 
-func (p *digitalPin) Write(val int) (err error) {
+func (p *digitalPin) Write(val int) error {
 	str := "0"
 	if val == gpio.High {
 		str = "1"
 	}
-	_, err = p.val.WriteString(str)
-	return
+	_, err := p.val.WriteString(str)
+	return err
 }
 
-func (p *digitalPin) ActiveLow(b bool) (err error) {
+func (p *digitalPin) ActiveLow(b bool) error {
 	str := "0"
 	if b {
 		str = "1"
 	}
-	_, err = p.activeLow.WriteString(str)
-	return
+	_, err := p.activeLow.WriteString(str)
+	return err
 }
 
 func (p *digitalPin) Close() error {

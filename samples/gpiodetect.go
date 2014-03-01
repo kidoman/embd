@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/kidoman/embd"
+	"github.com/kidoman/embd/gpio"
 	"github.com/kidoman/embd/host"
 )
 
@@ -24,28 +24,27 @@ func main() {
 		panic("host not supported (yet :P)")
 	}
 
-	gpio, err := embd.NewGPIO()
-	if err != nil {
+	if err := gpio.Open(); err != nil {
 		panic(err)
 	}
 	defer gpio.Close()
 
-	led, err := gpio.DigitalPin(pinNo)
+	led, err := gpio.NewDigitalPin(pinNo)
 	if err != nil {
 		panic(err)
 	}
 	defer led.Close()
 
-	if err := led.SetDir(embd.Out); err != nil {
+	if err := led.SetDirection(gpio.Out); err != nil {
 		panic(err)
 	}
-	if err := led.Write(embd.High); err != nil {
+	if err := led.Write(gpio.High); err != nil {
 		panic(err)
 	}
 
 	time.Sleep(1 * time.Second)
 
-	if err := led.SetDir(embd.In); err != nil {
+	if err := led.SetDirection(gpio.In); err != nil {
 		panic(err)
 	}
 }

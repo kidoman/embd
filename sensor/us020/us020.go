@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/gpio"
 )
 
@@ -59,8 +58,8 @@ func (d *US020) setup() (err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	d.TriggerPin.SetDir(embd.Out)
-	d.EchoPin.SetDir(embd.In)
+	d.TriggerPin.SetDirection(gpio.Out)
+	d.EchoPin.SetDirection(gpio.In)
 
 	if d.Thermometer == nil {
 		d.Thermometer = NullThermometer
@@ -107,7 +106,7 @@ func (d *US020) Distance() (distance float64, err error) {
 			return 0, err
 		}
 
-		if v != embd.Low {
+		if v != gpio.Low {
 			break
 		}
 	}
@@ -125,7 +124,7 @@ func (d *US020) Distance() (distance float64, err error) {
 			return 0, err
 		}
 
-		if v != embd.High {
+		if v != gpio.High {
 			break
 		}
 	}
@@ -140,5 +139,5 @@ func (d *US020) Distance() (distance float64, err error) {
 
 // Close.
 func (d *US020) Close() {
-	d.EchoPin.SetDir(embd.Out)
+	d.EchoPin.SetDirection(gpio.Out)
 }

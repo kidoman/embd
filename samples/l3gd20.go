@@ -5,17 +5,18 @@ import (
 	"os"
 	"os/signal"
 	"time"
-	"github.com/kidoman/embd"
+
+	"github.com/kidoman/embd/i2c"
 	"github.com/kidoman/embd/sensor/l3gd20"
 )
 
 func main() {
-	i2c, err := embd.NewI2C()
-	if err != nil {
+	if err := i2c.Open(); err != nil {
 		panic(err)
 	}
+	defer i2c.Close()
 
-	bus := i2c.Bus(1)
+	bus := i2c.NewBus(1)
 
 	gyro := l3gd20.New(bus, l3gd20.R250DPS)
 	gyro.Debug = true

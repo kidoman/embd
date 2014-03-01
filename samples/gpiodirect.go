@@ -12,21 +12,16 @@ func main() {
 	}
 	defer gpio.Close()
 
-	led, err := gpio.NewDigitalPin(10)
-	if err != nil {
+	if err := gpio.SetDirection(10, gpio.Out); err != nil {
 		panic(err)
 	}
-
-	if err := led.SetDirection(gpio.Out); err != nil {
-		panic(err)
-	}
-	if err := led.Write(gpio.High); err != nil {
+	if err := gpio.DigitalWrite(10, gpio.High); err != nil {
 		panic(err)
 	}
 
 	time.Sleep(1 * time.Second)
 
-	if err := led.SetDirection(gpio.In); err != nil {
+	if err := gpio.SetDirection(10, gpio.In); err != nil {
 		panic(err)
 	}
 }

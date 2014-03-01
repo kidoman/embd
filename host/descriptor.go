@@ -1,15 +1,10 @@
 package host
 
-import (
-	"errors"
-
-	"github.com/kidoman/embd/gpio"
-	"github.com/kidoman/embd/i2c"
-)
+import "errors"
 
 type Descriptor struct {
-	GPIO func() gpio.GPIO
-	I2C  func() i2c.I2C
+	GPIO func() interface{}
+	I2C  func() interface{}
 }
 
 type Describer func(rev int) *Descriptor

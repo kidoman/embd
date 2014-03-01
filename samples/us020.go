@@ -4,22 +4,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/kidoman/embd"
+	"github.com/kidoman/embd/gpio"
 	"github.com/kidoman/embd/sensor/us020"
 )
 
 func main() {
-	gpio, err := embd.NewGPIO()
-	if err != nil {
+	if err := gpio.Open(); err != nil {
 		panic(err)
 	}
 	defer gpio.Close()
 
-	echoPin, err := gpio.DigitalPin(10)
+	echoPin, err := gpio.NewDigitalPin(10)
 	if err != nil {
 		panic(err)
 	}
-	triggerPin, err := gpio.DigitalPin(9)
+	triggerPin, err := gpio.NewDigitalPin(9)
 	if err != nil {
 		panic(err)
 	}

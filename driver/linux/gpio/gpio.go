@@ -64,38 +64,39 @@ func New(pinMap PinMap) *GPIO {
 	}
 }
 
-func (io *GPIO) init() (err error) {
+func (io *GPIO) init() error {
 	if io.initialized {
-		return
+		return nil
 	}
 
+	var err error
 	if io.exporter, err = os.OpenFile("/sys/class/gpio/export", os.O_WRONLY, os.ModeExclusive); err != nil {
-		return
+		return err
 	}
 	if io.unexporter, err = os.OpenFile("/sys/class/gpio/unexport", os.O_WRONLY, os.ModeExclusive); err != nil {
-		return
+		return err
 	}
 
 	io.initialized = true
 
-	return
+	return nil
 }
 
 func (io *GPIO) lookupKey(key interface{}) (*PinDesc, bool) {
 	return io.pinMap.Lookup(key)
 }
 
-func (io *GPIO) export(n int) (err error) {
-	_, err = io.exporter.WriteString(strconv.Itoa(n))
-	return
+func (io *GPIO) export(n int) error {
+	_, err := io.exporter.WriteString(strconv.Itoa(n))
+	return err
 }
 
-func (io *GPIO) unexport(n int) (err error) {
-	_, err = io.unexporter.WriteString(strconv.Itoa(n))
-	return
+func (io *GPIO) unexport(n int) error {
+	_, err := io.unexporter.WriteString(strconv.Itoa(n))
+	return err
 }
 
-func (io *GPIO) digitalPin(key interface{}) (p *digitalPin, err error) {
+func (io *GPIO) digitalPin(key interface{}) (*digitalPin, error) {
 	pd, found := io.lookupKey(key)
 	if !found {
 		err = fmt.Errorf("gpio: could not find pin matching %q", key)
@@ -104,8 +105,8 @@ func (io *GPIO) digitalPin(key interface{}) (p *digitalPin, err error) {
 
 	n := pd.N
 
-	var ok bool
-	if p, ok = io.initializedPins[n]; ok {
+	p, ok := io.initializedPins[n]
+	if ok {
 		return
 	}
 
@@ -118,18 +119,19 @@ func (io *GPIO) digitalPin(key interface{}) (p *digitalPin, err error) {
 		glog.Infof("gpio: pin %q is not a dedicated GPIO pin. please refer to the system reference manual for more details", key)
 	}
 
-	if err = io.export(n); err != nil {
-		return
+	if err := io.export(n); err != nil {
+		return nil, err
 	}
 
-	if p, err = newDigitalPin(n); err != nil {
+	p, err := newDigitalPin(n)
+	if err != nil {
 		io.unexport(n)
-		return
+		return nil, err
 	}
 
 	io.initializedPins[n] = p
 
-	return
+	return p, nil
 }
 
 func (io *GPIO) DigitalPin(key interface{}) (gpio.DigitalPin, error) {

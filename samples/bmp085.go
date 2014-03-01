@@ -3,17 +3,18 @@ package main
 import (
 	"log"
 	"time"
-	"github.com/kidoman/embd"
+
+	"github.com/kidoman/embd/i2c"
 	"github.com/kidoman/embd/sensor/bmp085"
 )
 
 func main() {
-	i2c, err := embd.NewI2C()
-	if err != nil {
+	if err := i2c.Open(); err != nil {
 		panic(err)
 	}
+	defer i2c.Close()
 
-	bus := i2c.Bus(1)
+	bus := i2c.NewBus(1)
 
 	baro := bmp085.New(bus)
 	defer baro.Close()

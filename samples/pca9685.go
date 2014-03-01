@@ -6,17 +6,17 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/controller/pca9685"
+	"github.com/kidoman/embd/i2c"
 )
 
 func main() {
-	i2c, err := embd.NewI2C()
-	if err != nil {
+	if err := i2c.Open(); err != nil {
 		panic(err)
 	}
+	defer i2c.Close()
 
-	bus := i2c.Bus(1)
+	bus := i2c.NewBus(1)
 
 	pca9685 := pca9685.New(bus, 0x41)
 	pca9685.Freq = 1000
