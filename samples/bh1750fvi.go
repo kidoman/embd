@@ -6,17 +6,17 @@ import (
 	"log"
 	"time"
 
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/bh1750fvi"
 )
 
 func main() {
-	if err := i2c.Open(); err != nil {
+	if err := embd.InitI2C(); err != nil {
 		panic(err)
 	}
-	defer i2c.Close()
+	defer embd.CloseI2C()
 
-	bus := i2c.NewBus(1)
+	bus := embd.NewI2CBus(1)
 
 	sensor := bh1750fvi.New(bh1750fvi.High, bus)
 	defer sensor.Close()
@@ -24,7 +24,7 @@ func main() {
 	for {
 		lighting, err := sensor.Lighting()
 		if err != nil {
-			log.Panic(err)
+			panic(err)
 		}
 		log.Printf("Lighting is %v lx", lighting)
 

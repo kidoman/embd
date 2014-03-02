@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 )
 
 const (
@@ -112,7 +112,7 @@ type Orientation struct {
 
 // L3GD20 represents a L3GD20 3-axis gyroscope.
 type L3GD20 struct {
-	Bus   i2c.Bus
+	Bus   embd.I2CBus
 	Range *Range
 
 	initialized bool
@@ -128,7 +128,7 @@ type L3GD20 struct {
 
 // New creates a new L3GD20 interface. The bus variable controls
 // the I2C bus used to communicate with the device.
-func New(bus i2c.Bus, Range *Range) *L3GD20 {
+func New(bus embd.I2CBus, Range *Range) *L3GD20 {
 	return &L3GD20{
 		Bus:   bus,
 		Range: Range,

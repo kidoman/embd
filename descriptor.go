@@ -1,18 +1,18 @@
-package host
+package embd
 
 import "fmt"
 
 type Descriptor struct {
-	GPIO func() interface{}
-	I2C  func() interface{}
+	GPIO func() GPIO
+	I2C  func() I2C
 }
 
 type Describer func(rev int) *Descriptor
 
 var Describers = map[Host]Describer{}
 
-func Describe() (*Descriptor, error) {
-	host, rev, err := Detect()
+func DescribeHost() (*Descriptor, error) {
+	host, rev, err := DetectHost()
 	if err != nil {
 		return nil, err
 	}

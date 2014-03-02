@@ -8,17 +8,17 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/controller/mcp4725"
-	"github.com/kidoman/embd/i2c"
 )
 
 func main() {
-	if err := i2c.Open(); err != nil {
+	if err := embd.InitI2C(); err != nil {
 		panic(err)
 	}
-	defer i2c.Close()
+	defer embd.CloseI2C()
 
-	bus := i2c.NewBus(1)
+	bus := embd.NewI2CBus(1)
 
 	dac := mcp4725.New(bus, 0x62)
 	defer dac.Close()

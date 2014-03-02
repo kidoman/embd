@@ -2,12 +2,12 @@
 
 package main
 
-import "github.com/kidoman/embd/gpio"
+import "github.com/kidoman/embd"
 
 func main() {
-	gpio.Open()
-	defer gpio.Close()
+	embd.InitGPIO()
+	defer embd.CloseGPIO()
 
-	gpio.SetDirection(10, gpio.Out)
-	gpio.DigitalWrite(10, gpio.High)
+	embd.SetDirection(10, embd.Out)
+	embd.DigitalWrite(10, embd.High)
 }

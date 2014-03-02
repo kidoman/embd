@@ -6,8 +6,7 @@ import (
 	"math"
 	"sync"
 	"time"
-
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/util"
 )
 
@@ -28,7 +27,7 @@ const (
 
 // PCA9685 represents a PCA9685 PWM generator.
 type PCA9685 struct {
-	Bus  i2c.Bus
+	Bus  embd.I2CBus
 	Addr byte
 	Freq int
 
@@ -39,7 +38,7 @@ type PCA9685 struct {
 }
 
 // New creates a new PCA9685 interface.
-func New(bus i2c.Bus, addr byte) *PCA9685 {
+func New(bus embd.I2CBus, addr byte) *PCA9685 {
 	return &PCA9685{
 		Bus:  bus,
 		Addr: addr,

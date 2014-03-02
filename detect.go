@@ -1,4 +1,4 @@
-package host
+package embd
 
 import (
 	"fmt"
@@ -10,11 +10,11 @@ import (
 type Host int
 
 const (
-	Null Host = iota
-	RPi
-	BBB
-	CubieTruck
-	Galileo
+	HostNull Host = iota
+	HostRPi
+	HostBBB
+	HostCubieTruck
+	HostGalileo
 )
 
 func execOutput(name string, arg ...string) (output string, err error) {
@@ -60,20 +60,20 @@ func kernelVersion() (major, minor, patch int, err error) {
 	return parseVersion(output)
 }
 
-func Detect() (Host, int, error) {
+func DetectHost() (Host, int, error) {
 	major, minor, patch, err := kernelVersion()
 	if err != nil {
-		return Null, 0, err
+		return HostNull, 0, err
 	}
 
 	if major < 3 || (major == 3 && minor < 8) {
 		err = fmt.Errorf("embd: linux kernel versions lower than 3.8 are not supported. you have %v.%v.%v", major, minor, patch)
-		return Null, 0, err
+		return HostNull, 0, err
 	}
 
 	node, err := nodeName()
 	if err != nil {
-		return Null, 0, err
+		return HostNull, 0, err
 	}
 
 	var host Host
@@ -81,12 +81,12 @@ func Detect() (Host, int, error) {
 
 	switch node {
 	case "raspberrypi":
-		host = RPi
+		host = HostRPi
 	case "beaglebone":
-		host = BBB
+		host = HostBBB
 	default:
 		err = fmt.Errorf("embd: your host %q is not supported at this moment. please request support at https://github.com/kidoman/embd/issues", node)
-		return Null, 0, err
+		return HostNull, 0, err
 	}
 
 	return host, rev, nil

@@ -5,11 +5,11 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
-	"github.com/kidoman/embd/gpio"
+	"github.com/kidoman/embd"
 )
 
 type WaterSensor struct {
-	Pin gpio.DigitalPin
+	Pin embd.DigitalPin
 
 	initialized bool
 	mu          sync.RWMutex
@@ -18,7 +18,7 @@ type WaterSensor struct {
 }
 
 // New creates a new WaterSensor struct
-func New(pin gpio.DigitalPin) *WaterSensor {
+func New(pin embd.DigitalPin) *WaterSensor {
 	return &WaterSensor{Pin: pin}
 }
 
@@ -33,7 +33,7 @@ func (d *WaterSensor) setup() error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if err := d.Pin.SetDirection(gpio.In); err != nil {
+	if err := d.Pin.SetDirection(embd.In); err != nil {
 		return err
 	}
 	d.initialized = true
@@ -55,7 +55,7 @@ func (d *WaterSensor) IsWet() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if value == gpio.High {
+	if value == embd.High {
 		return true, nil
 	} else {
 		return false, nil

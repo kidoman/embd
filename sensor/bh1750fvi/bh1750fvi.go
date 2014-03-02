@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 )
 
 //accuracy = sensorValue/actualValue] (min = 0.96, typ = 1.2, max = 1.44
@@ -25,62 +25,42 @@ const (
 	pollDelay = 150
 )
 
-// A BH1750FVI interface implements access to the sensor.
-type BH1750FVI interface {
-	// Run starts continuous sensor data acquisition loop.
-	Run() error
+type BH1750FVI struct {
+	Bus  embd.I2CBus
+	Poll int
 
-	// Lighting returns the ambient lighting in lx.
-	Lighting() (lighting float64, err error)
-
-	// Close.
-	Close()
-
-	// SetPollDelay sets the delay between run of data acquisition loop.
-	SetPollDelay(delay int)
-}
-
-type bh1750fvi struct {
-	bus i2c.Bus
-	mu  *sync.RWMutex
+	mu sync.RWMutex
 
 	lightingReadings chan float64
 	quit             chan bool
 
 	i2cAddr       byte
 	operationCode byte
-
-	poll int
 }
 
-// Supports three modes:
-// "H" -> High resolution mode (1lx), takes 120ms (recommended).
-// "H2" -> High resolution mode 2 (0.5lx), takes 120ms (only use for low light).
-
-// New creates a new BH1750FVI interface according to the mode passed.
-func New(mode string, bus i2c.Bus) BH1750FVI {
+func New(mode string, bus embd.I2CBus) *BH1750FVI {
 	switch mode {
 	case High:
-		return &bh1750fvi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, mu: new(sync.RWMutex)}
+		return &BH1750FVI{Bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, Poll: pollDelay}
 	case High2:
-		return &bh1750fvi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResMode2OpCode, mu: new(sync.RWMutex)}
+		return &BH1750FVI{Bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResMode2OpCode, Poll: pollDelay}
 	default:
-		return &bh1750fvi{bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, mu: new(sync.RWMutex)}
+		return &BH1750FVI{Bus: bus, i2cAddr: sensorI2cAddr, operationCode: highResOpCode, Poll: pollDelay}
 	}
 }
 
 // NewHighMode returns a BH1750FVI inteface on high resolution mode (1lx resolution)
-func NewHighMode(bus i2c.Bus) BH1750FVI {
+func NewHighMode(bus embd.I2CBus) *BH1750FVI {
 	return New(High, bus)
 }
 
 // NewHighMode returns a BH1750FVI inteface on high resolution mode2 (0.5lx resolution)
-func NewHigh2Mode(bus i2c.Bus) BH1750FVI {
+func NewHigh2Mode(bus embd.I2CBus) *BH1750FVI {
 	return New(High2, bus)
 }
 
-func (d *bh1750fvi) measureLighting() (lighting float64, err error) {
-	err = d.bus.WriteByte(d.i2cAddr, d.operationCode)
+func (d *BH1750FVI) measureLighting() (lighting float64, err error) {
+	err = d.Bus.WriteByte(d.i2cAddr, d.operationCode)
 	if err != nil {
 		log.Print("bh1750fvi: Failed to initialize sensor")
 		return
@@ -88,7 +68,7 @@ func (d *bh1750fvi) measureLighting() (lighting float64, err error) {
 	time.Sleep(180 * time.Millisecond)
 
 	var reading uint16
-	if reading, err = d.bus.ReadWordFromReg(d.i2cAddr, defReadReg); err != nil {
+	if reading, err = d.Bus.ReadWordFromReg(d.i2cAddr, defReadReg); err != nil {
 		return
 	}
 
@@ -97,7 +77,7 @@ func (d *bh1750fvi) measureLighting() (lighting float64, err error) {
 }
 
 // Lighting returns the ambient lighting in lx.
-func (d *bh1750fvi) Lighting() (lighting float64, err error) {
+func (d *BH1750FVI) Lighting() (lighting float64, err error) {
 	select {
 	case lighting = <-d.lightingReadings:
 		return
@@ -107,11 +87,11 @@ func (d *bh1750fvi) Lighting() (lighting float64, err error) {
 }
 
 // Run starts continuous sensor data acquisition loop.
-func (d *bh1750fvi) Run() (err error) {
+func (d *BH1750FVI) Run() (err error) {
 	go func() {
 		d.quit = make(chan bool)
 
-		timer := time.Tick(time.Duration(d.poll) * time.Millisecond)
+		timer := time.Tick(time.Duration(d.Poll) * time.Millisecond)
 
 		var lighting float64
 
@@ -135,14 +115,9 @@ func (d *bh1750fvi) Run() (err error) {
 }
 
 // Close.
-func (d *bh1750fvi) Close() {
+func (d *BH1750FVI) Close() {
 	if d.quit != nil {
 		d.quit <- true
 	}
 	return
-}
-
-// SetPollDelay sets the delay between run of data acquisition loop.
-func (d *bh1750fvi) SetPollDelay(delay int) {
-	d.poll = delay
 }

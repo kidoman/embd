@@ -4,8 +4,7 @@ package mcp4725
 import (
 	"log"
 	"sync"
-
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 )
 
 const (
@@ -20,7 +19,7 @@ const (
 // MCP4725 represents a MCP4725 DAC.
 type MCP4725 struct {
 	// Bus to communicate over.
-	Bus i2c.Bus
+	Bus embd.I2CBus
 	// Addr of the sensor.
 	Addr byte
 
@@ -32,7 +31,7 @@ type MCP4725 struct {
 }
 
 // New creates a new MCP4725 sensor.
-func New(bus i2c.Bus, addr byte) *MCP4725 {
+func New(bus embd.I2CBus, addr byte) *MCP4725 {
 	return &MCP4725{
 		Bus:  bus,
 		Addr: addr,

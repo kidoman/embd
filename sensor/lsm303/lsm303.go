@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 )
 
 const (
@@ -42,101 +42,82 @@ const (
 	pollDelay = 250
 )
 
-// A LSM303 implements access to a LSM303 sensor.
-type LSM303 interface {
-	// SetPollDelay sets the delay between runs of the data acquisition loop.
-	SetPollDelay(delay int)
-
-	// Heading returns the current heading [0, 360).
-	Heading() (heading float64, err error)
-
-	// Run starts the sensor data acquisition loop.
-	Run() error
-	// Close closes the sensor data acquisition loop and puts the LSM303 into sleep mode.
-	Close() error
-}
-
-type lsm303 struct {
-	bus i2c.Bus
+type LSM303 struct {
+	Bus  embd.I2CBus
+	Poll int
 
 	initialized bool
-	mu          *sync.RWMutex
+	mu          sync.RWMutex
 
 	headings chan float64
 
-	poll int
 	quit chan struct{}
 
-	debug bool
+	Debug bool
 }
 
 // New creates a new LSM303 interface. The bus variable controls
 // the I2C bus used to communicate with the device.
-func New(bus i2c.Bus) LSM303 {
-	return &lsm303{bus: bus, mu: new(sync.RWMutex), poll: pollDelay}
+func New(bus embd.I2CBus) *LSM303 {
+	return &LSM303{Bus: bus, Poll: pollDelay}
 }
 
 // Initialize the device
-func (d *lsm303) setup() (err error) {
+func (d *LSM303) setup() error {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
-		return
+		return nil
 	}
 	d.mu.RUnlock()
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if err = d.bus.WriteByteToReg(magAddress, magConfigRegA, MagCRADefault); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(magAddress, magConfigRegA, MagCRADefault); err != nil {
+		return err
 	}
-	if err = d.bus.WriteByteToReg(magAddress, magModeReg, MagMRDefault); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(magAddress, magModeReg, MagMRDefault); err != nil {
+		return err
 	}
 
 	d.initialized = true
 
-	return
+	return nil
 }
 
-// SetPollDelay sets the delay between runs of the data acquisition loop.
-func (d *lsm303) SetPollDelay(delay int) {
-	d.poll = delay
-}
-
-func (d *lsm303) measureHeading() (heading float64, err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *LSM303) measureHeading() (float64, error) {
+	if err := d.setup(); err != nil {
+		return 0, err
 	}
 
-	if _, err = d.bus.ReadByteFromReg(magAddress, magDataSignal); err != nil {
-		return
+	if _, err := d.Bus.ReadByteFromReg(magAddress, magDataSignal); err != nil {
+		return 0, err
 	}
 
 	data := make([]byte, 6)
-	if err = d.bus.ReadFromReg(magAddress, magData, data); err != nil {
-		return
+	if err := d.Bus.ReadFromReg(magAddress, magData, data); err != nil {
+		return 0, err
 	}
 
 	x := int16(data[0])<<8 | int16(data[1])
 	y := int16(data[2])<<8 | int16(data[3])
 
-	heading = math.Atan2(float64(y), float64(x)) / math.Pi * 180
+	heading := math.Atan2(float64(y), float64(x)) / math.Pi * 180
 	if heading < 0 {
 		heading += 360
 	}
 
-	return
+	return heading, nil
 }
 
 // Heading returns the current heading [0, 360).
-func (d *lsm303) Heading() (heading float64, err error) {
+func (d *LSM303) Heading() (float64, error) {
 	select {
-	case heading = <-d.headings:
-		return
+	case heading := <-d.headings:
+		return heading, nil
 	default:
-		if d.debug {
+		if d.Debug {
 			log.Print("lsm303: no headings available... measuring")
 		}
 		return d.measureHeading()
@@ -144,11 +125,11 @@ func (d *lsm303) Heading() (heading float64, err error) {
 }
 
 // Run starts the sensor data acquisition loop.
-func (d *lsm303) Run() (err error) {
+func (d *LSM303) Run() (err error) {
 	go func() {
 		d.quit = make(chan struct{})
 
-		timer := time.Tick(time.Duration(d.poll) * time.Millisecond)
+		timer := time.Tick(time.Duration(d.Poll) * time.Millisecond)
 
 		var heading float64
 
@@ -175,10 +156,9 @@ func (d *lsm303) Run() (err error) {
 }
 
 // Close the sensor data acquisition loop and put the LSM303 into sleep mode.
-func (d *lsm303) Close() (err error) {
+func (d *LSM303) Close() error {
 	if d.quit != nil {
 		d.quit <- struct{}{}
 	}
-	err = d.bus.WriteByteToReg(magAddress, magModeReg, MagSleep)
-	return
+	return d.Bus.WriteByteToReg(magAddress, magModeReg, MagSleep)
 }

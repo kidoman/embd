@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 )
 
 const (
@@ -38,26 +38,12 @@ const (
 	pollDelay = 250
 )
 
-// A BMP085 implements access to the Bosch BMP085 sensor.
-type BMP085 interface {
-	// SetPollDelay sets the delay between runs of the data acquisition loop.
-	SetPollDelay(delay int)
+type BMP085 struct {
+	Bus  embd.I2CBus
+	Poll int
 
-	// Temperature returns the current temperature reading.
-	Temperature() (temp float64, err error)
-	// Pressure returns the current pressure reading.
-	Pressure() (pressure int, err error)
-	// Altitude returns the current altitude reading.
-	Altitude() (altitude float64, err error)
+	Debug bool
 
-	// Run starts the sensor data acquisition loop.
-	Run() error
-	// Close.
-	Close()
-}
-
-type bmp085 struct {
-	bus i2c.Bus
 	oss uint
 
 	ac1, ac2, ac3      int16
@@ -65,29 +51,19 @@ type bmp085 struct {
 	b1, b2, mb, mc, md int16
 	b5                 int32
 	calibrated         bool
-	cmu                *sync.RWMutex
+	cmu                sync.RWMutex
 
-	poll      int
 	temps     chan uint16
 	pressures chan int32
 	altitudes chan float64
 	quit      chan struct{}
-
-	debug bool
 }
 
-// New creates a new BMP085 interface. The bus variable controls
-// the I2C bus used to communicate with the device.
-func New(bus i2c.Bus) BMP085 {
-	return &bmp085{bus: bus, cmu: new(sync.RWMutex), poll: pollDelay}
+func New(bus embd.I2CBus) *BMP085 {
+	return &BMP085{Bus: bus, Poll: pollDelay}
 }
 
-// SetPollDelay sets the delay between runs of the data acquisition loop.
-func (d *bmp085) SetPollDelay(delay int) {
-	d.poll = delay
-}
-
-func (d *bmp085) calibrate() (err error) {
+func (d *BMP085) calibrate() (err error) {
 	d.cmu.RLock()
 	if d.calibrated {
 		d.cmu.RUnlock()
@@ -100,7 +76,7 @@ func (d *bmp085) calibrate() (err error) {
 
 	readInt16 := func(reg byte) (value int16, err error) {
 		var v uint16
-		if v, err = d.bus.ReadWordFromReg(address, reg); err != nil {
+		if v, err = d.Bus.ReadWordFromReg(address, reg); err != nil {
 			return
 		}
 		value = int16(v)
@@ -109,7 +85,7 @@ func (d *bmp085) calibrate() (err error) {
 
 	readUInt16 := func(reg byte) (value uint16, err error) {
 		var v uint16
-		if v, err = d.bus.ReadWordFromReg(address, reg); err != nil {
+		if v, err = d.Bus.ReadWordFromReg(address, reg); err != nil {
 			return
 		}
 		value = uint16(v)
@@ -163,7 +139,7 @@ func (d *bmp085) calibrate() (err error) {
 
 	d.calibrated = true
 
-	if d.debug {
+	if d.Debug {
 		log.Print("bmp085: calibration data retrieved")
 		log.Printf("bmp085: param AC1 = %v", d.ac1)
 		log.Printf("bmp085: param AC2 = %v", d.ac2)
@@ -181,18 +157,18 @@ func (d *bmp085) calibrate() (err error) {
 	return
 }
 
-func (d *bmp085) readUncompensatedTemp() (temp uint16, err error) {
-	if err = d.bus.WriteByteToReg(address, control, readTempCmd); err != nil {
+func (d *BMP085) readUncompensatedTemp() (temp uint16, err error) {
+	if err = d.Bus.WriteByteToReg(address, control, readTempCmd); err != nil {
 		return
 	}
 	time.Sleep(tempReadDelay)
-	if temp, err = d.bus.ReadWordFromReg(address, tempData); err != nil {
+	if temp, err = d.Bus.ReadWordFromReg(address, tempData); err != nil {
 		return
 	}
 	return
 }
 
-func (d *bmp085) calcTemp(utemp uint16) uint16 {
+func (d *BMP085) calcTemp(utemp uint16) uint16 {
 	x1 := ((int(utemp) - int(d.ac6)) * int(d.ac5)) >> 15
 	x2 := (int(d.mc) << 11) / (x1 + int(d.md))
 
@@ -203,7 +179,7 @@ func (d *bmp085) calcTemp(utemp uint16) uint16 {
 	return uint16((d.b5 + 8) >> 4)
 }
 
-func (d *bmp085) measureTemp() (temp uint16, err error) {
+func (d *BMP085) measureTemp() (temp uint16, err error) {
 	if err = d.calibrate(); err != nil {
 		return
 	}
@@ -212,25 +188,25 @@ func (d *bmp085) measureTemp() (temp uint16, err error) {
 	if utemp, err = d.readUncompensatedTemp(); err != nil {
 		return
 	}
-	if d.debug {
+	if d.Debug {
 		log.Printf("bcm085: uncompensated temp: %v", utemp)
 	}
 	temp = d.calcTemp(utemp)
-	if d.debug {
+	if d.Debug {
 		log.Printf("bcm085: compensated temp %v", temp)
 	}
 	return
 }
 
 // Temperature returns the current temperature reading.
-func (d *bmp085) Temperature() (temp float64, err error) {
+func (d *BMP085) Temperature() (temp float64, err error) {
 
 	select {
 	case t := <-d.temps:
 		temp = float64(t) / 10
 		return
 	default:
-		if d.debug {
+		if d.Debug {
 			log.Print("bcm085: no temps available... measuring")
 		}
 		var t uint16
@@ -243,14 +219,14 @@ func (d *bmp085) Temperature() (temp float64, err error) {
 	}
 }
 
-func (d *bmp085) readUncompensatedPressure() (pressure uint32, err error) {
-	if err = d.bus.WriteByteToReg(address, control, byte(readPressureCmd+(d.oss<<6))); err != nil {
+func (d *BMP085) readUncompensatedPressure() (pressure uint32, err error) {
+	if err = d.Bus.WriteByteToReg(address, control, byte(readPressureCmd+(d.oss<<6))); err != nil {
 		return
 	}
 	time.Sleep(time.Duration(2+(3<<d.oss)) * time.Millisecond)
 
 	data := make([]byte, 3)
-	if err = d.bus.ReadFromReg(address, pressureData, data); err != nil {
+	if err = d.Bus.ReadFromReg(address, pressureData, data); err != nil {
 		return
 	}
 
@@ -259,11 +235,11 @@ func (d *bmp085) readUncompensatedPressure() (pressure uint32, err error) {
 	return
 }
 
-func (d *bmp085) calcPressure(upressure uint32) (p int32) {
+func (d *BMP085) calcPressure(upressure uint32) (p int32) {
 	var x1, x2, x3 int32
 
 	l := func(s string, v interface{}) {
-		if d.debug {
+		if d.Debug {
 			log.Printf("bcm085: %v = %v", s, v)
 		}
 	}
@@ -315,11 +291,11 @@ func (d *bmp085) calcPressure(upressure uint32) (p int32) {
 	return
 }
 
-func (d *bmp085) calcAltitude(pressure int32) float64 {
+func (d *BMP085) calcAltitude(pressure int32) float64 {
 	return 44330 * (1 - math.Pow(float64(pressure)/p0, 0.190295))
 }
 
-func (d *bmp085) measurePressureAndAltitude() (pressure int32, altitude float64, err error) {
+func (d *BMP085) measurePressureAndAltitude() (pressure int32, altitude float64, err error) {
 	if err = d.calibrate(); err != nil {
 		return
 	}
@@ -328,22 +304,22 @@ func (d *bmp085) measurePressureAndAltitude() (pressure int32, altitude float64,
 	if upressure, err = d.readUncompensatedPressure(); err != nil {
 		return
 	}
-	if d.debug {
+	if d.Debug {
 		log.Printf("bcm085: uncompensated pressure: %v", upressure)
 	}
 	pressure = d.calcPressure(upressure)
-	if d.debug {
+	if d.Debug {
 		log.Printf("bcm085: compensated pressure %v", pressure)
 	}
 	altitude = d.calcAltitude(pressure)
-	if d.debug {
+	if d.Debug {
 		log.Printf("bcm085: calculated altitude %v", altitude)
 	}
 	return
 }
 
 // Pressure returns the current pressure reading.
-func (d *bmp085) Pressure() (pressure int, err error) {
+func (d *BMP085) Pressure() (pressure int, err error) {
 	if err = d.calibrate(); err != nil {
 		return
 	}
@@ -353,7 +329,7 @@ func (d *bmp085) Pressure() (pressure int, err error) {
 		pressure = int(p)
 		return
 	default:
-		if d.debug {
+		if d.Debug {
 			log.Print("bcm085: no pressures available... measuring")
 		}
 		var p int32
@@ -367,7 +343,7 @@ func (d *bmp085) Pressure() (pressure int, err error) {
 }
 
 // Altitude returns the current altitude reading.
-func (d *bmp085) Altitude() (altitude float64, err error) {
+func (d *BMP085) Altitude() (altitude float64, err error) {
 	if err = d.calibrate(); err != nil {
 		return
 	}
@@ -376,7 +352,7 @@ func (d *bmp085) Altitude() (altitude float64, err error) {
 	case altitude = <-d.altitudes:
 		return
 	default:
-		if d.debug {
+		if d.Debug {
 			log.Print("bcm085: no altitudes available... measuring")
 		}
 		_, altitude, err = d.measurePressureAndAltitude()
@@ -388,10 +364,10 @@ func (d *bmp085) Altitude() (altitude float64, err error) {
 }
 
 // Run starts the sensor data acquisition loop.
-func (d *bmp085) Run() (err error) {
+func (d *BMP085) Run() (err error) {
 	go func() {
 		d.quit = make(chan struct{})
-		timer := time.Tick(time.Duration(d.poll) * time.Millisecond)
+		timer := time.Tick(time.Duration(d.Poll) * time.Millisecond)
 
 		var temp uint16
 		var pressure int32
@@ -432,7 +408,7 @@ func (d *bmp085) Run() (err error) {
 }
 
 // Close.
-func (d *bmp085) Close() {
+func (d *BMP085) Close() {
 	if d.quit != nil {
 		d.quit <- struct{}{}
 	}

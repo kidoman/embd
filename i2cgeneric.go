@@ -1,4 +1,4 @@
-package i2c
+package embd
 
 import (
 	"fmt"
@@ -9,6 +9,41 @@ import (
 	"time"
 	"unsafe"
 )
+
+type i2cDriver struct {
+	busMap     map[byte]*i2cBus
+	busMapLock sync.Mutex
+}
+
+func newI2CDriver() I2C {
+	return &i2cDriver{
+		busMap: make(map[byte]*i2cBus),
+	}
+}
+
+func (i *i2cDriver) Bus(l byte) I2CBus {
+	i.busMapLock.Lock()
+	defer i.busMapLock.Unlock()
+
+	var b *i2cBus
+
+	if b = i.busMap[l]; b == nil {
+		b = &i2cBus{l: l}
+		i.busMap[l] = b
+	}
+
+	return b
+}
+
+func (i *i2cDriver) Close() error {
+	for _, b := range i.busMap {
+		b.Close()
+
+		delete(i.busMap, b.l)
+	}
+
+	return nil
+}
 
 const (
 	delay = 20
@@ -31,15 +66,15 @@ type i2c_rdwr_ioctl_data struct {
 	nmsg uint32
 }
 
-type bus struct {
+type i2cBus struct {
 	l    byte
 	file *os.File
 	addr byte
 	mu   sync.Mutex
 }
 
-func newBus(l byte) (*bus, error) {
-	b := &bus{l: l}
+func newI2CBus(l byte) (*i2cBus, error) {
+	b := &i2cBus{l: l}
 
 	var err error
 	if b.file, err = os.OpenFile(fmt.Sprintf("/dev/i2c-%v", b.l), os.O_RDWR, os.ModeExclusive); err != nil {
@@ -49,14 +84,14 @@ func newBus(l byte) (*bus, error) {
 	return b, nil
 }
 
-func (b *bus) Close() error {
+func (b *i2cBus) Close() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	return b.file.Close()
 }
 
-func (b *bus) setAddress(addr byte) (err error) {
+func (b *i2cBus) setAddress(addr byte) (err error) {
 	if addr != b.addr {
 		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), slaveCmd, uintptr(addr)); errno != 0 {
 			err = syscall.Errno(errno)
@@ -69,7 +104,7 @@ func (b *bus) setAddress(addr byte) (err error) {
 	return
 }
 
-func (b *bus) ReadByte(addr byte) (value byte, err error) {
+func (b *i2cBus) ReadByte(addr byte) (value byte, err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -89,7 +124,7 @@ func (b *bus) ReadByte(addr byte) (value byte, err error) {
 	return
 }
 
-func (b *bus) WriteByte(addr, value byte) (err error) {
+func (b *i2cBus) WriteByte(addr, value byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -106,7 +141,7 @@ func (b *bus) WriteByte(addr, value byte) (err error) {
 	return
 }
 
-func (b *bus) WriteBytes(addr byte, value []byte) (err error) {
+func (b *i2cBus) WriteBytes(addr byte, value []byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -130,7 +165,7 @@ func (b *bus) WriteBytes(addr byte, value []byte) (err error) {
 	return nil
 }
 
-func (b *bus) ReadFromReg(addr, reg byte, value []byte) (err error) {
+func (b *i2cBus) ReadFromReg(addr, reg byte, value []byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -163,7 +198,7 @@ func (b *bus) ReadFromReg(addr, reg byte, value []byte) (err error) {
 	return nil
 }
 
-func (b *bus) ReadByteFromReg(addr, reg byte) (value byte, err error) {
+func (b *i2cBus) ReadByteFromReg(addr, reg byte) (value byte, err error) {
 	buf := make([]byte, 1)
 	if err = b.ReadFromReg(addr, reg, buf); err != nil {
 		return
@@ -172,7 +207,7 @@ func (b *bus) ReadByteFromReg(addr, reg byte) (value byte, err error) {
 	return
 }
 
-func (b *bus) ReadWordFromReg(addr, reg byte) (value uint16, err error) {
+func (b *i2cBus) ReadWordFromReg(addr, reg byte) (value uint16, err error) {
 	buf := make([]byte, 2)
 	if err = b.ReadFromReg(addr, reg, buf); err != nil {
 		return
@@ -181,7 +216,7 @@ func (b *bus) ReadWordFromReg(addr, reg byte) (value uint16, err error) {
 	return
 }
 
-func (b *bus) WriteToReg(addr, reg byte, value []byte) (err error) {
+func (b *i2cBus) WriteToReg(addr, reg byte, value []byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -212,7 +247,7 @@ func (b *bus) WriteToReg(addr, reg byte, value []byte) (err error) {
 	return
 }
 
-func (b *bus) WriteByteToReg(addr, reg, value byte) (err error) {
+func (b *i2cBus) WriteByteToReg(addr, reg, value byte) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -244,7 +279,7 @@ func (b *bus) WriteByteToReg(addr, reg, value byte) (err error) {
 	return
 }
 
-func (b *bus) WriteWordToReg(addr, reg byte, value uint16) (err error) {
+func (b *i2cBus) WriteWordToReg(addr, reg byte, value uint16) (err error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

@@ -1,6 +1,4 @@
-package gpio
-
-import "github.com/kidoman/embd/host"
+package embd
 
 type Direction int
 
@@ -27,31 +25,31 @@ type DigitalPin interface {
 	Close() error
 }
 
-type gpio interface {
+type GPIO interface {
 	DigitalPin(key interface{}) (DigitalPin, error)
 
 	Close() error
 }
 
-var instance gpio
+var gpioInstance GPIO
 
-func Open() error {
-	desc, err := host.Describe()
+func InitGPIO() error {
+	desc, err := DescribeHost()
 	if err != nil {
 		return err
 	}
 
-	instance = desc.GPIO().(gpio)
+	gpioInstance = desc.GPIO()
 
 	return nil
 }
 
-func Close() error {
-	return instance.Close()
+func CloseGPIO() error {
+	return gpioInstance.Close()
 }
 
 func NewDigitalPin(key interface{}) (DigitalPin, error) {
-	return instance.DigitalPin(key)
+	return gpioInstance.DigitalPin(key)
 }
 
 func DigitalWrite(key interface{}, val int) error {

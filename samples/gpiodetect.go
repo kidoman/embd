@@ -5,12 +5,11 @@ package main
 import (
 	"time"
 
-	"github.com/kidoman/embd/gpio"
-	"github.com/kidoman/embd/host"
+	"github.com/kidoman/embd"
 )
 
 func main() {
-	h, _, err := host.Detect()
+	h, _, err := embd.DetectHost()
 	if err != nil {
 		return
 	}
@@ -18,35 +17,35 @@ func main() {
 	var pinNo interface{}
 
 	switch h {
-	case host.BBB:
+	case embd.HostBBB:
 		pinNo = "P9_31"
-	case host.RPi:
+	case embd.HostRPi:
 		pinNo = 10
 	default:
 		panic("host not supported (yet :P)")
 	}
 
-	if err := gpio.Open(); err != nil {
+	if err := embd.InitGPIO(); err != nil {
 		panic(err)
 	}
-	defer gpio.Close()
+	defer embd.CloseGPIO()
 
-	led, err := gpio.NewDigitalPin(pinNo)
+	led, err := embd.NewDigitalPin(pinNo)
 	if err != nil {
 		panic(err)
 	}
 	defer led.Close()
 
-	if err := led.SetDirection(gpio.Out); err != nil {
+	if err := led.SetDirection(embd.Out); err != nil {
 		panic(err)
 	}
-	if err := led.Write(gpio.High); err != nil {
+	if err := led.Write(embd.High); err != nil {
 		panic(err)
 	}
 
 	time.Sleep(1 * time.Second)
 
-	if err := led.SetDirection(gpio.In); err != nil {
+	if err := led.SetDirection(embd.In); err != nil {
 		panic(err)
 	}
 }

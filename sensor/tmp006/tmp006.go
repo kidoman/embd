@@ -8,8 +8,7 @@ import (
 	"math"
 	"sync"
 	"time"
-
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 )
 
 const (
@@ -54,7 +53,7 @@ var (
 // TMP006 represents a TMP006 thermopile sensor.
 type TMP006 struct {
 	// Bus to communicate over.
-	Bus i2c.Bus
+	Bus embd.I2CBus
 	// Addr of the sensor.
 	Addr byte
 	// Debug turns on additional debug output.
@@ -71,7 +70,7 @@ type TMP006 struct {
 }
 
 // New creates a new TMP006 sensor.
-func New(bus i2c.Bus, addr byte) *TMP006 {
+func New(bus embd.I2CBus, addr byte) *TMP006 {
 	return &TMP006{
 		Bus:  bus,
 		Addr: addr,

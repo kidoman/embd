@@ -6,17 +6,17 @@ import (
 	"log"
 	"time"
 
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/bmp085"
 )
 
 func main() {
-	if err := i2c.Open(); err != nil {
+	if err := embd.InitI2C(); err != nil {
 		panic(err)
 	}
-	defer i2c.Close()
+	defer embd.CloseI2C()
 
-	bus := i2c.NewBus(1)
+	bus := embd.NewI2CBus(1)
 
 	baro := bmp085.New(bus)
 	defer baro.Close()

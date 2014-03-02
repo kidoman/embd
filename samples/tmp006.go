@@ -7,17 +7,17 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/kidoman/embd/i2c"
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/tmp006"
 )
 
 func main() {
-	if err := i2c.Open(); err != nil {
+	if err := embd.InitI2C(); err != nil {
 		panic(err)
 	}
-	defer i2c.Close()
+	defer embd.CloseI2C()
 
-	bus := i2c.NewBus(1)
+	bus := embd.NewI2CBus(1)
 
 	sensor := tmp006.New(bus, 0x40)
 	if status, err := sensor.Present(); err != nil || !status {

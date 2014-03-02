@@ -5,25 +5,25 @@ package main
 import (
 	"time"
 
-	"github.com/kidoman/embd/gpio"
+	"github.com/kidoman/embd"
 )
 
 func main() {
-	if err := gpio.Open(); err != nil {
+	if err := embd.InitGPIO(); err != nil {
 		panic(err)
 	}
-	defer gpio.Close()
+	defer embd.CloseGPIO()
 
-	if err := gpio.SetDirection(10, gpio.Out); err != nil {
+	if err := embd.SetDirection(10, embd.Out); err != nil {
 		panic(err)
 	}
-	if err := gpio.DigitalWrite(10, gpio.High); err != nil {
+	if err := embd.DigitalWrite(10, embd.High); err != nil {
 		panic(err)
 	}
 
 	time.Sleep(1 * time.Second)
 
-	if err := gpio.SetDirection(10, gpio.In); err != nil {
+	if err := embd.SetDirection(10, embd.In); err != nil {
 		panic(err)
 	}
 }

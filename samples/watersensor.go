@@ -6,17 +6,17 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/kidoman/embd/gpio"
+	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/watersensor"
 )
 
 func main() {
-	if err := gpio.Open(); err != nil {
+	if err := embd.InitGPIO(); err != nil {
 		panic(err)
 	}
-	defer gpio.Close()
+	defer embd.CloseGPIO()
 
-	pin, err := gpio.NewDigitalPin(7)
+	pin, err := embd.NewDigitalPin(7)
 	if err != nil {
 		panic(err)
 	}

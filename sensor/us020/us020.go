@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kidoman/embd/gpio"
+	"github.com/kidoman/embd"
 )
 
 const (
@@ -29,7 +29,7 @@ var NullThermometer = &nullThermometer{}
 
 // US020 represents a US020 ultrasonic range finder.
 type US020 struct {
-	EchoPin, TriggerPin gpio.DigitalPin
+	EchoPin, TriggerPin embd.DigitalPin
 
 	Thermometer Thermometer
 
@@ -43,7 +43,7 @@ type US020 struct {
 
 // New creates a new US020 interface. The bus variable controls
 // the I2C bus used to communicate with the device.
-func New(echoPin, triggerPin gpio.DigitalPin, thermometer Thermometer) *US020 {
+func New(echoPin, triggerPin embd.DigitalPin, thermometer Thermometer) *US020 {
 	return &US020{EchoPin: echoPin, TriggerPin: triggerPin, Thermometer: thermometer}
 }
 
@@ -58,8 +58,8 @@ func (d *US020) setup() (err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	d.TriggerPin.SetDirection(gpio.Out)
-	d.EchoPin.SetDirection(gpio.In)
+	d.TriggerPin.SetDirection(embd.Out)
+	d.EchoPin.SetDirection(embd.In)
 
 	if d.Thermometer == nil {
 		d.Thermometer = NullThermometer
@@ -91,9 +91,9 @@ func (d *US020) Distance() (distance float64, err error) {
 	}
 
 	// Generate a TRIGGER pulse
-	d.TriggerPin.Write(gpio.High)
+	d.TriggerPin.Write(embd.High)
 	time.Sleep(pulseDelay)
-	d.TriggerPin.Write(gpio.Low)
+	d.TriggerPin.Write(embd.Low)
 
 	if d.Debug {
 		log.Print("us020: waiting for echo to go high")
@@ -106,7 +106,7 @@ func (d *US020) Distance() (distance float64, err error) {
 			return 0, err
 		}
 
-		if v != gpio.Low {
+		if v != embd.Low {
 			break
 		}
 	}
@@ -124,7 +124,7 @@ func (d *US020) Distance() (distance float64, err error) {
 			return 0, err
 		}
 
-		if v != gpio.High {
+		if v != embd.High {
 			break
 		}
 	}
@@ -139,5 +139,5 @@ func (d *US020) Distance() (distance float64, err error) {
 
 // Close.
 func (d *US020) Close() {
-	d.EchoPin.SetDirection(gpio.Out)
+	d.EchoPin.SetDirection(embd.Out)
 }

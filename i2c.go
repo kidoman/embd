@@ -1,9 +1,6 @@
-// Package i2c enables gophers i2c speaking ability.
-package i2c
+package embd
 
-import "github.com/kidoman/embd/host"
-
-type Bus interface {
+type I2CBus interface {
 	// ReadByte reads a byte from the given address.
 	ReadByte(addr byte) (value byte, err error)
 	// WriteByte writes a byte to the given address.
@@ -27,28 +24,28 @@ type Bus interface {
 }
 
 type I2C interface {
-	Bus(l byte) Bus
+	Bus(l byte) I2CBus
 
 	Close() error
 }
 
-var instance I2C
+var i2cInstance I2C
 
-func Open() error {
-	desc, err := host.Describe()
+func InitI2C() error {
+	desc, err := DescribeHost()
 	if err != nil {
 		return err
 	}
 
-	instance = desc.I2C().(I2C)
+	i2cInstance = desc.I2C()
 
 	return nil
 }
 
-func Close() error {
-	return instance.Close()
+func CloseI2C() error {
+	return i2cInstance.Close()
 }
 
-func NewBus(l byte) Bus {
-	return instance.Bus(l)
+func NewI2CBus(l byte) I2CBus {
+	return i2cInstance.Bus(l)
 }
