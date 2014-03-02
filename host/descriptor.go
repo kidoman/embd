@@ -1,6 +1,6 @@
 package host
 
-import "errors"
+import "fmt"
 
 type Descriptor struct {
 	GPIO func() interface{}
@@ -19,7 +19,7 @@ func Describe() (*Descriptor, error) {
 
 	describer, ok := Describers[host]
 	if !ok {
-		return nil, errors.New("host: invalid host")
+		return nil, fmt.Errorf("host: invalid host %q", host)
 	}
 
 	return describer(rev), nil
