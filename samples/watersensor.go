@@ -1,25 +1,38 @@
 package main
 
 import (
-	"log"
 	"time"
 
+	"github.com/golang/glog"
+	"github.com/kidoman/embd/gpio"
 	"github.com/kidoman/embd/sensor/watersensor"
 )
 
 func main() {
-	fluidSensor := watersensor.New(7)
+	if err := gpio.Open(); err != nil {
+		panic(err)
+	}
+	defer gpio.Close()
+
+	pin, err := gpio.NewDigitalPin(7)
+	if err != nil {
+		panic(err)
+	}
+	defer pin.Close()
+
+	fluidSensor := watersensor.New(pin)
 
 	for {
-		isWater, err := fluidSensor.IsWet()
+		wet, err := fluidSensor.IsWet()
 		if err != nil {
-			log.Panic(err)
+			panic(err)
 		}
-		if isWater {
-			log.Printf("Bot is dry")
+		if wet {
+			glog.Info("bot is dry")
 		} else {
-			log.Printf("Bot is Wet")
+			glog.Info("bot is Wet")
 		}
+
 		time.Sleep(500 * time.Millisecond)
 	}
 }

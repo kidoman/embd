@@ -2,70 +2,62 @@
 package watersensor
 
 import (
-        "log"
-        "sync"
-        "github.com/stianeikeland/go-rpio"
-       )
+	"sync"
 
-type watersensor struct {
-    waterPinNumber int
-    waterPin rpio.Pin
+	"github.com/golang/glog"
+	"github.com/kidoman/embd/gpio"
+)
 
-    initialized bool
-    mu *sync.RWMutex
+type WaterSensor struct {
+	Pin gpio.DigitalPin
 
-    debug bool
+	initialized bool
+	mu          sync.RWMutex
+
+	Debug bool
 }
 
-// WaterSensor implements access to a water sensor
-type WaterSensor interface {
-    // IsWet determines if there is water present on the sensor
-    IsWet() (b bool,err error)
+// New creates a new WaterSensor struct
+func New(pin gpio.DigitalPin) *WaterSensor {
+	return &WaterSensor{Pin: pin}
 }
 
-// New creates a new WaterSensor interface
-func New(pinNumber int) WaterSensor {
-    return &watersensor{waterPinNumber: pinNumber, mu: new(sync.RWMutex)}
-}
+func (d *WaterSensor) setup() error {
+	d.mu.RLock()
+	if d.initialized {
+		d.mu.RUnlock()
+		return nil
+	}
+	d.mu.RUnlock()
 
-func (d *watersensor) Setup() (err error) {
-    d.mu.RLock()
-    if d.initialized {
-        d.mu.RUnlock()
-        return
-    }
-    d.mu.RUnlock()
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
-    d.mu.Lock()
-    defer d.mu.Unlock()
+	if err := d.Pin.SetDirection(gpio.In); err != nil {
+		return err
+	}
+	d.initialized = true
 
-    if err = rpio.Open(); err != nil {
-        return
-    }
-
-    d.waterPin = rpio.Pin(d.waterPinNumber)
-    d.waterPin.Input()
-    d.initialized = true
-
-    return nil
+	return nil
 }
 
 // IsWet determines if there is water present on the sensor
-func (d *watersensor) IsWet() (b bool, err error) {
-    if err = d.Setup(); err != nil {
-        return
-    }
+func (d *WaterSensor) IsWet() (bool, error) {
+	if err := d.setup(); err != nil {
+		return false, err
+	}
 
-    if d.debug {
-        log.Print("Getting reading")
-    }
+	if d.Debug {
+		glog.Infof("watersensor: reading")
+	}
 
-    // Read the pin value of the sensor
-    if d.waterPin.Read() == rpio.High {
-        b=true
-    } else {
-        b=false
-    }
-
-    return
+	value, err := d.Pin.Read()
+	if err != nil {
+		return false, err
+	}
+	if value == gpio.High {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
