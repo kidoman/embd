@@ -2,12 +2,11 @@
 package matrix4x3
 
 import (
-	"errors"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/stianeikeland/go-rpio"
+	"github.com/kidoman/embd/gpio"
 )
 
 type Key int
@@ -19,12 +18,13 @@ func (k Key) String() string {
 	case KHash:
 		return "#"
 	default:
-		return strconv.Itoa(int(k))
+		return strconv.Itoa(int(k) - 1)
 	}
 }
 
 const (
-	K0 Key = iota
+	KNone Key = iota
+	K0
 	K1
 	K2
 	K3
@@ -66,23 +66,9 @@ func init() {
 	keyMap[3][2] = KHash
 }
 
-// A Matrix4x3 interface implements access to the keypad.
-type Matrix4x3 interface {
-	// Run starts the continuous key scan loop.
-	Run()
-
-	// SetPollDelay sets the delay between runs of key scan acquisition loop.
-	SetPollDelay(delay int)
-
-	// Pressed key returns the current key pressed on the keypad.
-	PressedKey() (Key, error)
-
-	// Close.
-	Close()
-}
-
-type matrix4x3 struct {
-	rpioRowPins, rpioColPins []rpio.Pin
+// A Matrix4x3 struct represents access to the keypad.
+type Matrix4x3 struct {
+	rowPins, colPins []gpio.DigitalPin
 
 	initialized bool
 	mu          sync.RWMutex
@@ -94,33 +80,40 @@ type matrix4x3 struct {
 }
 
 // New creates a new interface for matrix4x3.
-func New(rowPins, colPins []int) Matrix4x3 {
-	m := &matrix4x3{
-		rpioRowPins: make([]rpio.Pin, rows),
-		rpioColPins: make([]rpio.Pin, cols),
-		poll:        pollDelay,
+func New(rowPins, colPins []int) (*Matrix4x3, error) {
+	m := &Matrix4x3{
+		rowPins: make([]gpio.DigitalPin, rows),
+		colPins: make([]gpio.DigitalPin, cols),
+		poll:    pollDelay,
 	}
 
+	var err error
 	for i := 0; i < rows; i++ {
-		m.rpioRowPins[i] = rpio.Pin(rowPins[i])
+		m.rowPins[i], err = gpio.NewDigitalPin(rowPins[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 	for i := 0; i < cols; i++ {
-		m.rpioColPins[i] = rpio.Pin(colPins[i])
+		m.colPins[i], err = gpio.NewDigitalPin(colPins[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return m
+	return m, nil
 }
 
 // SetPollDelay sets the delay between run of key scan acquisition loop.
-func (d *matrix4x3) SetPollDelay(delay int) {
+func (d *Matrix4x3) SetPollDelay(delay int) {
 	d.poll = delay
 }
 
-func (d *matrix4x3) setup() (err error) {
+func (d *Matrix4x3) setup() error {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
-		return
+		return nil
 	}
 	d.mu.RUnlock()
 
@@ -128,47 +121,67 @@ func (d *matrix4x3) setup() (err error) {
 	defer d.mu.Unlock()
 
 	for i := 0; i < rows; i++ {
-		d.rpioRowPins[i].Input()
-		d.rpioRowPins[i].PullUp()
+		if err := d.rowPins[i].SetDirection(gpio.In); err != nil {
+			return err
+		}
+		if err := d.rowPins[i].PullUp(); err != nil {
+			return err
+		}
 	}
 
 	for i := 0; i < cols; i++ {
-		d.rpioColPins[i].Output()
-		d.rpioColPins[i].High()
+		if err := d.colPins[i].SetDirection(gpio.Out); err != nil {
+			return err
+		}
+		if err := d.colPins[i].Write(gpio.High); err != nil {
+			return err
+		}
 	}
 
 	d.initialized = true
 
-	return
+	return nil
 }
 
-func (d *matrix4x3) findPressedKey() (key Key, err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *Matrix4x3) findPressedKey() (Key, error) {
+	if err := d.setup(); err != nil {
+		return 0, err
 	}
 
-	err = errors.New("no key pressed")
-
 	for col := 0; col < cols; col++ {
-		d.rpioColPins[col].Low()
+		if err := d.colPins[col].Write(gpio.Low); err != nil {
+			return KNone, err
+		}
 		for row := 0; row < rows; row++ {
-			if d.rpioRowPins[row].Read() == rpio.Low {
+			value, err := d.rowPins[row].Read()
+			if err != nil {
+				return KNone, err
+			}
+			if value == gpio.Low {
 				time.Sleep(debounce)
 
-				if d.rpioRowPins[row].Read() == rpio.Low {
-					key = keyMap[row][col]
-					err = nil
+				value, err = d.rowPins[row].Read()
+				if err != nil {
+					return KNone, err
+				}
+				if value == gpio.Low {
+					if err := d.colPins[col].Write(gpio.High); err != nil {
+						return KNone, err
+					}
+					return keyMap[row][col], nil
 				}
 			}
 		}
-		d.rpioColPins[col].High()
+		if err := d.colPins[col].Write(gpio.High); err != nil {
+			return KNone, err
+		}
 	}
 
-	return
+	return KNone, nil
 }
 
 // Pressed key returns the current key pressed on the keypad.
-func (d *matrix4x3) PressedKey() (key Key, err error) {
+func (d *Matrix4x3) PressedKey() (key Key, err error) {
 	select {
 	case key = <-d.keyPressed:
 		return
@@ -178,7 +191,7 @@ func (d *matrix4x3) PressedKey() (key Key, err error) {
 }
 
 // Run starts the continuous key scan loop.
-func (d *matrix4x3) Run() {
+func (d *Matrix4x3) Run() {
 	d.quit = make(chan bool)
 
 	go func() {
@@ -206,7 +219,7 @@ func (d *matrix4x3) Run() {
 }
 
 // Close.
-func (d *matrix4x3) Close() {
+func (d *Matrix4x3) Close() {
 	if d.quit != nil {
 		d.quit <- true
 	}

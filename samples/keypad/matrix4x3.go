@@ -4,21 +4,30 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kidoman/embd/gpio"
 	"github.com/kidoman/embd/interface/keypad/matrix4x3"
-	"github.com/stianeikeland/go-rpio"
 )
 
 func main() {
 	rowPins := []int{4, 17, 27, 22}
 	colPins := []int{23, 24, 25}
 
-	rpio.Open()
-	defer rpio.Close()
+	if err := gpio.Open(); err != nil {
+		panic(err)
+	}
+	defer gpio.Close()
 
-	keypad := matrix4x3.New(rowPins, colPins)
+	keypad, err := matrix4x3.New(rowPins, colPins)
+	if err != nil {
+		panic(err)
+	}
 
 	for {
-		if key, err := keypad.PressedKey(); err == nil {
+		key, err := keypad.PressedKey()
+		if err != nil {
+			panic(err)
+		}
+		if key != matrix4x3.KNone {
 			fmt.Printf("Key Pressed = %v\n", key)
 		}
 

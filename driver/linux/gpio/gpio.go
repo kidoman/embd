@@ -99,20 +99,20 @@ func (io *GPIO) unexport(n int) error {
 func (io *GPIO) digitalPin(key interface{}) (*digitalPin, error) {
 	pd, found := io.lookupKey(key)
 	if !found {
-		err = fmt.Errorf("gpio: could not find pin matching %q", key)
-		return
+		err := fmt.Errorf("gpio: could not find pin matching %q", key)
+		return nil, err
 	}
 
 	n := pd.N
 
 	p, ok := io.initializedPins[n]
 	if ok {
-		return
+		return p, nil
 	}
 
 	if pd.Caps&Normal == 0 {
-		err = fmt.Errorf("gpio: sorry, pin %q cannot be used for GPIO", key)
-		return
+		err := fmt.Errorf("gpio: sorry, pin %q cannot be used for GPIO", key)
+		return nil, err
 	}
 
 	if pd.Caps != Normal {

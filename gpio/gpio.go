@@ -21,6 +21,9 @@ type DigitalPin interface {
 	SetDirection(dir Direction) error
 	ActiveLow(b bool) error
 
+	PullUp() error
+	PullDown() error
+
 	Close() error
 }
 

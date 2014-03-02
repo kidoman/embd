@@ -15,6 +15,8 @@ func describer(rev int) *host.Descriptor {
 		GPIO: func() interface{} {
 			return lgpio.New(pins)
 		},
-		I2C: li2c.New,
+		I2C: func() interface{} {
+			return li2c.New()
+		},
 	}
 }

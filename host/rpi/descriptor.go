@@ -12,7 +12,7 @@ func init() {
 
 func describer(rev int) *host.Descriptor {
 	var pins = rev1Pins
-	if d.rev > 1 {
+	if rev > 1 {
 		pins = rev2Pins
 	}
 
@@ -20,6 +20,8 @@ func describer(rev int) *host.Descriptor {
 		GPIO: func() interface{} {
 			return lgpio.New(pins)
 		},
-		I2C: li2c.New,
+		I2C: func() interface{} {
+			return li2c.New()
+		},
 	}
 }

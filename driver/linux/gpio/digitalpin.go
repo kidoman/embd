@@ -1,6 +1,7 @@
 package gpio
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -18,7 +19,7 @@ type digitalPin struct {
 }
 
 func newDigitalPin(n int) (*digitalPin, error) {
-	p = &digitalPin{n: n}
+	p := &digitalPin{n: n}
 	if err := p.init(); err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (p *digitalPin) SetDirection(dir gpio.Direction) error {
 		str = "out"
 	}
 	_, err := p.dir.WriteString(str)
-	return
+	return err
 }
 
 func (p *digitalPin) Read() (int, error) {
@@ -97,6 +98,14 @@ func (p *digitalPin) ActiveLow(b bool) error {
 	}
 	_, err := p.activeLow.WriteString(str)
 	return err
+}
+
+func (p *digitalPin) PullUp() error {
+	return errors.New("not implemented")
+}
+
+func (p *digitalPin) PullDown() error {
+	return errors.New("not implemented")
 }
 
 func (p *digitalPin) Close() error {
