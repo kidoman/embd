@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kidoman/embd/gpio"
+	"github.com/kidoman/embd"
 )
 
 type Key int
@@ -68,7 +68,7 @@ func init() {
 
 // A Matrix4x3 struct represents access to the keypad.
 type Matrix4x3 struct {
-	rowPins, colPins []gpio.DigitalPin
+	rowPins, colPins []embd.DigitalPin
 
 	initialized bool
 	mu          sync.RWMutex
@@ -82,20 +82,20 @@ type Matrix4x3 struct {
 // New creates a new interface for matrix4x3.
 func New(rowPins, colPins []int) (*Matrix4x3, error) {
 	m := &Matrix4x3{
-		rowPins: make([]gpio.DigitalPin, rows),
-		colPins: make([]gpio.DigitalPin, cols),
+		rowPins: make([]embd.DigitalPin, rows),
+		colPins: make([]embd.DigitalPin, cols),
 		poll:    pollDelay,
 	}
 
 	var err error
 	for i := 0; i < rows; i++ {
-		m.rowPins[i], err = gpio.NewDigitalPin(rowPins[i])
+		m.rowPins[i], err = embd.NewDigitalPin(rowPins[i])
 		if err != nil {
 			return nil, err
 		}
 	}
 	for i := 0; i < cols; i++ {
-		m.colPins[i], err = gpio.NewDigitalPin(colPins[i])
+		m.colPins[i], err = embd.NewDigitalPin(colPins[i])
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +121,7 @@ func (d *Matrix4x3) setup() error {
 	defer d.mu.Unlock()
 
 	for i := 0; i < rows; i++ {
-		if err := d.rowPins[i].SetDirection(gpio.In); err != nil {
+		if err := d.rowPins[i].SetDirection(embd.In); err != nil {
 			return err
 		}
 		if err := d.rowPins[i].PullUp(); err != nil {
@@ -130,10 +130,10 @@ func (d *Matrix4x3) setup() error {
 	}
 
 	for i := 0; i < cols; i++ {
-		if err := d.colPins[i].SetDirection(gpio.Out); err != nil {
+		if err := d.colPins[i].SetDirection(embd.Out); err != nil {
 			return err
 		}
-		if err := d.colPins[i].Write(gpio.High); err != nil {
+		if err := d.colPins[i].Write(embd.High); err != nil {
 			return err
 		}
 	}
@@ -149,7 +149,7 @@ func (d *Matrix4x3) findPressedKey() (Key, error) {
 	}
 
 	for col := 0; col < cols; col++ {
-		if err := d.colPins[col].Write(gpio.Low); err != nil {
+		if err := d.colPins[col].Write(embd.Low); err != nil {
 			return KNone, err
 		}
 		for row := 0; row < rows; row++ {
@@ -157,22 +157,22 @@ func (d *Matrix4x3) findPressedKey() (Key, error) {
 			if err != nil {
 				return KNone, err
 			}
-			if value == gpio.Low {
+			if value == embd.Low {
 				time.Sleep(debounce)
 
 				value, err = d.rowPins[row].Read()
 				if err != nil {
 					return KNone, err
 				}
-				if value == gpio.Low {
-					if err := d.colPins[col].Write(gpio.High); err != nil {
+				if value == embd.Low {
+					if err := d.colPins[col].Write(embd.High); err != nil {
 						return KNone, err
 					}
 					return keyMap[row][col], nil
 				}
 			}
 		}
-		if err := d.colPins[col].Write(gpio.High); err != nil {
+		if err := d.colPins[col].Write(embd.High); err != nil {
 			return KNone, err
 		}
 	}
