@@ -6,4 +6,4 @@ go:
 
 script:
   - go test ./...
-  - make -C ./samples/
+  - pushd samples && find . -name "*.go" -exec go build {} \; && popd
