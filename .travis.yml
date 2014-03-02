@@ -3,3 +3,7 @@ language: go
 go:
   - 1.2
   - tip
+
+script:
+  - go test ./...
+  - make -C ./samples/
