@@ -16,6 +16,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer led.Close()
 
 	if err := led.SetDirection(gpio.Out); err != nil {
 		panic(err)
