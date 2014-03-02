@@ -1,4 +1,4 @@
-# embd
+# embd [![Build Status](https://travis-ci.org/kidoman/embd.png?branch=master)](https://travis-ci.org/kidoman/embd)
 
 Golang Embedded Programming Framework
 
