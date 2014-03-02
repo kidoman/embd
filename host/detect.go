@@ -22,7 +22,7 @@ func execOutput(name string, arg ...string) (output string, err error) {
 	if out, err = exec.Command(name, arg...).Output(); err != nil {
 		return
 	}
-	output = string(out)
+	output = strings.TrimSpace(string(out))
 	return
 }
 

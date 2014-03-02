@@ -8,14 +8,6 @@ func TestKernelVersionParse(t *testing.T) {
 		major, minor, patch int
 	}{
 		{
-			"3.8",
-			3, 8, 0,
-		},
-		{
-			"3.7",
-			3, 7, 0,
-		},
-		{
 			"3.8.2",
 			3, 8, 2,
 		},
