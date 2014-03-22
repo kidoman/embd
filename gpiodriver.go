@@ -32,23 +32,12 @@ func (io *gpioDriver) digitalPin(key interface{}) (*digitalPin, error) {
 		return nil, fmt.Errorf("gpio: could not find pin matching %q", key)
 	}
 
-	id := pd.ID
-
-	p, ok := io.initializedPins[id]
-	if ok {
-		dp, ok := p.(*digitalPin)
-		if !ok {
-			return nil, fmt.Errorf("gpio: sorry, pin %q is already initialized for a different mode", key)
-		}
-		return dp, nil
-	}
-
 	if pd.Caps != CapNormal {
 		glog.Infof("gpio: pin %q is not a dedicated digital io pin. please refer to the system reference manual for more details", key)
 	}
 
 	dp := newDigitalPin(pd.DigitalLogical)
-	io.initializedPins[id] = dp
+	io.initializedPins[pd.ID] = dp
 
 	return dp, nil
 }
