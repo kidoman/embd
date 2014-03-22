@@ -13,6 +13,7 @@ const (
 	CapGPMC
 	CapLCD
 	CapPWM
+	CapAnalog
 )
 
 type PinDesc struct {
@@ -21,11 +22,12 @@ type PinDesc struct {
 	Caps    int
 
 	DigitalLogical int
+	AnalogLogical  int
 }
 
 type PinMap []*PinDesc
 
-func (m PinMap) Lookup(k interface{}) (*PinDesc, bool) {
+func (m PinMap) Lookup(k interface{}, cap int) (*PinDesc, bool) {
 	var ks string
 	switch key := k.(type) {
 	case int:
@@ -46,7 +48,7 @@ func (m PinMap) Lookup(k interface{}) (*PinDesc, bool) {
 		}
 
 		for j := range pd.Aliases {
-			if pd.Aliases[j] == ks {
+			if pd.Aliases[j] == ks && pd.Caps&cap != 0 {
 				return pd, true
 			}
 		}

@@ -22,12 +22,12 @@ func newGPIODriver(pinMap PinMap) *gpioDriver {
 	}
 }
 
-func (io *gpioDriver) lookupKey(key interface{}) (*PinDesc, bool) {
-	return io.pinMap.Lookup(key)
+func (io *gpioDriver) lookupKey(key interface{}, cap int) (*PinDesc, bool) {
+	return io.pinMap.Lookup(key, cap)
 }
 
 func (io *gpioDriver) digitalPin(key interface{}) (*digitalPin, error) {
-	pd, found := io.lookupKey(key)
+	pd, found := io.lookupKey(key, CapNormal)
 	if !found {
 		return nil, fmt.Errorf("gpio: could not find pin matching %q", key)
 	}
@@ -41,10 +41,6 @@ func (io *gpioDriver) digitalPin(key interface{}) (*digitalPin, error) {
 			return nil, fmt.Errorf("gpio: sorry, pin %q is already initialized for a different mode", key)
 		}
 		return dp, nil
-	}
-
-	if pd.Caps&CapNormal == 0 {
-		return nil, fmt.Errorf("gpio: sorry, pin %q cannot be used for digital io", key)
 	}
 
 	if pd.Caps != CapNormal {
