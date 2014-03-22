@@ -7,13 +7,16 @@ func TestPinMapLookup(t *testing.T) {
 		key interface{}
 		cap int
 		id  string
+
+		found bool
 	}{
-		{"10", CapAnalog, "P1_1"},
-		{10, CapAnalog, "P1_1"},
-		{"10", CapNormal, "P1_2"},
-		{"P1_2", CapNormal, "P1_2"},
-		{"P1_2", CapAnalog, "P1_2"},
-		{"GPIO10", CapNormal, "P1_2"},
+		{"10", CapAnalog, "P1_1", true},
+		{10, CapAnalog, "P1_1", true},
+		{"10", CapNormal, "P1_2", true},
+		{"P1_2", CapNormal, "P1_2", true},
+		{"P1_2", CapAnalog, "P1_2", true},
+		{"GPIO10", CapNormal, "P1_2", true},
+		{key: "NOTTHERE", found: false},
 	}
 	var pinMap = PinMap{
 		&PinDesc{ID: "P1_1", Aliases: []string{"AN1", "10"}, Caps: CapAnalog},
@@ -21,8 +24,11 @@ func TestPinMapLookup(t *testing.T) {
 	}
 	for _, test := range tests {
 		pd, found := pinMap.Lookup(test.key, test.cap)
+		if found != test.found {
+			t.Errorf("Outcome mismatch for %v: got found = %v, expected found = %v", test.key, found, test.found)
+			continue
+		}
 		if !found {
-			t.Errorf("Could not find a descriptor for %q", test.key)
 			continue
 		}
 		if pd.ID != test.id {
