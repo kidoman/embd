@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 )
 
 type digitalPin struct {
@@ -14,18 +15,23 @@ type digitalPin struct {
 	val       *os.File
 	activeLow *os.File
 	edge      *os.File
+
+	initialized bool
 }
 
-func newDigitalPin(n int) (*digitalPin, error) {
-	p := &digitalPin{n: n}
-	if err := p.init(); err != nil {
-		return nil, err
-	}
-	return p, nil
+func newDigitalPin(n int) *digitalPin {
+	return &digitalPin{n: n}
 }
 
 func (p *digitalPin) init() error {
+	if p.initialized {
+		return nil
+	}
+
 	var err error
+	if err = p.export(); err != nil {
+		return err
+	}
 	if p.dir, err = p.directionFile(); err != nil {
 		return err
 	}
@@ -36,7 +42,29 @@ func (p *digitalPin) init() error {
 		return err
 	}
 
+	p.initialized = true
+
 	return nil
+}
+
+func (p *digitalPin) export() error {
+	exporter, err := os.OpenFile("/sys/class/gpio/export", os.O_WRONLY, os.ModeExclusive)
+	if err != nil {
+		return err
+	}
+	defer exporter.Close()
+	_, err = exporter.WriteString(strconv.Itoa(p.n))
+	return err
+}
+
+func (p *digitalPin) unexport() error {
+	unexporter, err := os.OpenFile("/sys/class/gpio/unexport", os.O_WRONLY, os.ModeExclusive)
+	if err != nil {
+		return err
+	}
+	defer unexporter.Close()
+	_, err = unexporter.WriteString(strconv.Itoa(p.n))
+	return err
 }
 
 func (p *digitalPin) basePath() string {
@@ -60,6 +88,10 @@ func (p *digitalPin) activeLowFile() (*os.File, error) {
 }
 
 func (p *digitalPin) SetDirection(dir Direction) error {
+	if err := p.init(); err != nil {
+		return err
+	}
+
 	str := "in"
 	if dir == Out {
 		str = "out"
@@ -69,6 +101,10 @@ func (p *digitalPin) SetDirection(dir Direction) error {
 }
 
 func (p *digitalPin) Read() (int, error) {
+	if err := p.init(); err != nil {
+		return 0, err
+	}
+
 	buf := make([]byte, 1)
 	if _, err := p.val.Read(buf); err != nil {
 		return 0, err
@@ -81,6 +117,10 @@ func (p *digitalPin) Read() (int, error) {
 }
 
 func (p *digitalPin) Write(val int) error {
+	if err := p.init(); err != nil {
+		return err
+	}
+
 	str := "0"
 	if val == High {
 		str = "1"
@@ -90,6 +130,10 @@ func (p *digitalPin) Write(val int) error {
 }
 
 func (p *digitalPin) ActiveLow(b bool) error {
+	if err := p.init(); err != nil {
+		return err
+	}
+
 	str := "0"
 	if b {
 		str = "1"
@@ -99,14 +143,18 @@ func (p *digitalPin) ActiveLow(b bool) error {
 }
 
 func (p *digitalPin) PullUp() error {
-	return errors.New("not implemented")
+	return errors.New("gpio: not implemented")
 }
 
 func (p *digitalPin) PullDown() error {
-	return errors.New("not implemented")
+	return errors.New("gpio: not implemented")
 }
 
 func (p *digitalPin) Close() error {
+	if !p.initialized {
+		return nil
+	}
+
 	if err := p.dir.Close(); err != nil {
 		return err
 	}
@@ -119,6 +167,11 @@ func (p *digitalPin) Close() error {
 	if err := p.edge.Close(); err != nil {
 		return err
 	}
+	if err := p.unexport(); err != nil {
+		return err
+	}
+
+	p.initialized = false
 
 	return nil
 }
