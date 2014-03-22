@@ -13,6 +13,8 @@ const (
 )
 
 type DigitalPin interface {
+	N() int
+
 	Write(val int) error
 	Read() (int, error)
 
@@ -25,8 +27,18 @@ type DigitalPin interface {
 	Close() error
 }
 
+type AnalogPin interface {
+	N() int
+
+	Write(val int) error
+	Read() (int, error)
+
+	Close() error
+}
+
 type GPIO interface {
 	DigitalPin(key interface{}) (DigitalPin, error)
+	AnalogPin(key interface{}) (AnalogPin, error)
 
 	Close() error
 }
@@ -86,4 +98,26 @@ func ActiveLow(key interface{}, b bool) error {
 	}
 
 	return pin.ActiveLow(b)
+}
+
+func NewAnalogPin(key interface{}) (AnalogPin, error) {
+	return gpioInstance.AnalogPin(key)
+}
+
+func AnalogWrite(key interface{}, val int) error {
+	pin, err := NewAnalogPin(key)
+	if err != nil {
+		return err
+	}
+
+	return pin.Write(val)
+}
+
+func AnalogRead(key interface{}) (int, error) {
+	pin, err := NewAnalogPin(key)
+	if err != nil {
+		return 0, err
+	}
+
+	return pin.Read()
 }

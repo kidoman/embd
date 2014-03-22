@@ -1,10 +1,19 @@
 package embd
 
+import (
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+)
+
 func init() {
 	Describers[HostBBB] = func(rev int) *Descriptor {
 		return &Descriptor{
 			GPIO: func() GPIO {
-				return newGPIODriver(bbbPins)
+				return newGPIODriver(bbbPins, newDigitalPin, newBBBAnalogPin)
 			},
 			I2C: newI2CDriver,
 		}
@@ -69,12 +78,111 @@ var bbbPins = PinMap{
 	&PinDesc{ID: "P9_30", Aliases: []string{"112", "GPIO_112", "SPI1_D1"}, Caps: CapNormal | CapSPI, DigitalLogical: 112},
 	&PinDesc{ID: "P9_31", Aliases: []string{"110", "GPIO_110", "SPI1_SCLK"}, Caps: CapNormal | CapSPI, DigitalLogical: 110},
 	&PinDesc{ID: "P9_32", Aliases: []string{"VADC"}},
-	&PinDesc{ID: "P9_33", Aliases: []string{"AIN4"}, Caps: CapAnalog, AnalogLogical: 4},
+	&PinDesc{ID: "P9_33", Aliases: []string{"4", "AIN4"}, Caps: CapAnalog, AnalogLogical: 4},
 	&PinDesc{ID: "P9_34", Aliases: []string{"AGND"}},
-	&PinDesc{ID: "P9_35", Aliases: []string{"AIN6"}, Caps: CapAnalog, AnalogLogical: 6},
-	&PinDesc{ID: "P9_36", Aliases: []string{"AIN5"}, Caps: CapAnalog, AnalogLogical: 5},
-	&PinDesc{ID: "P9_37", Aliases: []string{"AIN2"}, Caps: CapAnalog, AnalogLogical: 2},
-	&PinDesc{ID: "P9_38", Aliases: []string{"AIN3"}, Caps: CapAnalog, AnalogLogical: 3},
-	&PinDesc{ID: "P9_39", Aliases: []string{"AIN0"}, Caps: CapAnalog, AnalogLogical: 0},
-	&PinDesc{ID: "P9_40", Aliases: []string{"AIN1"}, Caps: CapAnalog, AnalogLogical: 1},
+	&PinDesc{ID: "P9_35", Aliases: []string{"6", "AIN6"}, Caps: CapAnalog, AnalogLogical: 6},
+	&PinDesc{ID: "P9_36", Aliases: []string{"5", "AIN5"}, Caps: CapAnalog, AnalogLogical: 5},
+	&PinDesc{ID: "P9_37", Aliases: []string{"2", "AIN2"}, Caps: CapAnalog, AnalogLogical: 2},
+	&PinDesc{ID: "P9_38", Aliases: []string{"3", "AIN3"}, Caps: CapAnalog, AnalogLogical: 3},
+	&PinDesc{ID: "P9_39", Aliases: []string{"0", "AIN0"}, Caps: CapAnalog, AnalogLogical: 0},
+	&PinDesc{ID: "P9_40", Aliases: []string{"1", "AIN1"}, Caps: CapAnalog, AnalogLogical: 1},
+}
+
+type bbbAnalogPin struct {
+	n int
+
+	val *os.File
+
+	initialized bool
+}
+
+func newBBBAnalogPin(n int) AnalogPin {
+	return &bbbAnalogPin{n: n}
+}
+
+func (p *bbbAnalogPin) N() int {
+	return p.n
+}
+
+func (p *bbbAnalogPin) init() error {
+	if p.initialized {
+		return nil
+	}
+
+	var err error
+	if err = p.ensureEnabled(); err != nil {
+		return err
+	}
+	if p.val, err = p.valueFile(); err != nil {
+		return err
+	}
+
+	p.initialized = true
+
+	return nil
+}
+
+func (p *bbbAnalogPin) ensureEnabled() error {
+	file := "/sys/devices/bone_capemgr.8/slots"
+	bytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	str := string(bytes)
+	if strings.Contains(str, "cape-bone-iio") {
+		return nil
+	}
+	// Not initialized yet
+	slots, err := os.OpenFile(file, os.O_WRONLY, os.ModeExclusive)
+	if err != nil {
+		return err
+	}
+	defer slots.Close()
+	_, err = slots.WriteString("cape-bone-iio")
+	return err
+}
+
+func (p *bbbAnalogPin) valueFilePath() string {
+	return fmt.Sprintf("/sys/devices/ocp.2/helper.14/AIN%v", p.n)
+}
+
+func (p *bbbAnalogPin) openFile(path string) (*os.File, error) {
+	return os.OpenFile(path, os.O_RDONLY, os.ModeExclusive)
+}
+
+func (p *bbbAnalogPin) valueFile() (*os.File, error) {
+	return p.openFile(p.valueFilePath())
+}
+
+func (p *bbbAnalogPin) Read() (int, error) {
+	if err := p.init(); err != nil {
+		return 0, err
+	}
+
+	p.val.Seek(0, 0)
+	bytes, err := ioutil.ReadAll(p.val)
+	if err != nil {
+		return 0, err
+	}
+	str := string(bytes)
+	str = strings.TrimSpace(str)
+	return strconv.Atoi(str)
+}
+
+func (p *bbbAnalogPin) Write(_ int) error {
+	return errors.New("gpio: not implemented")
+}
+
+func (p *bbbAnalogPin) Close() error {
+	if !p.initialized {
+		return nil
+	}
+
+	if err := p.val.Close(); err != nil {
+		return err
+	}
+
+	p.initialized = false
+
+	return nil
 }

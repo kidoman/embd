@@ -1,9 +1,8 @@
 package embd
 
 import (
+	"errors"
 	"fmt"
-
-	"github.com/golang/glog"
 )
 
 type pin interface {
@@ -11,39 +10,54 @@ type pin interface {
 }
 
 type gpioDriver struct {
-	pinMap          PinMap
+	pinMap PinMap
+
+	dpf func(n int) DigitalPin
+	apf func(n int) AnalogPin
+
 	initializedPins map[string]pin
 }
 
-func newGPIODriver(pinMap PinMap) *gpioDriver {
+func newGPIODriver(pinMap PinMap, dpf func(n int) DigitalPin, apf func(n int) AnalogPin) GPIO {
 	return &gpioDriver{
-		pinMap:          pinMap,
+		pinMap: pinMap,
+		dpf:    dpf,
+		apf:    apf,
+
 		initializedPins: map[string]pin{},
 	}
 }
 
-func (io *gpioDriver) lookupKey(key interface{}, cap int) (*PinDesc, bool) {
-	return io.pinMap.Lookup(key, cap)
-}
-
-func (io *gpioDriver) digitalPin(key interface{}) (*digitalPin, error) {
-	pd, found := io.lookupKey(key, CapNormal)
-	if !found {
-		return nil, fmt.Errorf("gpio: could not find pin matching %q", key)
-	}
-
-	if pd.Caps != CapNormal {
-		glog.Infof("gpio: pin %q is not a dedicated digital io pin. please refer to the system reference manual for more details", key)
-	}
-
-	dp := newDigitalPin(pd.DigitalLogical)
-	io.initializedPins[pd.ID] = dp
-
-	return dp, nil
-}
-
 func (io *gpioDriver) DigitalPin(key interface{}) (DigitalPin, error) {
-	return io.digitalPin(key)
+	if io.dpf == nil {
+		return nil, errors.New("gpio: digital io not supported on this host")
+	}
+
+	pd, found := io.pinMap.Lookup(key, CapNormal)
+	if !found {
+		return nil, fmt.Errorf("gpio: could not find pin matching %v", key)
+	}
+
+	p := io.dpf(pd.DigitalLogical)
+	io.initializedPins[pd.ID] = p
+
+	return p, nil
+}
+
+func (io *gpioDriver) AnalogPin(key interface{}) (AnalogPin, error) {
+	if io.apf == nil {
+		return nil, errors.New("gpio: analog io not supported on this host")
+	}
+
+	pd, found := io.pinMap.Lookup(key, CapAnalog)
+	if !found {
+		return nil, fmt.Errorf("gpio: could not find pin matching %v", key)
+	}
+
+	p := io.apf(pd.AnalogLogical)
+	io.initializedPins[pd.ID] = p
+
+	return p, nil
 }
 
 func (io *gpioDriver) Close() error {

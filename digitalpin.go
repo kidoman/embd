@@ -19,8 +19,12 @@ type digitalPin struct {
 	initialized bool
 }
 
-func newDigitalPin(n int) *digitalPin {
+func newDigitalPin(n int) DigitalPin {
 	return &digitalPin{n: n}
+}
+
+func (p *digitalPin) N() int {
+	return p.n
 }
 
 func (p *digitalPin) init() error {
