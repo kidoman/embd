@@ -12,13 +12,13 @@ type pin interface {
 
 type gpioDriver struct {
 	pinMap          PinMap
-	initializedPins map[int]pin
+	initializedPins map[string]pin
 }
 
 func newGPIODriver(pinMap PinMap) *gpioDriver {
 	return &gpioDriver{
 		pinMap:          pinMap,
-		initializedPins: map[int]pin{},
+		initializedPins: map[string]pin{},
 	}
 }
 
@@ -32,9 +32,9 @@ func (io *gpioDriver) digitalPin(key interface{}) (*digitalPin, error) {
 		return nil, fmt.Errorf("gpio: could not find pin matching %q", key)
 	}
 
-	n := pd.N
+	id := pd.ID
 
-	p, ok := io.initializedPins[n]
+	p, ok := io.initializedPins[id]
 	if ok {
 		dp, ok := p.(*digitalPin)
 		if !ok {
@@ -51,8 +51,8 @@ func (io *gpioDriver) digitalPin(key interface{}) (*digitalPin, error) {
 		glog.Infof("gpio: pin %q is not a dedicated digital io pin. please refer to the system reference manual for more details", key)
 	}
 
-	dp := newDigitalPin(n)
-	io.initializedPins[n] = dp
+	dp := newDigitalPin(pd.DigitalLogical)
+	io.initializedPins[id] = dp
 
 	return dp, nil
 }

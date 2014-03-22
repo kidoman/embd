@@ -1,5 +1,10 @@
 package embd
 
+import (
+	"fmt"
+	"strconv"
+)
+
 const (
 	CapNormal int = 1 << iota
 	CapI2C
@@ -11,27 +16,38 @@ const (
 )
 
 type PinDesc struct {
-	N    int
-	IDs  []string
-	Caps int
+	ID      string
+	Aliases []string
+	Caps    int
+
+	DigitalLogical int
 }
 
 type PinMap []*PinDesc
 
 func (m PinMap) Lookup(k interface{}) (*PinDesc, bool) {
+	var ks string
 	switch key := k.(type) {
 	case int:
-		for i := range m {
-			if m[i].N == key {
-				return m[i], true
-			}
-		}
+		ks = strconv.Itoa(key)
 	case string:
-		for i := range m {
-			for j := range m[i].IDs {
-				if m[i].IDs[j] == key {
-					return m[i], true
-				}
+		ks = key
+	case fmt.Stringer:
+		ks = key.String()
+	default:
+		return nil, false
+	}
+
+	for i := range m {
+		pd := m[i]
+
+		if pd.ID == ks {
+			return pd, true
+		}
+
+		for j := range pd.Aliases {
+			if pd.Aliases[j] == ks {
+				return pd, true
 			}
 		}
 	}
