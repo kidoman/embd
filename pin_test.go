@@ -45,3 +45,13 @@ func TestPinMapLookup(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkPinMapLookup(b *testing.B) {
+	var pinMap = PinMap{
+		&PinDesc{ID: "P1_1", Aliases: []string{"AN1", "10"}, Caps: CapAnalog},
+		&PinDesc{ID: "P1_2", Aliases: []string{"10", "GPIO10"}, Caps: CapNormal},
+	}
+	for i := 0; i < b.N; i++ {
+		pinMap.Lookup("GPIO10", CapNormal)
+	}
+}
