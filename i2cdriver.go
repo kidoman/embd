@@ -91,45 +91,42 @@ func (b *i2cBus) Close() error {
 	return b.file.Close()
 }
 
-func (b *i2cBus) setAddress(addr byte) (err error) {
+func (b *i2cBus) setAddress(addr byte) error {
 	if addr != b.addr {
 		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), slaveCmd, uintptr(addr)); errno != 0 {
-			err = syscall.Errno(errno)
-			return
+			return syscall.Errno(errno)
 		}
 
 		b.addr = addr
 	}
 
-	return
+	return nil
 }
 
-func (b *i2cBus) ReadByte(addr byte) (value byte, err error) {
+func (b *i2cBus) ReadByte(addr byte) (byte, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if err = b.setAddress(addr); err != nil {
-		return
+	if err := b.setAddress(addr); err != nil {
+		return 0, err
 	}
 
 	bytes := make([]byte, 1)
-	n, err := b.file.Read(bytes)
+	n, _ := b.file.Read(bytes)
 
 	if n != 1 {
-		err = fmt.Errorf("i2c: Unexpected number (%v) of bytes read", n)
+		return 0, fmt.Errorf("i2c: Unexpected number (%v) of bytes read", n)
 	}
 
-	value = bytes[0]
-
-	return
+	return bytes[0], nil
 }
 
-func (b *i2cBus) WriteByte(addr, value byte) (err error) {
+func (b *i2cBus) WriteByte(addr, value byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if err = b.setAddress(addr); err != nil {
-		return
+	if err := b.setAddress(addr); err != nil {
+		return err
 	}
 
 	n, err := b.file.Write([]byte{value})
@@ -138,14 +135,14 @@ func (b *i2cBus) WriteByte(addr, value byte) (err error) {
 		err = fmt.Errorf("i2c: Unexpected number (%v) of bytes written in WriteByte", n)
 	}
 
-	return
+	return err
 }
 
-func (b *i2cBus) WriteBytes(addr byte, value []byte) (err error) {
+func (b *i2cBus) WriteBytes(addr byte, value []byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if err = b.setAddress(addr); err != nil {
+	if err := b.setAddress(addr); err != nil {
 		return err
 	}
 
@@ -165,12 +162,12 @@ func (b *i2cBus) WriteBytes(addr byte, value []byte) (err error) {
 	return nil
 }
 
-func (b *i2cBus) ReadFromReg(addr, reg byte, value []byte) (err error) {
+func (b *i2cBus) ReadFromReg(addr, reg byte, value []byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if err = b.setAddress(addr); err != nil {
-		return
+	if err := b.setAddress(addr); err != nil {
+		return err
 	}
 
 	hdrp := (*reflect.SliceHeader)(unsafe.Pointer(&value))
@@ -198,30 +195,28 @@ func (b *i2cBus) ReadFromReg(addr, reg byte, value []byte) (err error) {
 	return nil
 }
 
-func (b *i2cBus) ReadByteFromReg(addr, reg byte) (value byte, err error) {
+func (b *i2cBus) ReadByteFromReg(addr, reg byte) (byte, error) {
 	buf := make([]byte, 1)
-	if err = b.ReadFromReg(addr, reg, buf); err != nil {
-		return
+	if err := b.ReadFromReg(addr, reg, buf); err != nil {
+		return 0, err
 	}
-	value = buf[0]
-	return
+	return buf[0], nil
 }
 
-func (b *i2cBus) ReadWordFromReg(addr, reg byte) (value uint16, err error) {
+func (b *i2cBus) ReadWordFromReg(addr, reg byte) (uint16, error) {
 	buf := make([]byte, 2)
-	if err = b.ReadFromReg(addr, reg, buf); err != nil {
-		return
+	if err := b.ReadFromReg(addr, reg, buf); err != nil {
+		return 0, err
 	}
-	value = uint16((uint16(buf[0]) << 8) | uint16(buf[1]))
-	return
+	return uint16((uint16(buf[0]) << 8) | uint16(buf[1])), nil
 }
 
-func (b *i2cBus) WriteToReg(addr, reg byte, value []byte) (err error) {
+func (b *i2cBus) WriteToReg(addr, reg byte, value []byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if err = b.setAddress(addr); err != nil {
-		return
+	if err := b.setAddress(addr); err != nil {
+		return err
 	}
 
 	outbuf := append([]byte{reg}, value...)
@@ -240,19 +235,18 @@ func (b *i2cBus) WriteToReg(addr, reg byte, value []byte) (err error) {
 	packets.nmsg = 1
 
 	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), rdrwCmd, uintptr(unsafe.Pointer(&packets))); errno != 0 {
-		err = syscall.Errno(errno)
-		return
+		return syscall.Errno(errno)
 	}
 
-	return
+	return nil
 }
 
-func (b *i2cBus) WriteByteToReg(addr, reg, value byte) (err error) {
+func (b *i2cBus) WriteByteToReg(addr, reg, value byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if err = b.setAddress(addr); err != nil {
-		return
+	if err := b.setAddress(addr); err != nil {
+		return err
 	}
 
 	outbuf := [...]byte{
@@ -272,19 +266,18 @@ func (b *i2cBus) WriteByteToReg(addr, reg, value byte) (err error) {
 	packets.nmsg = 1
 
 	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), rdrwCmd, uintptr(unsafe.Pointer(&packets))); errno != 0 {
-		err = syscall.Errno(errno)
-		return
+		return syscall.Errno(errno)
 	}
 
-	return
+	return nil
 }
 
-func (b *i2cBus) WriteWordToReg(addr, reg byte, value uint16) (err error) {
+func (b *i2cBus) WriteWordToReg(addr, reg byte, value uint16) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	if err = b.setAddress(addr); err != nil {
-		return
+	if err := b.setAddress(addr); err != nil {
+		return err
 	}
 
 	outbuf := [...]byte{
@@ -305,9 +298,8 @@ func (b *i2cBus) WriteWordToReg(addr, reg byte, value uint16) (err error) {
 	packets.nmsg = 1
 
 	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), rdrwCmd, uintptr(unsafe.Pointer(&packets))); errno != 0 {
-		err = syscall.Errno(errno)
-		return
+		return syscall.Errno(errno)
 	}
 
-	return
+	return nil
 }
