@@ -1,3 +1,5 @@
+// Generic LED driver.
+
 package embd
 
 import (
@@ -9,6 +11,7 @@ import (
 	"strings"
 )
 
+// LEDMap type represents a LED mapping for a host.
 type LEDMap map[string][]string
 
 type ledDriver struct {

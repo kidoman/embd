@@ -1,3 +1,5 @@
+// Generic I2C driver.
+
 package embd
 
 import (

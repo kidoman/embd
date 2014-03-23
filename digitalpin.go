@@ -1,3 +1,7 @@
+// Digital IO support.
+// This driver requires kernel version 3.8+ and should work uniformly
+// across all supported devices.
+
 package embd
 
 import (

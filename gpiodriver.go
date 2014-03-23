@@ -1,3 +1,5 @@
+// Generic GPIO driver.
+
 package embd
 
 import (

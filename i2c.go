@@ -52,12 +52,12 @@ func InitI2C() error {
 	return nil
 }
 
-// CloseI2C gracefully closes the I2C driver.
+// CloseI2C releases resources associated with the I2C driver.
 func CloseI2C() error {
 	return i2cDriverInstance.Close()
 }
 
-// NewI2CBus returns a I2CBus corresponding to the provided address.
+// NewI2CBus returns a I2CBus.
 func NewI2CBus(l byte) I2CBus {
 	return i2cDriverInstance.Bus(l)
 }

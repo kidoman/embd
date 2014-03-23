@@ -4,11 +4,16 @@ package embd
 
 // The LED interface is used to control a led on the prototyping board.
 type LED interface {
+	// On switches the LED on.
 	On() error
+
+	// Off switches the LED off.
 	Off() error
 
+	// Toggle toggles the LED.
 	Toggle() error
 
+	// Close releases resources associated with the LED.
 	Close() error
 }
 
@@ -38,18 +43,17 @@ func InitLED() error {
 	return nil
 }
 
-// CloseLED gracefully closes the LED driver.
+// CloseLED releases resources associated with the LED driver.
 func CloseLED() error {
 	return ledDriverInstance.Close()
 }
 
-// NewLED returns a LED interface which allows control over the LED
-// represented by key.
+// NewLED returns a LED interface which allows control over the LED.
 func NewLED(key interface{}) (LED, error) {
 	return ledDriverInstance.LED(key)
 }
 
-// LEDOn switches the corresponding LED on.
+// LEDOn switches the LED on.
 func LEDOn(key interface{}) error {
 	led, err := NewLED(key)
 	if err != nil {
@@ -59,7 +63,7 @@ func LEDOn(key interface{}) error {
 	return led.On()
 }
 
-// LEDOff switches the corresponding LED off.
+// LEDOff switches the LED off.
 func LEDOff(key interface{}) error {
 	led, err := NewLED(key)
 	if err != nil {
@@ -69,7 +73,7 @@ func LEDOff(key interface{}) error {
 	return led.Off()
 }
 
-// LEDToggle toggles the corresponding LED.
+// LEDToggle toggles the LED.
 func LEDToggle(key interface{}) error {
 	led, err := NewLED(key)
 	if err != nil {
