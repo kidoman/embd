@@ -20,6 +20,9 @@ type Describer func(rev int) *Descriptor
 // Describers is a global list of registered host Describers.
 var describers = make(map[Host]Describer)
 
+// Register makes a host describer available by the provided host key.
+// If Register is called twice with the same host or if describer is nil,
+// it panics.
 func Register(host Host, describer Describer) {
 	if describer == nil {
 		panic("embd: describer is nil")
@@ -30,11 +33,32 @@ func Register(host Host, describer Describer) {
 	describers[host] = describer
 }
 
+var hostOverride Host
+var hostRevOverride int
+var hostOverriden bool
+
+// SetHost overrides the host and revision no.
+func SetHost(host Host, rev int) {
+	hostOverride = host
+	hostRevOverride = rev
+
+	hostOverriden = true
+}
+
 // DescribeHost returns the detected host descriptor.
+// Can be overriden by calling SetHost though.
 func DescribeHost() (*Descriptor, error) {
-	host, rev, err := DetectHost()
-	if err != nil {
-		return nil, err
+	var host Host
+	var rev int
+
+	if hostOverriden {
+		host, rev = hostOverride, hostRevOverride
+	} else {
+		var err error
+		host, rev, err = DetectHost()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	describer, ok := describers[host]
