@@ -36,14 +36,14 @@ type AnalogPin interface {
 	Close() error
 }
 
-type GPIO interface {
+type GPIODriver interface {
 	DigitalPin(key interface{}) (DigitalPin, error)
 	AnalogPin(key interface{}) (AnalogPin, error)
 
 	Close() error
 }
 
-var gpioInstance GPIO
+var gpioDriverInstance GPIODriver
 
 func InitGPIO() error {
 	desc, err := DescribeHost()
@@ -51,21 +51,21 @@ func InitGPIO() error {
 		return err
 	}
 
-	if desc.GPIO == nil {
+	if desc.GPIODriver == nil {
 		return ErrFeatureNotSupport
 	}
 
-	gpioInstance = desc.GPIO()
+	gpioDriverInstance = desc.GPIODriver()
 
 	return nil
 }
 
 func CloseGPIO() error {
-	return gpioInstance.Close()
+	return gpioDriverInstance.Close()
 }
 
 func NewDigitalPin(key interface{}) (DigitalPin, error) {
-	return gpioInstance.DigitalPin(key)
+	return gpioDriverInstance.DigitalPin(key)
 }
 
 func DigitalWrite(key interface{}, val int) error {
@@ -105,7 +105,7 @@ func ActiveLow(key interface{}, b bool) error {
 }
 
 func NewAnalogPin(key interface{}) (AnalogPin, error) {
-	return gpioInstance.AnalogPin(key)
+	return gpioDriverInstance.AnalogPin(key)
 }
 
 func AnalogWrite(key interface{}, val int) error {

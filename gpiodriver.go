@@ -18,7 +18,7 @@ type gpioDriver struct {
 	initializedPins map[string]pin
 }
 
-func newGPIODriver(pinMap PinMap, dpf func(n int) DigitalPin, apf func(n int) AnalogPin) GPIO {
+func newGPIODriver(pinMap PinMap, dpf func(n int) DigitalPin, apf func(n int) AnalogPin) GPIODriver {
 	return &gpioDriver{
 		pinMap: pinMap,
 		dpf:    dpf,

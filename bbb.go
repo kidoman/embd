@@ -12,10 +12,10 @@ import (
 func init() {
 	Describers[HostBBB] = func(rev int) *Descriptor {
 		return &Descriptor{
-			GPIO: func() GPIO {
+			GPIODriver: func() GPIODriver {
 				return newGPIODriver(bbbPins, newDigitalPin, newBBBAnalogPin)
 			},
-			I2C: newI2CDriver,
+			I2CDriver: newI2CDriver,
 			LEDDriver: func() LEDDriver {
 				return newLEDDriver(bbbLEDMap)
 			},

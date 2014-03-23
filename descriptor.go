@@ -6,9 +6,9 @@ import (
 )
 
 type Descriptor struct {
-	GPIO      func() GPIO
-	I2C       func() I2C
-	LEDDriver func() LEDDriver
+	GPIODriver func() GPIODriver
+	I2CDriver  func() I2CDriver
+	LEDDriver  func() LEDDriver
 }
 
 type Describer func(rev int) *Descriptor

@@ -15,7 +15,7 @@ type i2cDriver struct {
 	busMapLock sync.Mutex
 }
 
-func newI2CDriver() I2C {
+func newI2CDriver() I2CDriver {
 	return &i2cDriver{
 		busMap: make(map[byte]*i2cBus),
 	}

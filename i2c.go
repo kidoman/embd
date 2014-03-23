@@ -23,13 +23,13 @@ type I2CBus interface {
 	WriteWordToReg(addr, reg byte, value uint16) error
 }
 
-type I2C interface {
+type I2CDriver interface {
 	Bus(l byte) I2CBus
 
 	Close() error
 }
 
-var i2cInstance I2C
+var i2cDriverInstance I2CDriver
 
 func InitI2C() error {
 	desc, err := DescribeHost()
@@ -37,19 +37,19 @@ func InitI2C() error {
 		return err
 	}
 
-	if desc.I2C == nil {
+	if desc.I2CDriver == nil {
 		return ErrFeatureNotSupport
 	}
 
-	i2cInstance = desc.I2C()
+	i2cDriverInstance = desc.I2CDriver()
 
 	return nil
 }
 
 func CloseI2C() error {
-	return i2cInstance.Close()
+	return i2cDriverInstance.Close()
 }
 
 func NewI2CBus(l byte) I2CBus {
-	return i2cInstance.Bus(l)
+	return i2cDriverInstance.Bus(l)
 }
