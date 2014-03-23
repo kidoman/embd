@@ -10,23 +10,26 @@ import (
 )
 
 // The Host type represents all the supported host types.
-type Host int
+type Host string
 
 const (
 	// HostNull reprents a null host.
-	HostNull Host = iota
+	HostNull Host = ""
 
 	// HostRPi represents the RaspberryPi.
-	HostRPi
+	HostRPi = "Raspberry Pi"
 
 	// HostBBB represents the BeagleBone Black.
-	HostBBB
-
-	// HostCubieTruck represents the Cubie Truck.
-	HostCubieTruck
+	HostBBB = "BeagleBone Black"
 
 	// HostGalileo represents the Intel Galileo board.
-	HostGalileo
+	HostGalileo = "Intel Galileo"
+
+	// HostCubieTruck represents the Cubie Truck.
+	HostCubieTruck = "CubieTruck"
+
+	// HostRadxa represents the Cubie Truck.
+	HostRadxa = "Radxa"
 )
 
 func execOutput(name string, arg ...string) (output string, err error) {
