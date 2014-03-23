@@ -123,7 +123,11 @@ func (p *bbbAnalogPin) init() error {
 }
 
 func (p *bbbAnalogPin) ensureEnabled() error {
-	file := "/sys/devices/bone_capemgr.8/slots"
+	pattern := "/sys/devices/bone_capemgr.*/slots"
+	file, err := findFirstMatchingFile(pattern)
+	if err != nil {
+		return err
+	}
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -142,8 +146,9 @@ func (p *bbbAnalogPin) ensureEnabled() error {
 	return err
 }
 
-func (p *bbbAnalogPin) valueFilePath() string {
-	return fmt.Sprintf("/sys/devices/ocp.2/helper.14/AIN%v", p.n)
+func (p *bbbAnalogPin) valueFilePath() (string, error) {
+	pattern := fmt.Sprintf("/sys/devices/ocp.*/helper.*/AIN%v", p.n)
+	return findFirstMatchingFile(pattern)
 }
 
 func (p *bbbAnalogPin) openFile(path string) (*os.File, error) {
@@ -151,7 +156,11 @@ func (p *bbbAnalogPin) openFile(path string) (*os.File, error) {
 }
 
 func (p *bbbAnalogPin) valueFile() (*os.File, error) {
-	return p.openFile(p.valueFilePath())
+	path, err := p.valueFilePath()
+	if err != nil {
+		return nil, err
+	}
+	return p.openFile(path)
 }
 
 func (p *bbbAnalogPin) Read() (int, error) {
