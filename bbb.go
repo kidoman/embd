@@ -194,10 +194,6 @@ func (p *bbbAnalogPin) Read() (int, error) {
 	return strconv.Atoi(str)
 }
 
-func (p *bbbAnalogPin) Write(_ int) error {
-	return ErrFeatureNotImplemented
-}
-
 func (p *bbbAnalogPin) Close() error {
 	if !p.initialized {
 		return nil

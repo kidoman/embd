@@ -54,9 +54,6 @@ type AnalogPin interface {
 	// N returns the logical GPIO number.
 	N() int
 
-	// Write writes the provided value to the pin.
-	Write(val int) error
-
 	// Read reads the value from the pin.
 	Read() (int, error)
 
@@ -170,16 +167,6 @@ func PullDown(key interface{}) error {
 // the analog GPIO pin.
 func NewAnalogPin(key interface{}) (AnalogPin, error) {
 	return gpioDriverInstance.AnalogPin(key)
-}
-
-// AnalogWrite writes the provided value to the pin.
-func AnalogWrite(key interface{}, val int) error {
-	pin, err := NewAnalogPin(key)
-	if err != nil {
-		return err
-	}
-
-	return pin.Write(val)
 }
 
 // AnalogWrite reads a value from the pin.
