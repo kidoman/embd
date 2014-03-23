@@ -1,4 +1,4 @@
-# embd [![Build Status](https://travis-ci.org/kidoman/embd.png?branch=master)](https://travis-ci.org/kidoman/embd) [![GoDoc](http://godoc.org/github.com/kidoman/embd?status.png)](http://godoc.org/github.com/kidoman/embd)
+# embd [![Build Status](https://travis-ci.org/kidoman/embd.svg?branch=master)](https://travis-ci.org/kidoman/embd) [![GoDoc](http://godoc.org/github.com/kidoman/embd?status.png)](http://godoc.org/github.com/kidoman/embd)
 
 Supercharged Embedded Programming Framework
 
