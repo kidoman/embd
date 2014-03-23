@@ -80,8 +80,7 @@ func DetectHost() (Host, int, error) {
 	}
 
 	if major < 3 || (major == 3 && minor < 8) {
-		err = fmt.Errorf("embd: linux kernel versions lower than 3.8 are not supported. you have %v.%v.%v", major, minor, patch)
-		return HostNull, 0, err
+		return HostNull, 0, fmt.Errorf("embd: linux kernel versions lower than 3.8 are not supported. you have %v.%v.%v", major, minor, patch)
 	}
 
 	node, err := nodeName()
@@ -98,8 +97,7 @@ func DetectHost() (Host, int, error) {
 	case "beaglebone":
 		host = HostBBB
 	default:
-		err = fmt.Errorf("embd: your host %q is not supported at this moment. please request support at https://github.com/kidoman/embd/issues", node)
-		return HostNull, 0, err
+		return HostNull, 0, fmt.Errorf("embd: your host %q is not supported at this moment. please request support at https://github.com/kidoman/embd/issues", node)
 	}
 
 	return host, rev, nil
