@@ -3,6 +3,8 @@
 	on supported platforms like the Raspberry Pi and BeagleBone Black. Most of the examples below
 	will work without change (i.e. the same binary) on all supported platforms. How cool is that?
 
+	Although samples are all present in the samples folder, we will show a few choice examples here.
+
 	Use the LED driver to toggle LEDs on the BBB:
 
 		import "github.com/kidoman/embd"
