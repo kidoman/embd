@@ -7,7 +7,7 @@
 package embd
 
 func init() {
-	Describers[HostRPi] = func(rev int) *Descriptor {
+	Register(HostRPi, func(rev int) *Descriptor {
 		var pins = rpiRev1Pins
 		if rev > 1 {
 			pins = rpiRev2Pins
@@ -19,7 +19,7 @@ func init() {
 			},
 			I2CDriver: newI2CDriver,
 		}
-	}
+	})
 }
 
 var rpiRev1Pins = PinMap{

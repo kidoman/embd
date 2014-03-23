@@ -18,7 +18,17 @@ type Descriptor struct {
 type Describer func(rev int) *Descriptor
 
 // Describers is a global list of registered host Describers.
-var Describers = map[Host]Describer{}
+var describers = make(map[Host]Describer)
+
+func Register(host Host, describer Describer) {
+	if describer == nil {
+		panic("embd: describer is nil")
+	}
+	if _, dup := describers[host]; dup {
+		panic("embd: describer already registered")
+	}
+	describers[host] = describer
+}
 
 // DescribeHost returns the detected host descriptor.
 func DescribeHost() (*Descriptor, error) {
@@ -27,7 +37,7 @@ func DescribeHost() (*Descriptor, error) {
 		return nil, err
 	}
 
-	describer, ok := Describers[host]
+	describer, ok := describers[host]
 	if !ok {
 		return nil, fmt.Errorf("host: invalid host %q", host)
 	}

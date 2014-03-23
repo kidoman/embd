@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	Describers[HostBBB] = func(rev int) *Descriptor {
+	Register(HostBBB, func(rev int) *Descriptor {
 		return &Descriptor{
 			GPIODriver: func() GPIODriver {
 				return newGPIODriver(bbbPins, newDigitalPin, newBBBAnalogPin)
@@ -26,7 +26,7 @@ func init() {
 				return newLEDDriver(bbbLEDMap)
 			},
 		}
-	}
+	})
 }
 
 var bbbPins = PinMap{
