@@ -1,3 +1,9 @@
+// RaspberryPi support.
+// The following features are supported on Linux kernel 3.8+
+//
+//	GPIO (digital (rw))
+//	I2C
+
 package embd
 
 func init() {

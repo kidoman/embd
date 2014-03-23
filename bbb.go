@@ -1,3 +1,10 @@
+// BeagleBone Black support.
+// The following features are supported on Linux kernel 3.8+
+//
+//	GPIO (both digital (rw) and analog (ro))
+//	I2C
+//	LED
+
 package embd
 
 import (

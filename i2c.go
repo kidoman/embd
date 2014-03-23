@@ -1,5 +1,8 @@
+// I2C support.
+
 package embd
 
+// I2CBus interface is used to interact with the I2C bus.
 type I2CBus interface {
 	// ReadByte reads a byte from the given address.
 	ReadByte(addr byte) (value byte, err error)
@@ -23,6 +26,8 @@ type I2CBus interface {
 	WriteWordToReg(addr, reg byte, value uint16) error
 }
 
+// I2CDriver interface interacts with the host descriptors to allow us
+// control of I2C communication.
 type I2CDriver interface {
 	Bus(l byte) I2CBus
 
@@ -31,6 +36,7 @@ type I2CDriver interface {
 
 var i2cDriverInstance I2CDriver
 
+// InitI2C initializes the I2C driver.
 func InitI2C() error {
 	desc, err := DescribeHost()
 	if err != nil {
@@ -46,10 +52,12 @@ func InitI2C() error {
 	return nil
 }
 
+// CloseI2C gracefully closes the I2C driver.
 func CloseI2C() error {
 	return i2cDriverInstance.Close()
 }
 
+// NewI2CBus returns a I2CBus corresponding to the provided address.
 func NewI2CBus(l byte) I2CBus {
 	return i2cDriverInstance.Bus(l)
 }

@@ -1,3 +1,5 @@
+// Host detection.
+
 package embd
 
 import (
@@ -7,13 +9,23 @@ import (
 	"strings"
 )
 
+// The Host type represents all the supported host types.
 type Host int
 
 const (
+	// HostNull reprents a null host.
 	HostNull Host = iota
+
+	// HostRPi represents the RaspberryPi.
 	HostRPi
+
+	// HostBBB represents the BeagleBone Black.
 	HostBBB
+
+	// HostCubieTruck represents the Cubie Truck.
 	HostCubieTruck
+
+	// HostGalileo represents the Intel Galileo board.
 	HostGalileo
 )
 
@@ -60,6 +72,7 @@ func kernelVersion() (major, minor, patch int, err error) {
 	return parseVersion(output)
 }
 
+// DetectHost returns the detected host and its revision number.
 func DetectHost() (Host, int, error) {
 	major, minor, patch, err := kernelVersion()
 	if err != nil {
