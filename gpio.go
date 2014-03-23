@@ -51,6 +51,10 @@ func InitGPIO() error {
 		return err
 	}
 
+	if desc.GPIO == nil {
+		return ErrFeatureNotSupport
+	}
+
 	gpioInstance = desc.GPIO()
 
 	return nil

@@ -1,10 +1,14 @@
 package embd
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type Descriptor struct {
-	GPIO func() GPIO
-	I2C  func() I2C
+	GPIO      func() GPIO
+	I2C       func() I2C
+	LEDDriver func() LEDDriver
 }
 
 type Describer func(rev int) *Descriptor
@@ -24,3 +28,5 @@ func DescribeHost() (*Descriptor, error) {
 
 	return describer(rev), nil
 }
+
+var ErrFeatureNotSupport = errors.New("embd: feature is not supported")

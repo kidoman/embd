@@ -8,6 +8,8 @@ gpiodetect
 gpiodirect
 gpioshort
 l3gd20
+led
+ledshort
 lsm303
 mcp4725
 pca9685

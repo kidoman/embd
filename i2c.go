@@ -37,6 +37,10 @@ func InitI2C() error {
 		return err
 	}
 
+	if desc.I2C == nil {
+		return ErrFeatureNotSupport
+	}
+
 	i2cInstance = desc.I2C()
 
 	return nil

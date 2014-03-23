@@ -16,6 +16,9 @@ func init() {
 				return newGPIODriver(bbbPins, newDigitalPin, newBBBAnalogPin)
 			},
 			I2C: newI2CDriver,
+			LEDDriver: func() LEDDriver {
+				return newLEDDriver(bbbLEDMap)
+			},
 		}
 	}
 }
@@ -86,6 +89,13 @@ var bbbPins = PinMap{
 	&PinDesc{ID: "P9_38", Aliases: []string{"3", "AIN3"}, Caps: CapAnalog, AnalogLogical: 3},
 	&PinDesc{ID: "P9_39", Aliases: []string{"0", "AIN0"}, Caps: CapAnalog, AnalogLogical: 0},
 	&PinDesc{ID: "P9_40", Aliases: []string{"1", "AIN1"}, Caps: CapAnalog, AnalogLogical: 1},
+}
+
+var bbbLEDMap = LEDMap{
+	"beaglebone:green:usr0": []string{"0", "USR0", "usr0"},
+	"beaglebone:green:usr1": []string{"1", "USR1", "usr1"},
+	"beaglebone:green:usr2": []string{"2", "USR2", "usr2"},
+	"beaglebone:green:usr3": []string{"3", "USR3", "usr3"},
 }
 
 type bbbAnalogPin struct {
