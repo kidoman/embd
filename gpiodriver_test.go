@@ -50,7 +50,7 @@ func TestGpioDriverDigitalPin(t *testing.T) {
 		{1, 1},
 	}
 	var pinMap = PinMap{
-		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapNormal, DigitalLogical: 1},
+		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapDigital, DigitalLogical: 1},
 	}
 	driver := newGPIODriver(pinMap, newFakeDigitalPin, nil)
 	for _, test := range tests {
@@ -114,7 +114,7 @@ func TestGpioDriverAnalogPin(t *testing.T) {
 
 func TestGpioDriverUnavailablePinType(t *testing.T) {
 	var pinMap = PinMap{
-		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapNormal, DigitalLogical: 1},
+		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapDigital, DigitalLogical: 1},
 		&PinDesc{ID: "P1_2", Aliases: []string{"1"}, Caps: CapAnalog, AnalogLogical: 1},
 	}
 	driver := newGPIODriver(pinMap, nil, nil)

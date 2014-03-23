@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	// CapNormal represents the digital IO capability.
-	CapNormal int = 1 << iota
+	// CapDigital represents the digital IO capability.
+	CapDigital int = 1 << iota
 
 	// CapI2C represents pins with the I2C capability.
 	CapI2C
@@ -50,10 +50,10 @@ type PinMap []*PinDesc
 // combination. This allows the same keys to be used across pins with differing
 // capabilities. For example, it is perfectly fine to have:
 //
-//	pin1: {Aliases: [10, GPIO10], Cap: CapNormal}
+//	pin1: {Aliases: [10, GPIO10], Cap: CapDigital}
 //	pin2: {Aliases: [10, AIN0], Cap: CapAnalog}
 //
-// Searching for 10 with CapNormal will return pin1 and searching for
+// Searching for 10 with CapDigital will return pin1 and searching for
 // 10 with CapAnalog will return pin2. This makes for a very pleasant to use API.
 func (m PinMap) Lookup(k interface{}, cap int) (*PinDesc, bool) {
 	var ks string

@@ -35,7 +35,7 @@ func (io *gpioDriver) DigitalPin(key interface{}) (DigitalPin, error) {
 		return nil, errors.New("gpio: digital io not supported on this host")
 	}
 
-	pd, found := io.pinMap.Lookup(key, CapNormal)
+	pd, found := io.pinMap.Lookup(key, CapDigital)
 	if !found {
 		return nil, fmt.Errorf("gpio: could not find pin matching %v", key)
 	}

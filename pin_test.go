@@ -12,15 +12,15 @@ func TestPinMapLookup(t *testing.T) {
 	}{
 		{"10", CapAnalog, "P1_1", true},
 		{10, CapAnalog, "P1_1", true},
-		{"10", CapNormal, "P1_2", true},
-		{"P1_2", CapNormal, "P1_2", true},
+		{"10", CapDigital, "P1_2", true},
+		{"P1_2", CapDigital, "P1_2", true},
 		{"P1_2", CapAnalog, "P1_2", true},
-		{"GPIO10", CapNormal, "P1_2", true},
+		{"GPIO10", CapDigital, "P1_2", true},
 		{key: "NOTTHERE", found: false},
 	}
 	var pinMap = PinMap{
 		&PinDesc{ID: "P1_1", Aliases: []string{"AN1", "10"}, Caps: CapAnalog},
-		&PinDesc{ID: "P1_2", Aliases: []string{"10", "GPIO10"}, Caps: CapNormal},
+		&PinDesc{ID: "P1_2", Aliases: []string{"10", "GPIO10"}, Caps: CapDigital},
 	}
 	for _, test := range tests {
 		pd, found := pinMap.Lookup(test.key, test.cap)
@@ -34,8 +34,8 @@ func TestPinMapLookup(t *testing.T) {
 		if pd.ID != test.id {
 			var capStr string
 			switch test.cap {
-			case CapNormal:
-				capStr = "CapNormal"
+			case CapDigital:
+				capStr = "CapDigital"
 			case CapAnalog:
 				capStr = "CapAnalog"
 			default:
@@ -49,9 +49,9 @@ func TestPinMapLookup(t *testing.T) {
 func BenchmarkPinMapLookup(b *testing.B) {
 	var pinMap = PinMap{
 		&PinDesc{ID: "P1_1", Aliases: []string{"AN1", "10"}, Caps: CapAnalog},
-		&PinDesc{ID: "P1_2", Aliases: []string{"10", "GPIO10"}, Caps: CapNormal},
+		&PinDesc{ID: "P1_2", Aliases: []string{"10", "GPIO10"}, Caps: CapDigital},
 	}
 	for i := 0; i < b.N; i++ {
-		pinMap.Lookup("GPIO10", CapNormal)
+		pinMap.Lookup("GPIO10", CapDigital)
 	}
 }
