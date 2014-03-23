@@ -6,6 +6,7 @@ import (
 	"math"
 	"sync"
 	"time"
+
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/util"
 )
@@ -155,11 +156,14 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 	return
 }
 
+// SetMicroseconds is a convinience method which allows easy servo control.
 func (d *PCA9685) SetMicroseconds(channel, us int) (err error) {
 	offTime := us * d.Freq * pwmControlPoints / 1000000
 	return d.SetPwm(channel, 0, offTime)
 }
 
+// SetAnalog is a convinience method which allows easy manipulation of the PWM
+// based on a (0-255) range value.
 func (d *PCA9685) SetAnalog(channel int, value byte) (err error) {
 	offTime := util.Map(int64(value), minAnalogValue, maxAnalogValue, 0, pwmControlPoints-1)
 	return d.SetPwm(channel, 0, int(offTime))

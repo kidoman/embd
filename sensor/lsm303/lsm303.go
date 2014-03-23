@@ -42,6 +42,7 @@ const (
 	pollDelay = 250
 )
 
+// LSM303 represents a LSM303 magnetometer.
 type LSM303 struct {
 	Bus  embd.I2CBus
 	Poll int

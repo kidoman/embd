@@ -38,6 +38,7 @@ const (
 	pollDelay = 250
 )
 
+// BMP085 represents a Bosch BMP085 barometric sensor.
 type BMP085 struct {
 	Bus  embd.I2CBus
 	Poll int
@@ -59,6 +60,7 @@ type BMP085 struct {
 	quit      chan struct{}
 }
 
+// New returns a handle to a BMP085 sensor.
 func New(bus embd.I2CBus) *BMP085 {
 	return &BMP085{Bus: bus, Poll: pollDelay}
 }

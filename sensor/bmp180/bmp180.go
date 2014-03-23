@@ -38,6 +38,7 @@ const (
 	pollDelay = 250
 )
 
+// BMP180 represents a Bosch BMP180 barometric sensor.
 type BMP180 struct {
 	Bus  embd.I2CBus
 	Poll int
@@ -59,6 +60,7 @@ type BMP180 struct {
 	quit      chan struct{}
 }
 
+// New returns a handle to a BMP180 sensor.
 func New(bus embd.I2CBus) *BMP180 {
 	return &BMP180{Bus: bus, Poll: pollDelay}
 }

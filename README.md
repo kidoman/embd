@@ -1,19 +1,99 @@
-# embd [![Build Status](https://travis-ci.org/kidoman/embd.png?branch=master)](https://travis-ci.org/kidoman/embd)
+# embd [![Build Status](https://travis-ci.org/kidoman/embd.png?branch=master)](https://travis-ci.org/kidoman/embd) [![GoDoc](http://godoc.org/github.com/kidoman/embd?status.png)](http://godoc.org/github.com/kidoman/embd)
 
-Golang Embedded Programming Framework
+Supercharged Embedded Programming Framework
 
-## Documentation
-
-[![GoDoc](http://godoc.org/github.com/kidoman/embd?status.png)](http://godoc.org/github.com/kidoman/embd)
-
-## Hosts supported
+## Platforms supported
 
 * [RaspberryPi](http://www.raspberrypi.org/)
 * [BeagleBone Black](http://beagleboard.org/Products/BeagleBone%20Black)
+* [Intel Galileo](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) **coming soon**
+* [Radxa](http://radxa.com/) **coming soon**
+* [Cubietruck](http://www.cubietruck.com/) **coming soon**
+* Bring Your Own **coming soon**
+
+## How to use
+
+Package embd provides a supercharged hardware abstraction layer for doing embedded programming
+on supported platforms like the Raspberry Pi and BeagleBone Black. Most of the examples below
+will work without change (i.e. the same binary) on all supported platforms. How cool is that?
+
+Although samples are all present in the [samples](https://github.com/kidoman/embd/tree/master/samples) folder,
+we will show a few choice examples here.
+
+Use the LED driver to toggle LEDs on the BBB:
+
+	import "github.com/kidoman/embd"
+	...
+	embd.InitLED()
+	defer embd.CloseLED()
+	...
+	led, err := embd.NewLED("USR3")
+	...
+	led.Toggle()
+
+Even shorter while prototyping:
+
+	import "github.com/kidoman/embd"
+	...
+	embd.InitLED()
+	defer embd.CloseLED()
+	...
+	embd.ToggleLED(3)
+
+Control GPIO pins on the RaspberryPi / BeagleBone Black:
+
+	import "github.com/kidoman/embd"
+	...
+	embd.InitGPIO()
+	defer embd.CloseGPIO()
+	...
+	embd.SetDirection(10, embd.Out)
+	embd.DigitalWrite(10, embd.High)
+
+Could also do:
+
+	import "github.com/kidoman/embd"
+	...
+	embd.InitGPIO()
+	defer embd.CloseGPIO()
+	...
+	pin, err := embd.NewDigitalPin(10)
+	...
+	pin.SetDirection(embd.Out)
+	pin.Write(embd.High)
+
+Or read data from the Bosch BMP085 barometric sensor:
+
+	import "github.com/kidoman/embd"
+	import "github.com/kidoman/embd/sensor/bmp085"
+	...
+	bus := embd.NewI2CBus(1)
+	...
+	baro := bmp085.New(bus)
+	...
+	temp, err := baro.Temperature()
+	altitude, err := baro.Altitude()
+
+Even find out the heading from the LSM303 magnetometer:
+
+	import "github.com/kidoman/embd"
+	import "github.com/kidoman/embd/sensor/lsm303"
+	...
+	bus := embd.NewI2CBus(1)
+	...
+	mag := lsm303.New(bus)
+	...
+	heading, err := mag.Heading()
+
+The above two examples depend on I2C and therefore will work without change on almost all
+platforms.
 
 ## Protocols supported
 
-* **I2C** [Documentation](http://godoc.org/github.com/kidoman/embd/i2c)
+* **Digital GPIO** [Documentation](http://godoc.org/github.com/kidoman/embd#DigitalPin)
+* **Analog GPIO** [Documentation](http://godoc.org/github.com/kidoman/embd#AnalogPin)
+* **I2C** [Documentation](http://godoc.org/github.com/kidoman/embd#I2CBus)
+* **LED** [Documentation](http://godoc.org/github.com/kidoman/embd#LED)
 
 ## Sensors supported
 

@@ -1,4 +1,4 @@
-// Package BH1750FVI allows interfacing with the BH1750FVI ambient light sensor through I2C protocol.
+// Package BH1750FVI allows interfacing with the BH1750FVI ambient light sensor through I2C.
 package bh1750fvi
 
 import (
@@ -25,6 +25,7 @@ const (
 	pollDelay = 150
 )
 
+// BH1750FVI represents a BH1750FVI ambient light sensor.
 type BH1750FVI struct {
 	Bus  embd.I2CBus
 	Poll int
@@ -38,6 +39,7 @@ type BH1750FVI struct {
 	operationCode byte
 }
 
+// New returns a BH1750FVI sensor at the specific resolution mode.
 func New(mode string, bus embd.I2CBus) *BH1750FVI {
 	switch mode {
 	case High:
@@ -49,12 +51,12 @@ func New(mode string, bus embd.I2CBus) *BH1750FVI {
 	}
 }
 
-// NewHighMode returns a BH1750FVI inteface on high resolution mode (1lx resolution)
+// NewHighMode returns a BH1750FVI sensor on high resolution mode (1lx resolution)
 func NewHighMode(bus embd.I2CBus) *BH1750FVI {
 	return New(High, bus)
 }
 
-// NewHighMode returns a BH1750FVI inteface on high resolution mode2 (0.5lx resolution)
+// NewHighMode returns a BH1750FVI sensor on high resolution mode2 (0.5lx resolution)
 func NewHigh2Mode(bus embd.I2CBus) *BH1750FVI {
 	return New(High2, bus)
 }

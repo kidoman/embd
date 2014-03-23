@@ -1,5 +1,7 @@
 // +build ignore
 
+// Short LED example, works OOTB on a BBB.
+
 package main
 
 import (

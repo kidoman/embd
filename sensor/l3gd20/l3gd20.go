@@ -316,6 +316,7 @@ func (d *L3GD20) Temperature() (temp int, err error) {
 	return
 }
 
+// Orientations returns a channel which will have the current temperature reading.
 func (d *L3GD20) Orientations() (orientations <-chan Orientation, err error) {
 	if err = d.setup(); err != nil {
 		return
@@ -366,6 +367,7 @@ func (d *L3GD20) Start() (err error) {
 	return
 }
 
+// Stop the data acquisition loop.
 func (d *L3GD20) Stop() (err error) {
 	if d.closing != nil {
 		waitc := make(chan struct{})

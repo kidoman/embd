@@ -1,29 +1,74 @@
 /*
-Package rpi provides modules which will help gophers deal with various sensors.
+	Package embd provides a supercharged hardware abstraction layer for doing embedded programming
+	on supported platforms like the Raspberry Pi and BeagleBone Black. Most of the examples below
+	will work without change (i.e. the same binary) on all supported platforms. How cool is that?
 
-Use the default i2c bus to read/write data:
+	Use the LED driver to toggle LEDs on the BBB:
 
-	import "github.com/kidoman/embd/i2c"
-	...
-	value, err := i2c.ReadInt(0x1E, 0x03)
-	...
-	value := make([]byte, 6)
-	err := i2c.ReadFromReg(0x77, 0xF6, value)
-	...
-	err := i2c.WriteToReg(0x1E, 0x02, 0x00)
+		import "github.com/kidoman/embd"
+		...
+		embd.InitLED()
+		defer embd.CloseLED()
+		...
+		led, err := embd.NewLED("USR3")
+		...
+		led.Toggle()
 
-Read data from the BMP085 sensor:
+	Even shorter while prototyping:
 
-	import "github.com/kidoman/embd/sensor/bmp085"
-	...
-	temp, err := bmp085.Temperature()
-	...
-	altitude, err := bmp085.Altitude()
+		import "github.com/kidoman/embd"
+		...
+		embd.InitLED()
+		defer embd.CloseLED()
+		...
+		embd.ToggleLED(3)
 
-Find out the heading from the LSM303 magnetometer:
+	Control GPIO pins on the RaspberryPi / BeagleBone Black:
 
-	import "github.com/kidoman/embd/sensor/lsm303"
-	...
-	heading, err := lsm303.Heading()
+		import "github.com/kidoman/embd"
+		...
+		embd.InitGPIO()
+		defer embd.CloseGPIO()
+		...
+		embd.SetDirection(10, embd.Out)
+		embd.DigitalWrite(10, embd.High)
+
+	Could also do:
+
+		import "github.com/kidoman/embd"
+		...
+		embd.InitGPIO()
+		defer embd.CloseGPIO()
+		...
+		pin, err := embd.NewDigitalPin(10)
+		...
+		pin.SetDirection(embd.Out)
+		pin.Write(embd.High)
+
+	Or read data from the Bosch BMP085 barometric sensor:
+
+		import "github.com/kidoman/embd"
+		import "github.com/kidoman/embd/sensor/bmp085"
+		...
+		bus := embd.NewI2CBus(1)
+		...
+		baro := bmp085.New(bus)
+		...
+		temp, err := baro.Temperature()
+		altitude, err := baro.Altitude()
+
+	Even find out the heading from the LSM303 magnetometer:
+
+		import "github.com/kidoman/embd"
+		import "github.com/kidoman/embd/sensor/lsm303"
+		...
+		bus := embd.NewI2CBus(1)
+		...
+		mag := lsm303.New(bus)
+		...
+		heading, err := mag.Heading()
+
+	The above two examples depend on I2C and therefore will work without change on almost all
+	platforms.
 */
 package embd

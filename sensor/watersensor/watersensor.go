@@ -1,4 +1,4 @@
-// Package watersensor allows interfacing with the water sensor
+// Package watersensor allows interfacing with the water sensor.
 package watersensor
 
 import (
@@ -8,6 +8,7 @@ import (
 	"github.com/kidoman/embd"
 )
 
+// WaterSensor represents a water sensor.
 type WaterSensor struct {
 	Pin embd.DigitalPin
 
