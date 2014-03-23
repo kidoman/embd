@@ -57,3 +57,12 @@ func LEDOff(key interface{}) error {
 
 	return led.Off()
 }
+
+func LEDToggle(key interface{}) error {
+	led, err := NewLED(key)
+	if err != nil {
+		return err
+	}
+
+	return led.Toggle()
+}
