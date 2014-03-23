@@ -1,7 +1,6 @@
 package embd
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -189,7 +188,7 @@ func (p *bbbAnalogPin) Read() (int, error) {
 }
 
 func (p *bbbAnalogPin) Write(_ int) error {
-	return errors.New("gpio: not implemented")
+	return ErrFeatureNotImplemented
 }
 
 func (p *bbbAnalogPin) Close() error {

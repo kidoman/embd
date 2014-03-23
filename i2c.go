@@ -38,7 +38,7 @@ func InitI2C() error {
 	}
 
 	if desc.I2CDriver == nil {
-		return ErrFeatureNotSupport
+		return ErrFeatureNotSupported
 	}
 
 	i2cDriverInstance = desc.I2CDriver()

@@ -52,7 +52,7 @@ func InitGPIO() error {
 	}
 
 	if desc.GPIODriver == nil {
-		return ErrFeatureNotSupport
+		return ErrFeatureNotSupported
 	}
 
 	gpioDriverInstance = desc.GPIODriver()

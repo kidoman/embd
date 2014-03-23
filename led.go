@@ -24,7 +24,7 @@ func InitLED() error {
 	}
 
 	if desc.LEDDriver == nil {
-		return ErrFeatureNotSupport
+		return ErrFeatureNotSupported
 	}
 
 	ledDriverInstance = desc.LEDDriver()

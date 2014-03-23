@@ -29,4 +29,5 @@ func DescribeHost() (*Descriptor, error) {
 	return describer(rev), nil
 }
 
-var ErrFeatureNotSupport = errors.New("embd: feature is not supported")
+var ErrFeatureNotSupported = errors.New("embd: requested feature is not supported")
+var ErrFeatureNotImplemented = errors.New("embd: requested feature is not implemented")
