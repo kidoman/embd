@@ -1,6 +1,6 @@
 # embd [![Build Status](https://travis-ci.org/kidoman/embd.svg?branch=master)](https://travis-ci.org/kidoman/embd) [![GoDoc](http://godoc.org/github.com/kidoman/embd?status.png)](http://godoc.org/github.com/kidoman/embd)
 
-Supercharged Embedded Programming Framework
+A superheroic hardware abstraction layer for doing embedded programming on supported platforms like the Raspberry Pi and BeagleBone Black.
 
 ## Platforms supported
 
@@ -13,14 +13,14 @@ Supercharged Embedded Programming Framework
 
 ## How to use
 
-Package embd provides a supercharged hardware abstraction layer for doing embedded programming
+Package embd provides a superheroic hardware abstraction layer for doing embedded programming
 on supported platforms like the Raspberry Pi and BeagleBone Black. Most of the examples below
 will work without change (i.e. the same binary) on all supported platforms. How cool is that?
 
 Although samples are all present in the [samples](https://github.com/kidoman/embd/tree/master/samples) folder,
 we will show a few choice examples here.
 
-Use the LED driver to toggle LEDs on the BBB:
+Use the **LED** driver to toggle LEDs on the BBB:
 
 	import "github.com/kidoman/embd"
 	...
@@ -40,7 +40,9 @@ Even shorter while prototyping:
 	...
 	embd.ToggleLED(3)
 
-Control GPIO pins on the RaspberryPi / BeagleBone Black:
+NB: **3** == **USR3** for all intents and purposes. The driver is smart enough to figure all this out.
+
+Control **GPIO** pins on the RaspberryPi / BeagleBone Black:
 
 	import "github.com/kidoman/embd"
 	...
@@ -62,7 +64,7 @@ Could also do:
 	pin.SetDirection(embd.Out)
 	pin.Write(embd.High)
 
-Or read data from the Bosch BMP085 barometric sensor:
+Or read data from the **Bosch BMP085** barometric sensor:
 
 	import "github.com/kidoman/embd"
 	import "github.com/kidoman/embd/sensor/bmp085"
@@ -74,7 +76,7 @@ Or read data from the Bosch BMP085 barometric sensor:
 	temp, err := baro.Temperature()
 	altitude, err := baro.Altitude()
 
-Even find out the heading from the LSM303 magnetometer:
+Even find out the heading from the **LSM303** magnetometer:
 
 	import "github.com/kidoman/embd"
 	import "github.com/kidoman/embd/sensor/lsm303"
@@ -85,7 +87,7 @@ Even find out the heading from the LSM303 magnetometer:
 	...
 	heading, err := mag.Heading()
 
-The above two examples depend on I2C and therefore will work without change on almost all
+The above two examples depend on **I2C** and therefore will work without change on almost all
 platforms.
 
 ## Protocols supported
