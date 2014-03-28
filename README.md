@@ -42,6 +42,18 @@ Even shorter while prototyping:
 	...
 	embd.ToggleLED(3)
 
+BBB + **PWM**:
+
+	import "github.com/kidoman/embd"
+	...
+	embd.InitGPIO()
+	defer embd.CloseGPIO()
+	...
+	pwm, _ := embd.NewPWMPin("P9_14")
+	defer pwm.Close()
+	...
+	pwm.SetDuty(1000)
+
 NB: **3** == **USR3** for all intents and purposes. The driver is smart enough to figure all this out.
 
 Control **GPIO** pins on the RaspberryPi / BeagleBone Black:

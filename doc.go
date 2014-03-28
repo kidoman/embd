@@ -25,6 +25,18 @@
 		...
 		embd.ToggleLED(3)
 
+	BBB + **PWM**:
+
+		import "github.com/kidoman/embd"
+		...
+		embd.InitGPIO()
+		defer embd.CloseGPIO()
+		...
+		pwm, _ := embd.NewPWMPin("P9_14")
+		defer pwm.Close()
+		...
+		pwm.SetDuty(1000)
+
 	Control GPIO pins on the RaspberryPi / BeagleBone Black:
 
 		import "github.com/kidoman/embd"
