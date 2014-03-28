@@ -15,7 +15,7 @@ func init() {
 
 		return &Descriptor{
 			GPIODriver: func() GPIODriver {
-				return newGPIODriver(pins, newDigitalPin, nil)
+				return newGPIODriver(pins, newDigitalPin, nil, nil)
 			},
 			I2CDriver: newI2CDriver,
 		}

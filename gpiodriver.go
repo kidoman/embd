@@ -16,15 +16,17 @@ type gpioDriver struct {
 
 	dpf func(n int) DigitalPin
 	apf func(n int) AnalogPin
+	ppf func(n string) PWMPin
 
 	initializedPins map[string]pin
 }
 
-func newGPIODriver(pinMap PinMap, dpf func(n int) DigitalPin, apf func(n int) AnalogPin) GPIODriver {
+func newGPIODriver(pinMap PinMap, dpf func(n int) DigitalPin, apf func(n int) AnalogPin, ppf func(n string) PWMPin) GPIODriver {
 	return &gpioDriver{
 		pinMap: pinMap,
 		dpf:    dpf,
 		apf:    apf,
+		ppf:    ppf,
 
 		initializedPins: map[string]pin{},
 	}
@@ -57,6 +59,22 @@ func (io *gpioDriver) AnalogPin(key interface{}) (AnalogPin, error) {
 	}
 
 	p := io.apf(pd.AnalogLogical)
+	io.initializedPins[pd.ID] = p
+
+	return p, nil
+}
+
+func (io *gpioDriver) PWMPin(key interface{}) (PWMPin, error) {
+	if io.ppf == nil {
+		return nil, errors.New("gpio: pwm not supported on this host")
+	}
+
+	pd, found := io.pinMap.Lookup(key, CapPWM)
+	if !found {
+		return nil, fmt.Errorf("gpio: could not find pin matching %v", key)
+	}
+
+	p := io.ppf(pd.ID)
 	io.initializedPins[pd.ID] = p
 
 	return p, nil

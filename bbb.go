@@ -1,25 +1,28 @@
 // BeagleBone Black support.
 // The following features are supported on Linux kernel 3.8+
 //
-//	GPIO (both digital (rw) and analog (ro))
+//	GPIO (digital (rw), analog (ro), pwm)
 //	I2C
 //	LED
 
 package embd
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func init() {
 	Register(HostBBB, func(rev int) *Descriptor {
 		return &Descriptor{
 			GPIODriver: func() GPIODriver {
-				return newGPIODriver(bbbPins, newDigitalPin, newBBBAnalogPin)
+				return newGPIODriver(bbbPins, newDigitalPin, newBBBAnalogPin, newBBBPWMPin)
 			},
 			I2CDriver: newI2CDriver,
 			LEDDriver: func() LEDDriver {
@@ -104,6 +107,53 @@ var bbbLEDMap = LEDMap{
 	"beaglebone:green:usr3": []string{"3", "USR3", "usr3"},
 }
 
+func bbbEnsureFeatureEnabled(id string) error {
+	pattern := "/sys/devices/bone_capemgr.*/slots"
+	file, err := findFirstMatchingFile(pattern)
+	if err != nil {
+		return err
+	}
+	bytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	str := string(bytes)
+	if strings.Contains(str, id) {
+		return nil
+	}
+	slots, err := os.OpenFile(file, os.O_WRONLY, os.ModeExclusive)
+	if err != nil {
+		return err
+	}
+	defer slots.Close()
+	_, err = slots.WriteString(id)
+	return err
+}
+
+// This needs a little more work.
+func bbbEnsureFeatureDisabled(id string) error {
+	pattern := "/sys/devices/bone_capemgr.*/slots"
+	file, err := findFirstMatchingFile(pattern)
+	if err != nil {
+		return err
+	}
+	bytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	str := string(bytes)
+	if !strings.Contains(str, id) {
+		return nil
+	}
+	slots, err := os.OpenFile(file, os.O_WRONLY, os.ModeExclusive)
+	if err != nil {
+		return err
+	}
+	defer slots.Close()
+	_, err = slots.WriteString("-" + id)
+	return err
+}
+
 type bbbAnalogPin struct {
 	n int
 
@@ -139,27 +189,7 @@ func (p *bbbAnalogPin) init() error {
 }
 
 func (p *bbbAnalogPin) ensureEnabled() error {
-	pattern := "/sys/devices/bone_capemgr.*/slots"
-	file, err := findFirstMatchingFile(pattern)
-	if err != nil {
-		return err
-	}
-	bytes, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-	str := string(bytes)
-	if strings.Contains(str, "cape-bone-iio") {
-		return nil
-	}
-	// Not initialized yet
-	slots, err := os.OpenFile(file, os.O_WRONLY, os.ModeExclusive)
-	if err != nil {
-		return err
-	}
-	defer slots.Close()
-	_, err = slots.WriteString("cape-bone-iio")
-	return err
+	return bbbEnsureFeatureEnabled("cape-bone-iio")
 }
 
 func (p *bbbAnalogPin) valueFilePath() (string, error) {
@@ -200,6 +230,190 @@ func (p *bbbAnalogPin) Close() error {
 	}
 
 	if err := p.val.Close(); err != nil {
+		return err
+	}
+
+	p.initialized = false
+
+	return nil
+}
+
+const BBBPWMDefaultPolarity = Positive
+const BBBPWMDefaultDuty = 0
+const BBBPWMDefaultPeriod = 500000
+const BBBPWMMaxPulseWidth = 1000000000
+
+type bbbPWMPin struct {
+	n string
+
+	duty     *os.File
+	period   *os.File
+	polarity *os.File
+
+	initialized bool
+}
+
+func newBBBPWMPin(n string) PWMPin {
+	return &bbbPWMPin{n: n}
+}
+
+func (p *bbbPWMPin) N() string {
+	return p.n
+}
+
+func (p *bbbPWMPin) id() string {
+	return "bone_pwm_" + p.n
+}
+
+func (p *bbbPWMPin) init() error {
+	if p.initialized {
+		return nil
+	}
+
+	if err := p.ensurePWMEnabled(); err != nil {
+		return err
+	}
+	if err := p.ensurePinEnabled(); err != nil {
+		return err
+	}
+
+	basePath, err := p.basePath()
+	if err != nil {
+		return err
+	}
+	if err := p.ensurePeriodFileExists(basePath, 500*time.Millisecond); err != nil {
+		return err
+	}
+	if p.period, err = p.periodFile(basePath); err != nil {
+		return err
+	}
+	if p.duty, err = p.dutyFile(basePath); err != nil {
+		return err
+	}
+	if p.polarity, err = p.polarityFile(basePath); err != nil {
+		return err
+	}
+
+	p.initialized = true
+
+	return nil
+}
+
+func (p *bbbPWMPin) ensurePWMEnabled() error {
+	return bbbEnsureFeatureEnabled("am33xx_pwm")
+}
+
+func (p *bbbPWMPin) ensurePinEnabled() error {
+	return bbbEnsureFeatureEnabled(p.id())
+}
+
+func (p *bbbPWMPin) ensurePinDisabled() error {
+	return nil
+	// return bbbEnsureFeatureDisabled(p.id())
+}
+
+func (p *bbbPWMPin) basePath() (string, error) {
+	pattern := "/sys/devices/ocp.*/pwm_test_" + p.n + ".*"
+	return findFirstMatchingFile(pattern)
+}
+
+func (p *bbbPWMPin) openFile(path string) (*os.File, error) {
+	return os.OpenFile(path, os.O_WRONLY, os.ModeExclusive)
+}
+
+func (p *bbbPWMPin) ensurePeriodFileExists(basePath string, d time.Duration) error {
+	path := p.periodFilePath(basePath)
+	timeout := time.After(d)
+
+	for {
+		select {
+		case <-timeout:
+			return errors.New("embd: period file not found before timeout")
+		default:
+			if _, err := os.Stat(path); err == nil {
+				return nil
+			}
+		}
+
+		// We are looping, wait a bit.
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func (p *bbbPWMPin) periodFilePath(basePath string) string {
+	return path.Join(basePath, "period")
+}
+
+func (p *bbbPWMPin) periodFile(basePath string) (*os.File, error) {
+	return p.openFile(p.periodFilePath(basePath))
+}
+
+func (p *bbbPWMPin) dutyFile(basePath string) (*os.File, error) {
+	return p.openFile(path.Join(basePath, "duty"))
+}
+
+func (p *bbbPWMPin) polarityFile(basePath string) (*os.File, error) {
+	return p.openFile(path.Join(basePath, "polarity"))
+}
+
+func (p *bbbPWMPin) SetPeriod(ns int) error {
+	if err := p.init(); err != nil {
+		return err
+	}
+
+	if ns > BBBPWMMaxPulseWidth {
+		return fmt.Errorf("embd: pwm period for %v is out of bounds (must be =< %vns)", p.n, BBBPWMMaxPulseWidth)
+	}
+
+	_, err := p.period.WriteString(strconv.Itoa(ns))
+	return err
+}
+
+func (p *bbbPWMPin) SetDuty(ns int) error {
+	if err := p.init(); err != nil {
+		return err
+	}
+
+	if ns > BBBPWMMaxPulseWidth {
+		return fmt.Errorf("embd: pwm duty for %v is out of bounds (must be =< %vns)", p.n, BBBPWMMaxPulseWidth)
+	}
+
+	_, err := p.duty.WriteString(strconv.Itoa(ns))
+	return err
+}
+
+func (p *bbbPWMPin) SetPolarity(pol Polarity) error {
+	if err := p.init(); err != nil {
+		return err
+	}
+
+	_, err := p.polarity.WriteString(strconv.Itoa(int(pol)))
+	return err
+}
+
+func (p *bbbPWMPin) reset() error {
+	if err := p.SetPolarity(Positive); err != nil {
+		return err
+	}
+	if err := p.SetDuty(BBBPWMDefaultDuty); err != nil {
+		return err
+	}
+	if err := p.SetPeriod(BBBPWMDefaultPeriod); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *bbbPWMPin) Close() error {
+	if !p.initialized {
+		return nil
+	}
+
+	if err := p.reset(); err != nil {
+		return err
+	}
+	if err := p.ensurePinDisabled(); err != nil {
 		return err
 	}
 

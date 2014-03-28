@@ -61,6 +61,35 @@ type AnalogPin interface {
 	Close() error
 }
 
+// The Polarity type indicates the polarity of a pwm pin.
+type Polarity int
+
+const (
+	// Positive represents (default) positive polarity.
+	Positive Polarity = iota
+
+	// Negative represents negative polarity.
+	Negative
+)
+
+// PWMPin implements access to a pwm capable GPIO pin.
+type PWMPin interface {
+	// N returns the logical PWM id.
+	N() string
+
+	// SetPeriod sets the period of a pwm pin.
+	SetPeriod(ns int) error
+
+	// SetDuty sets the duty of a pwm pin.
+	SetDuty(ns int) error
+
+	// SetPolarity sets the polarity of a pwm pin.
+	SetPolarity(pol Polarity) error
+
+	// Close releases the resources associated with the pin.
+	Close() error
+}
+
 // GPIODriver implements a generic GPIO driver.
 type GPIODriver interface {
 	// DigitalPin returns a pin capable of doing digital IO.
@@ -68,6 +97,9 @@ type GPIODriver interface {
 
 	// AnalogPin returns a pin capable of doing analog IO.
 	AnalogPin(key interface{}) (AnalogPin, error)
+
+	// PWMPin returns a pin capable of generating PWM.
+	PWMPin(key interface{}) (PWMPin, error)
 
 	// Close releases the resources associated with the driver.
 	Close() error
@@ -177,4 +209,10 @@ func AnalogRead(key interface{}) (int, error) {
 	}
 
 	return pin.Read()
+}
+
+// NewPWMPin returns a PWMPin interface which allows PWM signal
+// generation over a the PWM pin.
+func NewPWMPin(key interface{}) (PWMPin, error) {
+	return gpioDriverInstance.PWMPin(key)
 }

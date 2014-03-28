@@ -52,7 +52,7 @@ func TestGpioDriverDigitalPin(t *testing.T) {
 	var pinMap = PinMap{
 		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapDigital, DigitalLogical: 1},
 	}
-	driver := newGPIODriver(pinMap, newFakeDigitalPin, nil)
+	driver := newGPIODriver(pinMap, newFakeDigitalPin, nil, nil)
 	for _, test := range tests {
 		pin, err := driver.DigitalPin(test.key)
 		if err != nil {
@@ -99,7 +99,7 @@ func TestGpioDriverAnalogPin(t *testing.T) {
 	var pinMap = PinMap{
 		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapAnalog, AnalogLogical: 1},
 	}
-	driver := newGPIODriver(pinMap, nil, newFakeAnalogPin)
+	driver := newGPIODriver(pinMap, nil, newFakeAnalogPin, nil)
 	for _, test := range tests {
 		pin, err := driver.AnalogPin(test.key)
 		if err != nil {
@@ -117,7 +117,7 @@ func TestGpioDriverUnavailablePinType(t *testing.T) {
 		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapDigital, DigitalLogical: 1},
 		&PinDesc{ID: "P1_2", Aliases: []string{"1"}, Caps: CapAnalog, AnalogLogical: 1},
 	}
-	driver := newGPIODriver(pinMap, nil, nil)
+	driver := newGPIODriver(pinMap, nil, nil, nil)
 	_, err := driver.DigitalPin(1)
 	if err == nil {
 		t.Fatal("Looking up digital pin 1: did not get error")

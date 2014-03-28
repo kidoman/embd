@@ -13,6 +13,7 @@ ledshort
 lsm303
 mcp4725
 pca9685
+pwm
 servo
 servoblaster
 tmp006
