@@ -238,9 +238,16 @@ func (p *bbbAnalogPin) Close() error {
 	return nil
 }
 
+// BBBPWMDefaultPolarity represents the default polarity (Positve or 1) for pwm.
 const BBBPWMDefaultPolarity = Positive
+
+//	BBBPWMDefaultDuty represents the default duty (0ns) for pwm.
 const BBBPWMDefaultDuty = 0
+
+// BBBPWMDefaultPeriod represents the default period (500000ns) for pwm.
 const BBBPWMDefaultPeriod = 500000
+
+// BBBPWMMaxPulseWidth represents the max period (1000000000ns) supported by pwm.
 const BBBPWMMaxPulseWidth = 1000000000
 
 type bbbPWMPin struct {
