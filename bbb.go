@@ -8,6 +8,7 @@
 package embd
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -130,28 +131,36 @@ func bbbEnsureFeatureEnabled(id string) error {
 	return err
 }
 
-// This needs a little more work.
 func bbbEnsureFeatureDisabled(id string) error {
 	pattern := "/sys/devices/bone_capemgr.*/slots"
 	file, err := findFirstMatchingFile(pattern)
 	if err != nil {
 		return err
 	}
-	bytes, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-	str := string(bytes)
-	if !strings.Contains(str, id) {
-		return nil
-	}
-	slots, err := os.OpenFile(file, os.O_WRONLY, os.ModeExclusive)
+	slots, err := os.OpenFile(file, os.O_RDWR, os.ModeExclusive)
 	if err != nil {
 		return err
 	}
 	defer slots.Close()
-	_, err = slots.WriteString("-" + id)
-	return err
+	scanner := bufio.NewScanner(slots)
+	for scanner.Scan() {
+		text := scanner.Text()
+		if !strings.Contains(text, id) {
+			continue
+		}
+		// Extract the id from the line
+		idx := strings.Index(text, ":")
+		if idx < 0 {
+			// Something is off, bail
+			continue
+		}
+		dis := strings.TrimSpace(text[:idx])
+		slots.Seek(0, 0)
+		_, err = slots.WriteString("-" + dis)
+		return err
+	}
+	// Could not disable the feature
+	return fmt.Errorf("embd: could not disable feature %q", id)
 }
 
 type bbbAnalogPin struct {
@@ -317,8 +326,7 @@ func (p *bbbPWMPin) ensurePinEnabled() error {
 }
 
 func (p *bbbPWMPin) ensurePinDisabled() error {
-	return nil
-	// return bbbEnsureFeatureDisabled(p.id())
+	return bbbEnsureFeatureDisabled(p.id())
 }
 
 func (p *bbbPWMPin) basePath() (string, error) {
