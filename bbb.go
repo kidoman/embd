@@ -117,6 +117,10 @@ func bbbEnsureFeatureEnabled(id string) error {
 	return err
 }
 
+// This cannot be currently used to disable things like the
+// analog and pwm modules. Removing them from slots file can
+// potentially cause a kernel panic and unsettle things. So the
+// recommended thing to do is to simply reboot.
 func bbbEnsureFeatureDisabled(id string) error {
 	pattern := "/sys/devices/bone_capemgr.*/slots"
 	file, err := findFirstMatchingFile(pattern)
