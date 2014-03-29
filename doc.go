@@ -25,7 +25,7 @@
 		...
 		embd.ToggleLED(3)
 
-	BBB + **PWM**:
+	BBB + PWM:
 
 		import "github.com/kidoman/embd"
 		...
