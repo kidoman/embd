@@ -42,6 +42,8 @@ Even shorter while prototyping:
 	...
 	embd.ToggleLED(3)
 
+NB: **3** == **USR3** for all intents and purposes. The driver is smart enough to figure all this out.
+
 BBB + **PWM**:
 
 	import "github.com/kidoman/embd"
@@ -53,8 +55,6 @@ BBB + **PWM**:
 	defer pwm.Close()
 	...
 	pwm.SetDuty(1000)
-
-NB: **3** == **USR3** for all intents and purposes. The driver is smart enough to figure all this out.
 
 Control **GPIO** pins on the RaspberryPi / BeagleBone Black:
 
@@ -108,6 +108,7 @@ platforms.
 
 * **Digital GPIO** [Documentation](http://godoc.org/github.com/kidoman/embd#DigitalPin)
 * **Analog GPIO** [Documentation](http://godoc.org/github.com/kidoman/embd#AnalogPin)
+* **PWM** [Documentation](http://godoc.org/github.com/kidoman/embd#PWMPin)
 * **I2C** [Documentation](http://godoc.org/github.com/kidoman/embd#I2CBus)
 * **LED** [Documentation](http://godoc.org/github.com/kidoman/embd#LED)
 
