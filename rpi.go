@@ -6,22 +6,6 @@
 
 package embd
 
-func init() {
-	Register(HostRPi, func(rev int) *Descriptor {
-		var pins = rpiRev1Pins
-		if rev > 1 {
-			pins = rpiRev2Pins
-		}
-
-		return &Descriptor{
-			GPIODriver: func() GPIODriver {
-				return newGPIODriver(pins, newDigitalPin, nil, nil)
-			},
-			I2CDriver: newI2CDriver,
-		}
-	})
-}
-
 var rpiRev1Pins = PinMap{
 	&PinDesc{ID: "P1_3", Aliases: []string{"0", "GPIO_0", "SDA", "I2C0_SDA"}, Caps: CapDigital | CapI2C, DigitalLogical: 0},
 	&PinDesc{ID: "P1_5", Aliases: []string{"1", "GPIO_1", "SCL", "I2C0_SCL"}, Caps: CapDigital | CapI2C, DigitalLogical: 1},
@@ -60,4 +44,20 @@ var rpiRev2Pins = PinMap{
 	&PinDesc{ID: "P1_23", Aliases: []string{"11", "GPIO_11", "SCLK", "SPI0_SCLK"}, Caps: CapDigital | CapSPI, DigitalLogical: 11},
 	&PinDesc{ID: "P1_24", Aliases: []string{"8", "GPIO_8", "CE0", "SPI0_CE0_N"}, Caps: CapDigital | CapSPI, DigitalLogical: 8},
 	&PinDesc{ID: "P1_26", Aliases: []string{"7", "GPIO_7", "CE1", "SPI0_CE1_N"}, Caps: CapDigital | CapSPI, DigitalLogical: 7},
+}
+
+func init() {
+	Register(HostRPi, func(rev int) *Descriptor {
+		var pins = rpiRev1Pins
+		if rev > 1 {
+			pins = rpiRev2Pins
+		}
+
+		return &Descriptor{
+			GPIODriver: func() GPIODriver {
+				return newGPIODriver(pins, newDigitalPin, nil, nil)
+			},
+			I2CDriver: newI2CDriver,
+		}
+	})
 }

@@ -19,20 +19,6 @@ import (
 	"time"
 )
 
-func init() {
-	Register(HostBBB, func(rev int) *Descriptor {
-		return &Descriptor{
-			GPIODriver: func() GPIODriver {
-				return newGPIODriver(bbbPins, newDigitalPin, newBBBAnalogPin, newBBBPWMPin)
-			},
-			I2CDriver: newI2CDriver,
-			LEDDriver: func() LEDDriver {
-				return newLEDDriver(bbbLEDMap)
-			},
-		}
-	})
-}
-
 var bbbPins = PinMap{
 	&PinDesc{ID: "P8_07", Aliases: []string{"66", "GPIO_66", "Caps: TIMER4"}, Caps: CapDigital | CapGPMC, DigitalLogical: 66},
 	&PinDesc{ID: "P8_08", Aliases: []string{"67", "GPIO_67", "TIMER7"}, Caps: CapDigital | CapGPMC, DigitalLogical: 67},
@@ -437,4 +423,18 @@ func (p *bbbPWMPin) Close() error {
 	p.initialized = false
 
 	return nil
+}
+
+func init() {
+	Register(HostBBB, func(rev int) *Descriptor {
+		return &Descriptor{
+			GPIODriver: func() GPIODriver {
+				return newGPIODriver(bbbPins, newDigitalPin, newBBBAnalogPin, newBBBPWMPin)
+			},
+			I2CDriver: newI2CDriver,
+			LEDDriver: func() LEDDriver {
+				return newLEDDriver(bbbLEDMap)
+			},
+		}
+	})
 }
