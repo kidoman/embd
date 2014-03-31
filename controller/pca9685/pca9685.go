@@ -2,11 +2,11 @@
 package pca9685
 
 import (
-	"log"
 	"math"
 	"sync"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/util"
 )
@@ -34,8 +34,6 @@ type PCA9685 struct {
 
 	initialized bool
 	mu          sync.RWMutex
-
-	Debug bool
 }
 
 // New creates a new PCA9685 interface.
@@ -50,11 +48,11 @@ func (d *PCA9685) mode1Reg() (byte, error) {
 	return d.Bus.ReadByteFromReg(d.Addr, mode1RegAddr)
 }
 
-func (d *PCA9685) setup() (err error) {
+func (d *PCA9685) setup() error {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
-		return
+		return nil
 	}
 	d.mu.RUnlock()
 
@@ -63,56 +61,49 @@ func (d *PCA9685) setup() (err error) {
 
 	mode1Reg, err := d.mode1Reg()
 	if err != nil {
-		return
-	}
-	if d.Debug {
-		log.Printf("pca9685: read MODE1 Reg [regAddr: %#02x] Value: [%v]", mode1RegAddr, mode1Reg)
+		return err
 	}
 
-	if err = d.sleep(); err != nil {
-		return
+	glog.V(1).Infof("pca9685: read MODE1 Reg [regAddr: %#02x] Value: [%v]", mode1RegAddr, mode1Reg)
+
+	if err := d.sleep(); err != nil {
+		return err
 	}
 
 	if d.Freq == 0 {
 		d.Freq = defaultFreq
 	}
 	preScaleValue := byte(math.Floor(float64(clockFreq/(pwmControlPoints*d.Freq))+float64(0.5)) - 1)
-	if d.Debug {
-		log.Printf("pca9685: calculated prescale value = %#02x", preScaleValue)
+	glog.V(1).Infof("pca9685: calculated prescale value = %#02x", preScaleValue)
+	if err := d.Bus.WriteByteToReg(d.Addr, preScaleRegAddr, byte(preScaleValue)); err != nil {
+		return err
 	}
-	if err = d.Bus.WriteByteToReg(d.Addr, preScaleRegAddr, byte(preScaleValue)); err != nil {
-		return
-	}
-	if d.Debug {
-		log.Printf("pca9685: prescale value [%#02x] written to PRE_SCALE Reg [regAddr: %#02x]", preScaleValue, preScaleRegAddr)
-	}
+	glog.V(1).Infof("pca9685: prescale value [%#02x] written to PRE_SCALE Reg [regAddr: %#02x]", preScaleValue, preScaleRegAddr)
 
-	if err = d.wake(); err != nil {
-		return
+	if err := d.wake(); err != nil {
+		return err
 	}
 
 	newmode := ((mode1Reg | 0x01) & 0xDF)
-	if err = d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, newmode); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, newmode); err != nil {
+		return err
 	}
-	if d.Debug {
-		log.Printf("pca9685: new mode [%#02x] [disabling register auto increment] written to MODE1 Reg [regAddr: %#02x]", newmode, mode1RegAddr)
-	}
+
+	glog.V(1).Infof("pca9685: new mode [%#02x] [disabling register auto increment] written to MODE1 Reg [regAddr: %#02x]", newmode, mode1RegAddr)
 
 	d.initialized = true
-	if d.Debug {
-		log.Printf("pca9685: driver initialized with pwm freq: %v", d.Freq)
-	}
 
-	return
+	glog.V(1).Infof("pca9685: driver initialized with pwm freq: %v", d.Freq)
+
+	return nil
 }
 
 // SetPwm sets the ON and OFF time registers for pwm signal shaping.
 // channel: 0-15
 // onTime/offTime: 0-4095
-func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *PCA9685) SetPwm(channel, onTime, offTime int) error {
+	if err := d.setup(); err != nil {
+		return err
 	}
 
 	onTimeLowReg := byte(pwm0OnLowReg + (4 * channel))
@@ -122,161 +113,136 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) (err error) {
 	offTimeLow := byte(offTime & 0xFF)
 	offTimeHigh := byte(offTime >> 8)
 
-	if err = d.Bus.WriteByteToReg(d.Addr, onTimeLowReg, onTimeLow); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(d.Addr, onTimeLowReg, onTimeLow); err != nil {
+		return err
 	}
-	if d.Debug {
-		log.Printf("pca9685: writing on-time low [%#02x] to CHAN%v_ON_L reg [reg: %#02x]", onTimeLow, channel, onTimeLowReg)
-	}
+
+	glog.V(2).Infof("pca9685: writing on-time low [%#02x] to CHAN%v_ON_L reg [reg: %#02x]", onTimeLow, channel, onTimeLowReg)
 
 	onTimeHighReg := onTimeLowReg + 1
-	if err = d.Bus.WriteByteToReg(d.Addr, onTimeHighReg, onTimeHigh); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(d.Addr, onTimeHighReg, onTimeHigh); err != nil {
+		return err
 	}
-	if d.Debug {
-		log.Printf("pca9685: writing on-time high [%#02x] to CHAN%v_ON_H reg [reg: %#02x]", onTimeHigh, channel, onTimeHighReg)
-	}
+	glog.V(2).Infof("pca9685: writing on-time high [%#02x] to CHAN%v_ON_H reg [reg: %#02x]", onTimeHigh, channel, onTimeHighReg)
 
 	offTimeLowReg := onTimeHighReg + 1
-	if err = d.Bus.WriteByteToReg(d.Addr, offTimeLowReg, offTimeLow); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(d.Addr, offTimeLowReg, offTimeLow); err != nil {
+		return err
 	}
-	if d.Debug {
-		log.Printf("pca9685: writing off-time low [%#02x] to CHAN%v_OFF_L reg [reg: %#02x]", offTimeLow, channel, offTimeLowReg)
-	}
+	glog.V(2).Infof("pca9685: writing off-time low [%#02x] to CHAN%v_OFF_L reg [reg: %#02x]", offTimeLow, channel, offTimeLowReg)
 
 	offTimeHighReg := offTimeLowReg + 1
-	if err = d.Bus.WriteByteToReg(d.Addr, offTimeHighReg, offTimeHigh); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(d.Addr, offTimeHighReg, offTimeHigh); err != nil {
+		return err
 	}
-	if d.Debug {
-		log.Printf("pca9685: writing off-time high [%#02x] to CHAN%v_OFF_H reg [reg: %#02x]", offTimeHigh, channel, offTimeHighReg)
-	}
+	glog.V(2).Infof("pca9685: writing off-time high [%#02x] to CHAN%v_OFF_H reg [reg: %#02x]", offTimeHigh, channel, offTimeHighReg)
 
-	return
+	return nil
 }
 
 // SetMicroseconds is a convinience method which allows easy servo control.
-func (d *PCA9685) SetMicroseconds(channel, us int) (err error) {
+func (d *PCA9685) SetMicroseconds(channel, us int) error {
 	offTime := us * d.Freq * pwmControlPoints / 1000000
 	return d.SetPwm(channel, 0, offTime)
 }
 
 // SetAnalog is a convinience method which allows easy manipulation of the PWM
 // based on a (0-255) range value.
-func (d *PCA9685) SetAnalog(channel int, value byte) (err error) {
+func (d *PCA9685) SetAnalog(channel int, value byte) error {
 	offTime := util.Map(int64(value), minAnalogValue, maxAnalogValue, 0, pwmControlPoints-1)
 	return d.SetPwm(channel, 0, int(offTime))
 }
 
 // Close stops the controller and resets mode and pwm controller registers.
-func (d *PCA9685) Close() (err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *PCA9685) Close() error {
+	if err := d.setup(); err != nil {
+		return err
 	}
 
-	if err = d.sleep(); err != nil {
-		return
+	if err := d.sleep(); err != nil {
+		return err
 	}
 
-	if d.Debug {
-		log.Println("pca9685: reset request received")
+	glog.V(1).Infof("pca9685: reset request received")
+
+	if err := d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, 0x00); err != nil {
+		return err
 	}
 
-	if err = d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, 0x00); err != nil {
-		return
-	}
-
-	if d.Debug {
-		log.Printf("pca9685: cleaning up all PWM control registers")
-	}
+	glog.V(1).Infof("pca9685: cleaning up all PWM control registers")
 
 	for regAddr := 0x06; regAddr <= 0x45; regAddr++ {
-		if err = d.Bus.WriteByteToReg(d.Addr, byte(regAddr), 0x00); err != nil {
-			return
+		if err := d.Bus.WriteByteToReg(d.Addr, byte(regAddr), 0x00); err != nil {
+			return err
 		}
 	}
 
-	if d.Debug {
-		log.Printf("pca9685: done Cleaning up all PWM control registers")
+	if glog.V(1) {
+		glog.Infof("pca9685: done Cleaning up all PWM control registers")
+		glog.Infof("pca9685: controller reset")
 	}
 
-	if d.Debug {
-		log.Println("pca9685: controller reset")
-	}
-
-	return
+	return nil
 }
 
-func (d *PCA9685) sleep() (err error) {
-	if d.Debug {
-		log.Println("pca9685: sleep request received")
-	}
+func (d *PCA9685) sleep() error {
+	glog.V(1).Infof("pca9685: sleep request received")
 
 	mode1Reg, err := d.mode1Reg()
 	if err != nil {
-		return
+		return err
 	}
 	sleepmode := (mode1Reg & 0x7F) | 0x10
-	if err = d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, sleepmode); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, sleepmode); err != nil {
+		return err
 	}
-	if d.Debug {
-		log.Printf("pca9685: sleep mode [%#02x] written to MODE1 Reg [regAddr: %#02x]", sleepmode, mode1RegAddr)
-	}
-
-	if d.Debug {
-		log.Println("pca9685: controller set to Sleep mode")
+	if glog.V(1) {
+		glog.Infof("pca9685: sleep mode [%#02x] written to MODE1 Reg [regAddr: %#02x]", sleepmode, mode1RegAddr)
+		glog.Infoln("pca9685: controller set to Sleep mode")
 	}
 
-	return
+	return nil
 }
 
 // Sleep puts the controller in sleep mode. Does not change the pwm control registers.
-func (d *PCA9685) Sleep() (err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *PCA9685) Sleep() error {
+	if err := d.setup(); err != nil {
+		return err
 	}
 
 	return d.sleep()
 }
 
-func (d *PCA9685) wake() (err error) {
-	if d.Debug {
-		log.Println("pca9685: wake request received")
-	}
+func (d *PCA9685) wake() error {
+	glog.V(1).Infoln("pca9685: wake request received")
 
 	mode1Reg, err := d.mode1Reg()
 	if err != nil {
-		return
+		return err
 	}
 	wakeMode := mode1Reg & 0xEF
 	if (mode1Reg & 0x80) == 0x80 {
-		if err = d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, wakeMode); err != nil {
-			return
+		if err := d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, wakeMode); err != nil {
+			return err
 		}
-		if d.Debug {
-			log.Printf("pca9685: wake mode [%#02x] written to MODE1 Reg [regAddr: %#02x]", wakeMode, mode1RegAddr)
-		}
+		glog.V(1).Infof("pca9685: wake mode [%#02x] written to MODE1 Reg [regAddr: %#02x]", wakeMode, mode1RegAddr)
 
 		time.Sleep(500 * time.Microsecond)
 	}
 
 	restartOpCode := wakeMode | 0x80
-	if err = d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, restartOpCode); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(d.Addr, mode1RegAddr, restartOpCode); err != nil {
+		return err
 	}
-	if d.Debug {
-		log.Printf("pca9685: restart mode [%#02x] written to MODE1 Reg [regAddr: %#02x]", restartOpCode, mode1RegAddr)
-	}
+	glog.V(1).Infof("pca9685: restart mode [%#02x] written to MODE1 Reg [regAddr: %#02x]", restartOpCode, mode1RegAddr)
 
-	return
+	return nil
 }
 
 // Wake allows the controller to exit sleep mode and resume with PWM generation.
-func (d *PCA9685) Wake() (err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *PCA9685) Wake() error {
+	if err := d.setup(); err != nil {
+		return err
 	}
 
 	return d.wake()

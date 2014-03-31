@@ -3,7 +3,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/kidoman/embd"
@@ -26,7 +26,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		log.Printf("Lighting is %v lx", lighting)
+		fmt.Printf("Lighting is %v lx\n", lighting)
 
 		time.Sleep(500 * time.Millisecond)
 	}

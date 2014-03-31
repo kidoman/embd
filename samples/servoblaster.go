@@ -3,7 +3,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -14,11 +13,9 @@ import (
 
 func main() {
 	sb := servoblaster.New()
-	sb.Debug = true
 	defer sb.Close()
 
 	servo := servo.New(sb, 0)
-	servo.Debug = true
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)
@@ -43,7 +40,7 @@ func main() {
 				err = servo.SetAngle(135)
 			}
 			if err != nil {
-				log.Panic(err)
+				panic(err)
 			}
 		case <-c:
 			return

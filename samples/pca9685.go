@@ -3,7 +3,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -22,11 +21,10 @@ func main() {
 
 	pca9685 := pca9685.New(bus, 0x41)
 	pca9685.Freq = 1000
-	pca9685.Debug = true
 	defer pca9685.Close()
 
 	if err := pca9685.SetPwm(15, 0, 2000); err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 
 	c := make(chan os.Signal, 1)

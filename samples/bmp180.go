@@ -3,7 +3,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/kidoman/embd"
@@ -24,19 +24,19 @@ func main() {
 	for {
 		temp, err := baro.Temperature()
 		if err != nil {
-			log.Panic(err)
+			panic(err)
 		}
-		log.Printf("Temp is %v", temp)
+		fmt.Printf("Temp is %v\n", temp)
 		pressure, err := baro.Pressure()
 		if err != nil {
-			log.Panic(err)
+			panic(err)
 		}
-		log.Printf("Pressure is %v", pressure)
+		fmt.Printf("Pressure is %v\n", pressure)
 		altitude, err := baro.Altitude()
 		if err != nil {
-			log.Panic(err)
+			panic(err)
 		}
-		log.Printf("Altitude is %v", altitude)
+		fmt.Printf("Altitude is %v\n", altitude)
 
 		time.Sleep(500 * time.Millisecond)
 	}

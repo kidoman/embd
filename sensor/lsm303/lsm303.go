@@ -2,11 +2,11 @@
 package lsm303
 
 import (
-	"log"
 	"math"
 	"sync"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 )
 
@@ -53,8 +53,6 @@ type LSM303 struct {
 	headings chan float64
 
 	quit chan struct{}
-
-	Debug bool
 }
 
 // New creates a new LSM303 interface. The bus variable controls
@@ -118,15 +116,13 @@ func (d *LSM303) Heading() (float64, error) {
 	case heading := <-d.headings:
 		return heading, nil
 	default:
-		if d.Debug {
-			log.Print("lsm303: no headings available... measuring")
-		}
+		glog.V(2).Infof("lsm303: no headings available... measuring")
 		return d.measureHeading()
 	}
 }
 
 // Run starts the sensor data acquisition loop.
-func (d *LSM303) Run() (err error) {
+func (d *LSM303) Run() error {
 	go func() {
 		d.quit = make(chan struct{})
 
@@ -153,7 +149,7 @@ func (d *LSM303) Run() (err error) {
 		}
 	}()
 
-	return
+	return nil
 }
 
 // Close the sensor data acquisition loop and put the LSM303 into sleep mode.

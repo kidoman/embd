@@ -2,8 +2,9 @@
 package mcp4725
 
 import (
-	"log"
 	"sync"
+
+	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 )
 
@@ -25,9 +26,6 @@ type MCP4725 struct {
 
 	initialized bool
 	mu          sync.RWMutex
-
-	// Debug turns on additional debug output.
-	Debug bool
 }
 
 // New creates a new MCP4725 sensor.
@@ -38,33 +36,32 @@ func New(bus embd.I2CBus, addr byte) *MCP4725 {
 	}
 }
 
-func (d *MCP4725) setup() (err error) {
+func (d *MCP4725) setup() error {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
-		return
+		return nil
 	}
 	d.mu.RUnlock()
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if d.Debug {
-		log.Print("mcp4725: general call reset")
+	glog.V(1).Infof("mcp4725: general call reset")
+
+	if err := d.Bus.WriteByteToReg(d.Addr, 0x00, powerUp); err != nil {
+		return err
 	}
-	if err = d.Bus.WriteByteToReg(d.Addr, 0x00, powerUp); err != nil {
-		return
-	}
-	if err = d.Bus.WriteByteToReg(d.Addr, 0x00, genReset); err != nil {
-		return
+	if err := d.Bus.WriteByteToReg(d.Addr, 0x00, genReset); err != nil {
+		return err
 	}
 	d.initialized = true
-	return
+	return nil
 }
 
-func (d *MCP4725) setVoltage(voltage int, reg byte) (err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *MCP4725) setVoltage(voltage int, reg byte) error {
+	if err := d.setup(); err != nil {
+		return err
 	}
 	if voltage > 4095 {
 		voltage = 4095
@@ -72,33 +69,32 @@ func (d *MCP4725) setVoltage(voltage int, reg byte) (err error) {
 	if voltage < 0 {
 		voltage = 0
 	}
-	if d.Debug {
-		log.Printf("mcp4725: setting voltage to %04d", voltage)
+
+	glog.V(2).Infof("mcp4725: setting voltage to %04d", voltage)
+
+	if err := d.Bus.WriteWordToReg(d.Addr, reg, uint16(voltage<<4)); err != nil {
+		return err
 	}
-	if err = d.Bus.WriteWordToReg(d.Addr, reg, uint16(voltage<<4)); err != nil {
-		return
-	}
-	return
+	return nil
 }
 
 // SetVoltage sets the output voltage.
-func (d *MCP4725) SetVoltage(voltage int) (err error) {
+func (d *MCP4725) SetVoltage(voltage int) error {
 	return d.setVoltage(voltage, dacReg)
 }
 
 // SetPersistedVoltage sets the voltage and programs the EEPROM so
 // that the voltage is restored on reboot.
-func (d *MCP4725) SetPersistedVoltage(voltage int) (err error) {
+func (d *MCP4725) SetPersistedVoltage(voltage int) error {
 	return d.setVoltage(voltage, programReg)
 }
 
 // Close puts the DAC into power down mode.
-func (d *MCP4725) Close() (err error) {
-	if d.Debug {
-		log.Print("mcp4725: powering down")
+func (d *MCP4725) Close() error {
+	glog.V(1).Infof("mcp4725: powering down")
+
+	if err := d.Bus.WriteWordToReg(d.Addr, powerDown, 0); err != nil {
+		return err
 	}
-	if err = d.Bus.WriteWordToReg(d.Addr, powerDown, 0); err != nil {
-		return
-	}
-	return
+	return nil
 }

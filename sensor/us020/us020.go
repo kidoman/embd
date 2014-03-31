@@ -2,10 +2,10 @@
 package us020
 
 import (
-	"log"
 	"sync"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 )
 
@@ -37,8 +37,6 @@ type US020 struct {
 
 	initialized bool
 	mu          sync.RWMutex
-
-	Debug bool
 }
 
 // New creates a new US020 interface. The bus variable controls
@@ -47,11 +45,11 @@ func New(echoPin, triggerPin embd.DigitalPin, thermometer Thermometer) *US020 {
 	return &US020{EchoPin: echoPin, TriggerPin: triggerPin, Thermometer: thermometer}
 }
 
-func (d *US020) setup() (err error) {
+func (d *US020) setup() error {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
-		return
+		return nil
 	}
 	d.mu.RUnlock()
 
@@ -68,36 +66,30 @@ func (d *US020) setup() (err error) {
 	if temp, err := d.Thermometer.Temperature(); err == nil {
 		d.speedSound = 331.3 + 0.606*temp
 
-		if d.Debug {
-			log.Printf("read a temperature of %v, so speed of sound = %v", temp, d.speedSound)
-		}
+		glog.V(1).Infof("us020: read a temperature of %v, so speed of sound = %v", temp, d.speedSound)
 	} else {
 		d.speedSound = 340
 	}
 
 	d.initialized = true
 
-	return
+	return nil
 }
 
 // Distance computes the distance of the bot from the closest obstruction.
-func (d *US020) Distance() (distance float64, err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *US020) Distance() (float64, error) {
+	if err := d.setup(); err != nil {
+		return 0, err
 	}
 
-	if d.Debug {
-		log.Print("us020: trigerring pulse")
-	}
+	glog.V(2).Infof("us020: trigerring pulse")
 
 	// Generate a TRIGGER pulse
 	d.TriggerPin.Write(embd.High)
 	time.Sleep(pulseDelay)
 	d.TriggerPin.Write(embd.Low)
 
-	if d.Debug {
-		log.Print("us020: waiting for echo to go high")
-	}
+	glog.V(2).Infof("us020: waiting for echo to go high")
 
 	// Wait until ECHO goes high
 	for {
@@ -113,9 +105,7 @@ func (d *US020) Distance() (distance float64, err error) {
 
 	startTime := time.Now() // Record time when ECHO goes high
 
-	if d.Debug {
-		log.Print("us020: waiting for echo to go low")
-	}
+	glog.V(2).Infof("us020: waiting for echo to go low")
 
 	// Wait until ECHO goes low
 	for {
@@ -132,12 +122,12 @@ func (d *US020) Distance() (distance float64, err error) {
 	duration := time.Since(startTime) // Calculate time lapsed for ECHO to transition from high to low
 
 	// Calculate the distance based on the time computed
-	distance = float64(duration.Nanoseconds()) / 10000000 * (d.speedSound / 2)
+	distance := float64(duration.Nanoseconds()) / 10000000 * (d.speedSound / 2)
 
-	return
+	return distance, nil
 }
 
 // Close.
-func (d *US020) Close() {
-	d.EchoPin.SetDirection(embd.Out)
+func (d *US020) Close() error {
+	return d.EchoPin.SetDirection(embd.Out)
 }

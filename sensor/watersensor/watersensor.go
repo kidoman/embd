@@ -14,8 +14,6 @@ type WaterSensor struct {
 
 	initialized bool
 	mu          sync.RWMutex
-
-	Debug bool
 }
 
 // New creates a new WaterSensor struct
@@ -48,9 +46,7 @@ func (d *WaterSensor) IsWet() (bool, error) {
 		return false, err
 	}
 
-	if d.Debug {
-		glog.Infof("watersensor: reading")
-	}
+	glog.V(1).Infof("watersensor: reading")
 
 	value, err := d.Pin.Read()
 	if err != nil {

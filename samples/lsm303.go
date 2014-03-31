@@ -3,7 +3,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/kidoman/embd"
@@ -24,9 +24,9 @@ func main() {
 	for {
 		heading, err := mems.Heading()
 		if err != nil {
-			log.Panic(err)
+			panic(err)
 		}
-		log.Printf("Heading is %v", heading)
+		fmt.Printf("Heading is %v\n", heading)
 
 		time.Sleep(500 * time.Millisecond)
 	}

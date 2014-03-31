@@ -5,17 +5,15 @@ package servoblaster
 
 import (
 	"fmt"
-	"log"
 	"os"
+
+	"github.com/golang/glog"
 )
 
 // ServoBlaster represents a software RPi PWM/PCM based servo control module.
 type ServoBlaster struct {
 	initialized bool
 	fd          *os.File
-
-	// Debug level.
-	Debug bool
 }
 
 // New creates a new ServoBlaster instance.
@@ -23,34 +21,33 @@ func New() *ServoBlaster {
 	return &ServoBlaster{}
 }
 
-func (d *ServoBlaster) setup() (err error) {
+func (d *ServoBlaster) setup() error {
 	if d.initialized {
-		return
+		return nil
 	}
+	var err error
 	if d.fd, err = os.OpenFile("/dev/servoblaster", os.O_WRONLY, os.ModeExclusive); err != nil {
-		return
+		return err
 	}
 	d.initialized = true
-	return
+	return nil
 }
 
 // SetMicroseconds sends a command to the PWM driver to generate a us wide pulse.
-func (d *ServoBlaster) SetMicroseconds(channel, us int) (err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *ServoBlaster) SetMicroseconds(channel, us int) error {
+	if err := d.setup(); err != nil {
+		return err
 	}
 	cmd := fmt.Sprintf("%v=%vus\n", channel, us)
-	if d.Debug {
-		log.Printf("servoblaster: sending command %q", cmd)
-	}
-	_, err = d.fd.WriteString(cmd)
-	return
+	glog.V(1).Infof("servoblaster: sending command %q", cmd)
+	_, err := d.fd.WriteString(cmd)
+	return err
 }
 
 // Close closes the open driver handle.
-func (d *ServoBlaster) Close() (err error) {
+func (d *ServoBlaster) Close() error {
 	if d.fd != nil {
-		err = d.fd.Close()
+		return d.fd.Close()
 	}
-	return
+	return nil
 }

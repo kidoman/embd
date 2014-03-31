@@ -4,11 +4,11 @@ package tmp006
 import (
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"sync"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 )
 
@@ -57,8 +57,6 @@ type TMP006 struct {
 	Bus embd.I2CBus
 	// Addr of the sensor.
 	Addr byte
-	// Debug turns on additional debug output.
-	Debug bool
 	// SampleRate specifies the sampling rate for the sensor.
 	SampleRate *SampleRate
 
@@ -89,143 +87,122 @@ func (d *TMP006) validate() error {
 }
 
 // Close puts the device into low power mode.
-func (d *TMP006) Close() (err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *TMP006) Close() error {
+	if err := d.setup(); err != nil {
+		return err
 	}
 	if d.closing != nil {
 		waitc := make(chan struct{})
 		d.closing <- waitc
 		<-waitc
 	}
-	if d.Debug {
-		log.Print("tmp006: resetting")
+	glog.V(1).Infof("tmp006: resetting")
+	if err := d.Bus.WriteWordToReg(d.Addr, configReg, reset); err != nil {
+		return err
 	}
-	if err = d.Bus.WriteWordToReg(d.Addr, configReg, reset); err != nil {
-		return
-	}
-	return
+	return nil
 }
 
 // Present checks if the device is present at the given address.
-func (d *TMP006) Present() (status bool, err error) {
-	if err = d.validate(); err != nil {
-		return
+func (d *TMP006) Present() (bool, error) {
+	if err := d.validate(); err != nil {
+		return false, err
 	}
-	var mid, did uint16
-	if mid, err = d.Bus.ReadWordFromReg(d.Addr, manIdReg); err != nil {
-		return
+	mid, err := d.Bus.ReadWordFromReg(d.Addr, manIdReg)
+	if err != nil {
+		return false, err
 	}
-	if d.Debug {
-		log.Printf("tmp006: got manufacturer id %#04x", mid)
-	}
+	glog.V(1).Infof("tmp006: got manufacturer id %#04x", mid)
 	if mid != manId {
-		err = fmt.Errorf("tmp006: not found at %#02x, manufacturer id mismatch", d.Addr)
-		return
+		return false, fmt.Errorf("tmp006: not found at %#02x, manufacturer id mismatch", d.Addr)
 	}
-	if did, err = d.Bus.ReadWordFromReg(d.Addr, devIdReg); err != nil {
-		return
+	did, err := d.Bus.ReadWordFromReg(d.Addr, devIdReg)
+	if err != nil {
+		return false, err
 	}
-	if d.Debug {
-		log.Printf("tmp006: got device id %#04x", did)
-	}
+	glog.V(1).Infof("tmp006: got device id %#04x", did)
 	if did != devId {
-		err = fmt.Errorf("tmp006: not found at %#02x, device id mismatch", d.Addr)
-		return
+		return false, fmt.Errorf("tmp006: not found at %#02x, device id mismatch", d.Addr)
 	}
 
-	status = true
-
-	return
+	return true, nil
 }
 
-func (d *TMP006) setup() (err error) {
+func (d *TMP006) setup() error {
 	d.mu.RLock()
 	if d.initialized {
 		d.mu.RUnlock()
-		return
+		return nil
 	}
 	d.mu.RUnlock()
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if err = d.validate(); err != nil {
-		return
+	if err := d.validate(); err != nil {
+		return err
 	}
 	if d.SampleRate == nil {
-		if d.Debug {
-			log.Printf("tmp006: sample rate = nil, using SR16")
-		}
+		glog.V(1).Infof("tmp006: sample rate = nil, using SR16")
 		d.SampleRate = SR16
 	}
-	if d.Debug {
-		log.Printf("tmp006: configuring with %#04x", configRegDefault|d.SampleRate.enabler)
-	}
-	if err = d.Bus.WriteWordToReg(d.Addr, configReg, configRegDefault|d.SampleRate.enabler); err != nil {
-		return
+	glog.V(1).Infof("tmp006: configuring with %#04x", configRegDefault|d.SampleRate.enabler)
+	if err := d.Bus.WriteWordToReg(d.Addr, configReg, configRegDefault|d.SampleRate.enabler); err != nil {
+		return err
 	}
 
 	d.initialized = true
 
-	return
+	return nil
 }
 
-func (d *TMP006) measureRawDieTemp() (temp float64, err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *TMP006) measureRawDieTemp() (float64, error) {
+	if err := d.setup(); err != nil {
+		return 0, err
 	}
-	var raw uint16
-	if raw, err = d.Bus.ReadWordFromReg(d.Addr, tempAmbReg); err != nil {
-		return
+	raw, err := d.Bus.ReadWordFromReg(d.Addr, tempAmbReg)
+	if err != nil {
+		return 0, err
 	}
 	raw >>= 2
-	if d.Debug {
-		log.Printf("tmp006: raw die temp %#04x", raw)
-	}
+	glog.V(2).Infof("tmp006: raw die temp %#04x", raw)
 
-	temp = float64(int16(raw)) * 0.03125
+	temp := float64(int16(raw)) * 0.03125
 
-	return
+	return temp, nil
 }
 
-func (d *TMP006) measureRawVoltage() (volt int16, err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *TMP006) measureRawVoltage() (int16, error) {
+	if err := d.setup(); err != nil {
+		return 0, err
 	}
-	var vlt uint16
-	if vlt, err = d.Bus.ReadWordFromReg(d.Addr, vObjReg); err != nil {
-		return
+	vlt, err := d.Bus.ReadWordFromReg(d.Addr, vObjReg)
+	if err != nil {
+		return 0, err
 	}
-	volt = int16(vlt)
-	if d.Debug {
-		log.Printf("tmp006: raw voltage %#04x", volt)
-	}
-	return
+	volt := int16(vlt)
+	glog.V(2).Infof("tmp006: raw voltage %#04x", volt)
+	return volt, nil
 }
 
-func (d *TMP006) measureObjTemp() (temp float64, err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *TMP006) measureObjTemp() (float64, error) {
+	if err := d.setup(); err != nil {
+		return 0, err
 	}
 	tDie, err := d.measureRawDieTemp()
 	if err != nil {
-		return
+		return 0, err
 	}
-	if d.Debug {
-		log.Printf("tmp006: tdie = %.2f C", tDie)
-	}
+	glog.V(2).Infof("tmp006: tdie = %.2f C", tDie)
 	tDie += 273.15 // Convert to K
 	vo, err := d.measureRawVoltage()
 	if err != nil {
-		return
+		return 0, err
 	}
 	vObj := float64(vo)
 	vObj *= 156.25 // 156.25 nV per LSB
 	vObj /= 1000   // nV -> uV
-	if d.Debug {
-		log.Printf("tmp006: vObj = %.5f uV", vObj)
-	}
+	glog.V(2).Infof("tmp006: vObj = %.5f uV", vObj)
 	vObj /= 1000 // uV -> mV
 	vObj /= 1000 // mV -> V
 
@@ -238,17 +215,17 @@ func (d *TMP006) measureObjTemp() (temp float64, err error) {
 	Vos := b0 + b1*tdie_tref + b2*tdie_tref*tdie_tref
 	fVobj := (vObj - Vos) + c2*(vObj-Vos)*(vObj-Vos)
 
-	temp = math.Sqrt(math.Sqrt(tDie*tDie*tDie*tDie + fVobj/s))
+	temp := math.Sqrt(math.Sqrt(tDie*tDie*tDie*tDie + fVobj/s))
 	temp -= 273.15
 
-	return
+	return temp, nil
 }
 
 // RawDieTemp returns the current raw die temp reading.
-func (d *TMP006) RawDieTemp() (temp float64, err error) {
+func (d *TMP006) RawDieTemp() (float64, error) {
 	select {
-	case temp = <-d.rawDieTemps:
-		return
+	case temp := <-d.rawDieTemps:
+		return temp, nil
 	default:
 		return d.measureRawDieTemp()
 	}
@@ -260,10 +237,10 @@ func (d *TMP006) RawDieTemps() <-chan float64 {
 }
 
 // ObjTemp returns the current obj temp reading.
-func (d *TMP006) ObjTemp() (temp float64, err error) {
+func (d *TMP006) ObjTemp() (float64, error) {
 	select {
-	case temp = <-d.objTemps:
-		return
+	case temp := <-d.objTemps:
+		return temp, nil
 	default:
 		return d.measureObjTemp()
 	}
@@ -275,9 +252,9 @@ func (d *TMP006) ObjTemps() <-chan float64 {
 }
 
 // Start starts the data acquisition loop.
-func (d *TMP006) Start() (err error) {
-	if err = d.setup(); err != nil {
-		return
+func (d *TMP006) Start() error {
+	if err := d.setup(); err != nil {
+		return err
 	}
 
 	d.rawDieTemps = make(chan float64)
@@ -307,14 +284,14 @@ func (d *TMP006) Start() (err error) {
 			case <-timer:
 				var rdt float64
 				if rdt, err = d.measureRawDieTemp(); err != nil {
-					log.Printf("tmp006: %v", err)
+					glog.Errorf("tmp006: %v", err)
 				} else {
 					rawDieTemp = rdt
 					rdtAvlb = true
 				}
 				var ot float64
 				if ot, err = d.measureObjTemp(); err != nil {
-					log.Printf("tmp006: %v", err)
+					glog.Errorf("tmp006: %v", err)
 				} else {
 					objTemp = ot
 					otAvlb = true
@@ -333,5 +310,5 @@ func (d *TMP006) Start() (err error) {
 		}
 	}()
 
-	return
+	return nil
 }

@@ -3,7 +3,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -33,7 +33,7 @@ func main() {
 		default:
 			voltage := rand.Intn(4096)
 			if err := dac.SetVoltage(voltage); err != nil {
-				log.Printf("mcp4725: %v", err)
+				fmt.Printf("mcp4725: %v\n", err)
 			}
 		}
 	}

@@ -3,7 +3,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -21,7 +21,6 @@ func main() {
 	bus := embd.NewI2CBus(1)
 
 	gyro := l3gd20.New(bus, l3gd20.R250DPS)
-	gyro.Debug = true
 	defer gyro.Close()
 
 	gyro.Start()
@@ -31,7 +30,7 @@ func main() {
 
 	orientations, err := gyro.Orientations()
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 
 	timer := time.Tick(250 * time.Millisecond)
@@ -40,7 +39,7 @@ func main() {
 		select {
 		case <-timer:
 			orientation := <-orientations
-			log.Printf("x: %v, y: %v, z: %v", orientation.X, orientation.Y, orientation.Z)
+			fmt.Printf("x: %v, y: %v, z: %v\n", orientation.X, orientation.Y, orientation.Z)
 		case <-quit:
 			return
 		}

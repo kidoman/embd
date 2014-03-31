@@ -3,7 +3,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"os/signal"
 
@@ -21,8 +21,8 @@ func main() {
 
 	sensor := tmp006.New(bus, 0x40)
 	if status, err := sensor.Present(); err != nil || !status {
-		log.Print("tmp006: not found")
-		log.Print(err)
+		fmt.Println("tmp006: not found")
+		fmt.Println(err)
 		return
 	}
 	defer sensor.Close()
@@ -35,9 +35,9 @@ func main() {
 	for {
 		select {
 		case temp := <-sensor.ObjTemps():
-			log.Printf("tmp006: got obj temp %.2f", temp)
+			fmt.Printf("tmp006: got obj temp %.2f\n", temp)
 		case temp := <-sensor.RawDieTemps():
-			log.Printf("tmp006: got die temp %.2f", temp)
+			fmt.Printf("tmp006: got die temp %.2f\n", temp)
 		case <-stop:
 			return
 		}

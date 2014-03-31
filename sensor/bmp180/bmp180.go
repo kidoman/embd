@@ -3,11 +3,11 @@
 package bmp180
 
 import (
-	"log"
 	"math"
 	"sync"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 )
 
@@ -43,8 +43,6 @@ type BMP180 struct {
 	Bus  embd.I2CBus
 	Poll int
 
-	Debug bool
-
 	oss uint
 
 	ac1, ac2, ac3      int16
@@ -65,109 +63,109 @@ func New(bus embd.I2CBus) *BMP180 {
 	return &BMP180{Bus: bus, Poll: pollDelay}
 }
 
-func (d *BMP180) calibrate() (err error) {
+func (d *BMP180) calibrate() error {
 	d.cmu.RLock()
 	if d.calibrated {
 		d.cmu.RUnlock()
-		return
+		return nil
 	}
 	d.cmu.RUnlock()
 
 	d.cmu.Lock()
 	defer d.cmu.Unlock()
 
-	readInt16 := func(reg byte) (value int16, err error) {
-		var v uint16
-		if v, err = d.Bus.ReadWordFromReg(address, reg); err != nil {
-			return
+	readInt16 := func(reg byte) (int16, error) {
+		v, err := d.Bus.ReadWordFromReg(address, reg)
+		if err != nil {
+			return 0, err
 		}
-		value = int16(v)
-		return
+		return int16(v), nil
 	}
 
-	readUInt16 := func(reg byte) (value uint16, err error) {
-		var v uint16
-		if v, err = d.Bus.ReadWordFromReg(address, reg); err != nil {
-			return
+	readUInt16 := func(reg byte) (uint16, error) {
+		v, err := d.Bus.ReadWordFromReg(address, reg)
+		if err != nil {
+			return 0, err
 		}
-		value = uint16(v)
-		return
+		return uint16(v), nil
 	}
 
+	var err error
 	d.ac1, err = readInt16(calAc1)
 	if err != nil {
-		return
+		return err
 	}
 	d.ac2, err = readInt16(calAc2)
 	if err != nil {
-		return
+		return err
 	}
 	d.ac3, err = readInt16(calAc3)
 	if err != nil {
-		return
+		return err
 	}
 	d.ac4, err = readUInt16(calAc4)
 	if err != nil {
-		return
+		return err
 	}
 	d.ac5, err = readUInt16(calAc5)
 	if err != nil {
-		return
+		return err
 	}
 	d.ac6, err = readUInt16(calAc6)
 	if err != nil {
-		return
+		return err
 	}
 	d.b1, err = readInt16(calB1)
 	if err != nil {
-		return
+		return err
 	}
 	d.b2, err = readInt16(calB2)
 	if err != nil {
-		return
+		return err
 	}
 	d.mb, err = readInt16(calMB)
 	if err != nil {
-		return
+		return err
 	}
 	d.mc, err = readInt16(calMC)
 	if err != nil {
-		return
+		return err
 	}
 	d.md, err = readInt16(calMD)
 	if err != nil {
-		return
+		return err
 	}
 
 	d.calibrated = true
 
-	if d.Debug {
-		log.Print("bmp085: calibration data retrieved")
-		log.Printf("bmp085: param AC1 = %v", d.ac1)
-		log.Printf("bmp085: param AC2 = %v", d.ac2)
-		log.Printf("bmp085: param AC3 = %v", d.ac3)
-		log.Printf("bmp085: param AC4 = %v", d.ac4)
-		log.Printf("bmp085: param AC5 = %v", d.ac5)
-		log.Printf("bmp085: param AC6 = %v", d.ac6)
-		log.Printf("bmp085: param B1 = %v", d.b1)
-		log.Printf("bmp085: param B2 = %v", d.b2)
-		log.Printf("bmp085: param MB = %v", d.mb)
-		log.Printf("bmp085: param MC = %v", d.mc)
-		log.Printf("bmp085: param MD = %v", d.md)
+	if glog.V(1) {
+		glog.Info("bmp180: calibration data retrieved")
+		glog.Infof("bmp180: param AC1 = %v", d.ac1)
+		glog.Infof("bmp180: param AC2 = %v", d.ac2)
+		glog.Infof("bmp180: param AC3 = %v", d.ac3)
+		glog.Infof("bmp180: param AC4 = %v", d.ac4)
+		glog.Infof("bmp180: param AC5 = %v", d.ac5)
+		glog.Infof("bmp180: param AC6 = %v", d.ac6)
+		glog.Infof("bmp180: param B1 = %v", d.b1)
+		glog.Infof("bmp180: param B2 = %v", d.b2)
+		glog.Infof("bmp180: param MB = %v", d.mb)
+		glog.Infof("bmp180: param MC = %v", d.mc)
+		glog.Infof("bmp180: param MD = %v", d.md)
 	}
 
-	return
+	return nil
 }
 
-func (d *BMP180) readUncompensatedTemp() (temp uint16, err error) {
-	if err = d.Bus.WriteByteToReg(address, control, readTempCmd); err != nil {
-		return
+func (d *BMP180) readUncompensatedTemp() (uint16, error) {
+	if err := d.Bus.WriteByteToReg(address, control, readTempCmd); err != nil {
+		return 0, err
 	}
 	time.Sleep(tempReadDelay)
-	if temp, err = d.Bus.ReadWordFromReg(address, tempData); err != nil {
-		return
+	temp, err := d.Bus.ReadWordFromReg(address, tempData)
+	if err != nil {
+		return 0, err
 	}
-	return
+	return temp, nil
 }
 
 func (d *BMP180) calcTemp(utemp uint16) uint16 {
@@ -181,69 +179,59 @@ func (d *BMP180) calcTemp(utemp uint16) uint16 {
 	return uint16((d.b5 + 8) >> 4)
 }
 
-func (d *BMP180) measureTemp() (temp uint16, err error) {
-	if err = d.calibrate(); err != nil {
-		return
+func (d *BMP180) measureTemp() (uint16, error) {
+	if err := d.calibrate(); err != nil {
+		return 0, err
 	}
 
-	var utemp uint16
-	if utemp, err = d.readUncompensatedTemp(); err != nil {
-		return
+	utemp, err := d.readUncompensatedTemp()
+	if err != nil {
+		return 0, err
 	}
-	if d.Debug {
-		log.Printf("bcm085: uncompensated temp: %v", utemp)
-	}
-	temp = d.calcTemp(utemp)
-	if d.Debug {
-		log.Printf("bcm085: compensated temp %v", temp)
-	}
-	return
+	glog.V(1).Infof("bcm085: uncompensated temp: %v", utemp)
+	temp := d.calcTemp(utemp)
+	glog.V(1).Infof("bcm085: compensated temp %v", temp)
+	return temp, nil
 }
 
 // Temperature returns the current temperature reading.
-func (d *BMP180) Temperature() (temp float64, err error) {
-
+func (d *BMP180) Temperature() (float64, error) {
 	select {
 	case t := <-d.temps:
-		temp = float64(t) / 10
-		return
+		temp := float64(t) / 10
+		return temp, nil
 	default:
-		if d.Debug {
-			log.Print("bcm085: no temps available... measuring")
-		}
-		var t uint16
-		t, err = d.measureTemp()
+		glog.V(1).Infof("bcm085: no temps available... measuring")
+		t, err := d.measureTemp()
 		if err != nil {
-			return
+			return 0, err
 		}
-		temp = float64(t) / 10
-		return
+		temp := float64(t) / 10
+		return temp, nil
 	}
 }
 
-func (d *BMP180) readUncompensatedPressure() (pressure uint32, err error) {
-	if err = d.Bus.WriteByteToReg(address, control, byte(readPressureCmd+(d.oss<<6))); err != nil {
-		return
+func (d *BMP180) readUncompensatedPressure() (uint32, error) {
+	if err := d.Bus.WriteByteToReg(address, control, byte(readPressureCmd+(d.oss<<6))); err != nil {
+		return 0, err
 	}
 	time.Sleep(time.Duration(2+(3<<d.oss)) * time.Millisecond)
 
 	data := make([]byte, 3)
-	if err = d.Bus.ReadFromReg(address, pressureData, data); err != nil {
-		return
+	if err := d.Bus.ReadFromReg(address, pressureData, data); err != nil {
+		return 0, err
 	}
 
-	pressure = ((uint32(data[0]) << 16) | (uint32(data[1]) << 8) | uint32(data[2])) >> (8 - d.oss)
+	pressure := ((uint32(data[0]) << 16) | (uint32(data[1]) << 8) | uint32(data[2])) >> (8 - d.oss)
 
-	return
+	return pressure, nil
 }
 
-func (d *BMP180) calcPressure(upressure uint32) (p int32) {
+func (d *BMP180) calcPressure(upressure uint32) int32 {
 	var x1, x2, x3 int32
 
 	l := func(s string, v interface{}) {
-		if d.Debug {
-			log.Printf("bcm085: %v = %v", s, v)
-		}
+		glog.V(1).Infof("bcm085: %v = %v", s, v)
 	}
 
 	b6 := d.b5 - 4000
@@ -271,6 +259,7 @@ func (d *BMP180) calcPressure(upressure uint32) (p int32) {
 	l("x3", x3)
 	l("b4", b4)
 
+	var p int32
 	b7 := (uint32(upressure-uint32(b3)) * (50000 >> d.oss))
 	if b7 < 0x80000000 {
 		p = int32((b7 << 1) / b4)
@@ -290,83 +279,70 @@ func (d *BMP180) calcPressure(upressure uint32) (p int32) {
 	l("x3", x3)
 	l("p", p)
 
-	return
+	return p
 }
 
 func (d *BMP180) calcAltitude(pressure int32) float64 {
 	return 44330 * (1 - math.Pow(float64(pressure)/p0, 0.190295))
 }
 
-func (d *BMP180) measurePressureAndAltitude() (pressure int32, altitude float64, err error) {
-	if err = d.calibrate(); err != nil {
-		return
+func (d *BMP180) measurePressureAndAltitude() (int32, float64, error) {
+	if err := d.calibrate(); err != nil {
+		return 0, 0, err
 	}
 
-	var upressure uint32
-	if upressure, err = d.readUncompensatedPressure(); err != nil {
-		return
+	upressure, err := d.readUncompensatedPressure()
+	if err != nil {
+		return 0, 0, err
 	}
-	if d.Debug {
-		log.Printf("bcm085: uncompensated pressure: %v", upressure)
-	}
-	pressure = d.calcPressure(upressure)
-	if d.Debug {
-		log.Printf("bcm085: compensated pressure %v", pressure)
-	}
-	altitude = d.calcAltitude(pressure)
-	if d.Debug {
-		log.Printf("bcm085: calculated altitude %v", altitude)
-	}
-	return
+	glog.V(1).Infof("bcm085: uncompensated pressure: %v", upressure)
+	pressure := d.calcPressure(upressure)
+	glog.V(1).Infof("bcm085: compensated pressure %v", pressure)
+	altitude := d.calcAltitude(pressure)
+	glog.V(1).Infof("bcm085: calculated altitude %v", altitude)
+	return pressure, altitude, nil
 }
 
 // Pressure returns the current pressure reading.
-func (d *BMP180) Pressure() (pressure int, err error) {
-	if err = d.calibrate(); err != nil {
-		return
+func (d *BMP180) Pressure() (int, error) {
+	if err := d.calibrate(); err != nil {
+		return 0, err
 	}
 
 	select {
 	case p := <-d.pressures:
-		pressure = int(p)
-		return
+		return int(p), nil
 	default:
-		if d.Debug {
-			log.Print("bcm085: no pressures available... measuring")
-		}
-		var p int32
-		p, _, err = d.measurePressureAndAltitude()
+		glog.V(1).Infof("bcm085: no pressures available... measuring")
+		p, _, err := d.measurePressureAndAltitude()
 		if err != nil {
-			return
+			return 0, err
 		}
-		pressure = int(p)
-		return
+		return int(p), nil
 	}
 }
 
 // Altitude returns the current altitude reading.
-func (d *BMP180) Altitude() (altitude float64, err error) {
-	if err = d.calibrate(); err != nil {
-		return
+func (d *BMP180) Altitude() (float64, error) {
+	if err := d.calibrate(); err != nil {
+		return 0, err
 	}
 
 	select {
-	case altitude = <-d.altitudes:
-		return
+	case altitude := <-d.altitudes:
+		return altitude, nil
 	default:
-		if d.Debug {
-			log.Print("bcm085: no altitudes available... measuring")
-		}
-		_, altitude, err = d.measurePressureAndAltitude()
+		glog.V(1).Info("bcm085: no altitudes available... measuring")
+		_, altitude, err := d.measurePressureAndAltitude()
 		if err != nil {
-			return
+			return 0, err
 		}
-		return
+		return altitude, nil
 	}
 }
 
 // Run starts the sensor data acquisition loop.
-func (d *BMP180) Run() (err error) {
+func (d *BMP180) Run() {
 	go func() {
 		d.quit = make(chan struct{})
 		timer := time.Tick(time.Duration(d.Poll) * time.Millisecond)

@@ -2,7 +2,6 @@
 package bh1750fvi
 
 import (
-	"log"
 	"sync"
 	"time"
 
@@ -61,35 +60,32 @@ func NewHigh2Mode(bus embd.I2CBus) *BH1750FVI {
 	return New(High2, bus)
 }
 
-func (d *BH1750FVI) measureLighting() (lighting float64, err error) {
-	err = d.Bus.WriteByte(d.i2cAddr, d.operationCode)
-	if err != nil {
-		log.Print("bh1750fvi: Failed to initialize sensor")
-		return
+func (d *BH1750FVI) measureLighting() (float64, error) {
+	if err := d.Bus.WriteByte(d.i2cAddr, d.operationCode); err != nil {
+		return 0, err
 	}
 	time.Sleep(180 * time.Millisecond)
 
-	var reading uint16
-	if reading, err = d.Bus.ReadWordFromReg(d.i2cAddr, defReadReg); err != nil {
-		return
+	reading, err := d.Bus.ReadWordFromReg(d.i2cAddr, defReadReg)
+	if err != nil {
+		return 0, err
 	}
 
-	lighting = float64(int16(reading)) / measurementAcuuracy
-	return
+	return float64(int16(reading)) / measurementAcuuracy, nil
 }
 
 // Lighting returns the ambient lighting in lx.
-func (d *BH1750FVI) Lighting() (lighting float64, err error) {
+func (d *BH1750FVI) Lighting() (float64, error) {
 	select {
-	case lighting = <-d.lightingReadings:
-		return
+	case lighting := <-d.lightingReadings:
+		return lighting, nil
 	default:
 		return d.measureLighting()
 	}
 }
 
 // Run starts continuous sensor data acquisition loop.
-func (d *BH1750FVI) Run() (err error) {
+func (d *BH1750FVI) Run() {
 	go func() {
 		d.quit = make(chan bool)
 
@@ -101,7 +97,8 @@ func (d *BH1750FVI) Run() (err error) {
 			select {
 			case d.lightingReadings <- lighting:
 			case <-timer:
-				if l, err := d.measureLighting(); err == nil {
+				l, err := d.measureLighting()
+				if err == nil {
 					lighting = l
 				}
 				if err == nil && d.lightingReadings == nil {

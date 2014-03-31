@@ -3,7 +3,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/kidoman/embd"
@@ -31,9 +31,9 @@ func main() {
 	for {
 		distance, err := rf.Distance()
 		if err != nil {
-			log.Panic(err)
+			panic(err)
 		}
-		log.Printf("Distance is %v", distance)
+		fmt.Printf("Distance is %v\n", distance)
 
 		time.Sleep(500 * time.Millisecond)
 	}

@@ -2,8 +2,7 @@
 package servo
 
 import (
-	"log"
-
+	"github.com/golang/glog"
 	"github.com/kidoman/embd/util"
 )
 
@@ -22,8 +21,6 @@ type Servo struct {
 	Channel int
 
 	Minus, Maxus int
-
-	Debug bool
 }
 
 // New creates a new Servo interface.
@@ -40,9 +37,7 @@ func New(pwm PWM, channel int) *Servo {
 func (s *Servo) SetAngle(angle int) error {
 	us := util.Map(int64(angle), 0, 180, int64(s.Minus), int64(s.Maxus))
 
-	if s.Debug {
-		log.Printf("servo: given angle %v calculated %v us", angle, us)
-	}
+	glog.V(1).Infof("servo: given angle %v calculated %v us", angle, us)
 
 	return s.PWM.SetMicroseconds(s.Channel, int(us))
 }
