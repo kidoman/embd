@@ -1,0 +1,8 @@
+{
+	"build": {
+		"gumbyPath": "bower_components/gumby",
+		"outPath": "js",
+		"modules": ["toggleswitch", "validation"],
+        "buildSourceMap": true
+	}
+}

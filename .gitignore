@@ -1,0 +1,4 @@
+.bundle
+.sass-cache
+vendor/bundle
+bin

@@ -1,0 +1,35 @@
+@function match($list, $icon) {
+  @each $item in $list {
+    $index: index($item, $icon);
+      @if $index {
+        $return: if($index == 1, 2, $index);
+        @return nth($item, $return);
+      }
+    }
+  @return false;
+}
+
+@mixin i($icon) {
+  .#{$icon}.icon-left a:before,
+  .#{$icon}.icon-right a:after,
+  i.#{$icon}:before {
+    content: "#{match($entypo-icons, $icon)}";
+    height: inherit;
+  }
+}
+
+@mixin icon($icon) {
+  @if (type-of($icon) == list) {
+    @each $i in $icon {
+      @include i($i);
+    }
+  }
+  @elseif ($icon == all) {
+    @each $icon in $entypo-icons {
+      @include i(nth($icon, 1));
+    }
+  }
+  @else {
+    @include i($icon);
+  }
+}

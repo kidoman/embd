@@ -1,0 +1,33 @@
+s3_bucket: embd.kidoman.io
+
+gzip: true
+gzip_zopfli: true
+
+max_age:
+  "js/*": 6000
+  "css/*": 6000
+  "img/*": 6000
+  "bower_components/*": 6000
+  "*": 300
+
+exclude_from_upload:
+  - .bundle
+  - .git
+  - bin
+  - sass
+  - vendor
+  - .gitignore
+  - .ruby-version
+  - config.rb
+  - Gemfile
+  - Gemfile.lock
+  - gumby.json
+  - s3_website.yml
+  - .DS_Store
+
+s3_reduced_redundancy: true
+
+cloudfront_distribution_id: E1R1QW09LV1O8W
+cloudfront_invalidate_root: true
+
+concurrency_level: 5
