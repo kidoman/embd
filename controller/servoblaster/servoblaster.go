@@ -33,8 +33,22 @@ func (d *ServoBlaster) setup() error {
 	return nil
 }
 
+type pwmChannel struct {
+	d *ServoBlaster
+
+	channel int
+}
+
+func (p *pwmChannel) SetMicroseconds(us int) error {
+	return p.d.setMicroseconds(p.channel, us)
+}
+
+func (d *ServoBlaster) Channel(channel int) *pwmChannel {
+	return &pwmChannel{d: d, channel: channel}
+}
+
 // SetMicroseconds sends a command to the PWM driver to generate a us wide pulse.
-func (d *ServoBlaster) SetMicroseconds(channel, us int) error {
+func (d *ServoBlaster) setMicroseconds(channel, us int) error {
 	if err := d.setup(); err != nil {
 		return err
 	}

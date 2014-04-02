@@ -17,6 +17,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/golang/glog"
+	"github.com/kidoman/embd/util"
 )
 
 var bbbPins = PinMap{
@@ -244,19 +247,22 @@ const (
 	// BBBPWMDefaultDuty represents the default duty (0ns) for pwm.
 	BBBPWMDefaultDuty = 0
 
-	// BBBPWMDefaultPeriod represents the default period (500000ns) for pwm.
+	// BBBPWMDefaultPeriod represents the default period (500000ns) for pwm. Equals 2000 Hz.
 	BBBPWMDefaultPeriod = 500000
 
-	// BBBPWMMaxPulseWidth represents the max period (1000000000ns) supported by pwm.
+	// BBBPWMMaxPulseWidth represents the max period (1000000000ns) supported by pwm. Equals 1 Hz.
 	BBBPWMMaxPulseWidth = 1000000000
 )
 
 type bbbPWMPin struct {
 	n string
 
-	duty     *os.File
-	period   *os.File
-	polarity *os.File
+	period   int
+	polarity Polarity
+
+	dutyf     *os.File
+	periodf   *os.File
+	polarityf *os.File
 
 	initialized bool
 }
@@ -292,17 +298,21 @@ func (p *bbbPWMPin) init() error {
 	if err := p.ensurePeriodFileExists(basePath, 500*time.Millisecond); err != nil {
 		return err
 	}
-	if p.period, err = p.periodFile(basePath); err != nil {
+	if p.periodf, err = p.periodFile(basePath); err != nil {
 		return err
 	}
-	if p.duty, err = p.dutyFile(basePath); err != nil {
+	if p.dutyf, err = p.dutyFile(basePath); err != nil {
 		return err
 	}
-	if p.polarity, err = p.polarityFile(basePath); err != nil {
+	if p.polarityf, err = p.polarityFile(basePath); err != nil {
 		return err
 	}
 
 	p.initialized = true
+
+	if err := p.reset(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -372,8 +382,14 @@ func (p *bbbPWMPin) SetPeriod(ns int) error {
 		return fmt.Errorf("embd: pwm period for %v is out of bounds (must be =< %vns)", p.n, BBBPWMMaxPulseWidth)
 	}
 
-	_, err := p.period.WriteString(strconv.Itoa(ns))
-	return err
+	_, err := p.periodf.WriteString(strconv.Itoa(ns))
+	if err != nil {
+		return err
+	}
+
+	p.period = ns
+
+	return nil
 }
 
 func (p *bbbPWMPin) SetDuty(ns int) error {
@@ -382,11 +398,35 @@ func (p *bbbPWMPin) SetDuty(ns int) error {
 	}
 
 	if ns > BBBPWMMaxPulseWidth {
-		return fmt.Errorf("embd: pwm duty for %v is out of bounds (must be =< %vns)", p.n, BBBPWMMaxPulseWidth)
+		return fmt.Errorf("embd: pwm duty %v for pin %v is out of bounds (must be =< %vns)", p.n, BBBPWMMaxPulseWidth)
 	}
 
-	_, err := p.duty.WriteString(strconv.Itoa(ns))
-	return err
+	if ns > p.period {
+		return fmt.Errorf("embd: pwm duty %v for pin %v is greater than the period %v", ns, p.n, p.period)
+	}
+
+	_, err := p.dutyf.WriteString(strconv.Itoa(ns))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *bbbPWMPin) SetMicroseconds(us int) error {
+	if p.period != 20000000 {
+		glog.Warningf("embd: pwm pin %v has freq %v hz. recommended 50 hz for servo mode", 1000000000/p.period)
+	}
+	duty := us * 1000 // in nanoseconds
+	if duty > p.period {
+		return fmt.Errorf("embd: calculated pwm duty %vns for pin %v (servo mode) is greater than the period %vns", duty, p.n, p.period)
+	}
+	return p.SetDuty(duty)
+}
+
+func (p *bbbPWMPin) SetAnalog(value byte) error {
+	duty := util.Map(int64(value), 0, 255, 0, int64(p.period))
+	return p.SetDuty(int(duty))
 }
 
 func (p *bbbPWMPin) SetPolarity(pol Polarity) error {
@@ -394,8 +434,14 @@ func (p *bbbPWMPin) SetPolarity(pol Polarity) error {
 		return err
 	}
 
-	_, err := p.polarity.WriteString(strconv.Itoa(int(pol)))
-	return err
+	_, err := p.polarityf.WriteString(strconv.Itoa(int(pol)))
+	if err != nil {
+		return err
+	}
+
+	p.polarity = pol
+
+	return nil
 }
 
 func (p *bbbPWMPin) reset() error {

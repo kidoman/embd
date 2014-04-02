@@ -11,25 +11,28 @@ const (
 	maxus = 2400
 )
 
+const (
+	// DefaultFreq represents the default (preferred) freq of a PWM doing servo duties.
+	DefaultFreq = 50
+)
+
 // A PWM interface implements access to a pwm controller.
 type PWM interface {
-	SetMicroseconds(channel int, us int) error
+	SetMicroseconds(us int) error
 }
 
 type Servo struct {
-	PWM     PWM
-	Channel int
+	PWM PWM
 
 	Minus, Maxus int
 }
 
 // New creates a new Servo interface.
-func New(pwm PWM, channel int) *Servo {
+func New(pwm PWM) *Servo {
 	return &Servo{
-		PWM:     pwm,
-		Channel: channel,
-		Minus:   minus,
-		Maxus:   maxus,
+		PWM:   pwm,
+		Minus: minus,
+		Maxus: maxus,
 	}
 }
 
@@ -39,5 +42,5 @@ func (s *Servo) SetAngle(angle int) error {
 
 	glog.V(1).Infof("servo: given angle %v calculated %v us", angle, us)
 
-	return s.PWM.SetMicroseconds(s.Channel, int(us))
+	return s.PWM.SetMicroseconds(int(us))
 }

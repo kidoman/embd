@@ -15,7 +15,9 @@ func main() {
 	sb := servoblaster.New()
 	defer sb.Close()
 
-	servo := servo.New(sb, 0)
+	pwm := sb.Channel(0)
+
+	servo := servo.New(pwm)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)

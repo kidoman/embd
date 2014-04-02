@@ -20,9 +20,7 @@ const (
 
 	pwm0OnLowReg = 0x6
 
-	minAnalogValue = 0
-	maxAnalogValue = 255
-
+	// inspired by arduino's default freq for analogWrites
 	defaultFreq = 490
 )
 
@@ -140,17 +138,35 @@ func (d *PCA9685) SetPwm(channel, onTime, offTime int) error {
 	return nil
 }
 
-// SetMicroseconds is a convinience method which allows easy servo control.
-func (d *PCA9685) SetMicroseconds(channel, us int) error {
-	offTime := us * d.Freq * pwmControlPoints / 1000000
-	return d.SetPwm(channel, 0, offTime)
+type pwmChannel struct {
+	d *PCA9685
+
+	channel int
+}
+
+func (p *pwmChannel) SetMicroseconds(us int) error {
+	return p.d.setMicroseconds(p.channel, us)
 }
 
 // SetAnalog is a convinience method which allows easy manipulation of the PWM
 // based on a (0-255) range value.
-func (d *PCA9685) SetAnalog(channel int, value byte) error {
-	offTime := util.Map(int64(value), minAnalogValue, maxAnalogValue, 0, pwmControlPoints-1)
-	return d.SetPwm(channel, 0, int(offTime))
+func (p *pwmChannel) SetAnalog(value byte) error {
+	offTime := util.Map(int64(value), 0, 255, 0, pwmControlPoints-1)
+	return p.d.SetPwm(p.channel, 0, int(offTime))
+}
+
+func (d *PCA9685) ServoChannel(channel int) *pwmChannel {
+	return &pwmChannel{d: d, channel: channel}
+}
+
+func (d *PCA9685) AnalogChannel(channel int) *pwmChannel {
+	return &pwmChannel{d: d, channel: channel}
+}
+
+// SetMicroseconds is a convinience method which allows easy servo control.
+func (d *PCA9685) setMicroseconds(channel, us int) error {
+	offTime := us * d.Freq * pwmControlPoints / 1000000
+	return d.SetPwm(channel, 0, offTime)
 }
 
 // Close stops the controller and resets mode and pwm controller registers.

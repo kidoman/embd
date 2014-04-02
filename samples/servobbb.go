@@ -8,23 +8,18 @@ import (
 	"time"
 
 	"github.com/kidoman/embd"
-	"github.com/kidoman/embd/controller/pca9685"
 	"github.com/kidoman/embd/motion/servo"
 )
 
 func main() {
-	if err := embd.InitI2C(); err != nil {
+	embd.InitGPIO()
+	defer embd.CloseGPIO()
+
+	pwm, err := embd.NewPWMPin("P9_14")
+	if err != nil {
 		panic(err)
 	}
-	defer embd.CloseI2C()
-
-	bus := embd.NewI2CBus(1)
-
-	d := pca9685.New(bus, 0x41)
-	d.Freq = 50
-	defer d.Close()
-
-	pwm := d.ServoChannel(0)
+	defer pwm.Close()
 
 	servo := servo.New(pwm)
 

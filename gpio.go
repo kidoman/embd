@@ -86,6 +86,12 @@ type PWMPin interface {
 	// SetPolarity sets the polarity of a pwm pin.
 	SetPolarity(pol Polarity) error
 
+	// SetMicroseconds sends a command to the PWM driver to generate a us wide pulse.
+	SetMicroseconds(us int) error
+
+	// SetAnalog allows easy manipulation of the PWM based on a (0-255) range value.
+	SetAnalog(value byte) error
+
 	// Close releases the resources associated with the pin.
 	Close() error
 }
