@@ -18,7 +18,6 @@ type digitalPin struct {
 	dir       *os.File
 	val       *os.File
 	activeLow *os.File
-	edge      *os.File
 
 	initialized bool
 }
@@ -171,9 +170,6 @@ func (p *digitalPin) Close() error {
 		return err
 	}
 	if err := p.activeLow.Close(); err != nil {
-		return err
-	}
-	if err := p.edge.Close(); err != nil {
 		return err
 	}
 	if err := p.unexport(); err != nil {
