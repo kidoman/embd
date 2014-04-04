@@ -98,7 +98,7 @@ func (d *US020) Distance() (float64, error) {
 			return 0, err
 		}
 
-		if v != embd.Low {
+		if v == embd.High {
 			break
 		}
 	}
@@ -114,7 +114,7 @@ func (d *US020) Distance() (float64, error) {
 			return 0, err
 		}
 
-		if v != embd.High {
+		if v == embd.Low {
 			break
 		}
 	}
