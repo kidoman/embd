@@ -117,6 +117,7 @@ func (p *digitalPin) Read() (int, error) {
 	if _, err := p.val.Read(buf); err != nil {
 		return 0, err
 	}
+	p.val.Seek(0, 0)
 	var val int
 	if buf[0] == '1' {
 		val = 1
