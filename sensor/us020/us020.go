@@ -91,35 +91,10 @@ func (d *US020) Distance() (float64, error) {
 
 	glog.V(2).Infof("us020: waiting for echo to go high")
 
-	// Wait until ECHO goes high
-	for {
-		v, err := d.EchoPin.Read()
-		if err != nil {
-			return 0, err
-		}
-
-		if v == embd.High {
-			break
-		}
+	duration, err := d.EchoPin.TimePulse(embd.High)
+	if err != nil {
+		return 0, err
 	}
-
-	startTime := time.Now() // Record time when ECHO goes high
-
-	glog.V(2).Infof("us020: waiting for echo to go low")
-
-	// Wait until ECHO goes low
-	for {
-		v, err := d.EchoPin.Read()
-		if err != nil {
-			return 0, err
-		}
-
-		if v == embd.Low {
-			break
-		}
-	}
-
-	duration := time.Since(startTime) // Calculate time lapsed for ECHO to transition from high to low
 
 	// Calculate the distance based on the time computed
 	distance := float64(duration.Nanoseconds()) / 10000000 * (d.speedSound / 2)

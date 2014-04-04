@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"time"
 )
 
 type digitalPin struct {
@@ -19,11 +20,13 @@ type digitalPin struct {
 	val       *os.File
 	activeLow *os.File
 
+	readBuf []byte
+
 	initialized bool
 }
 
 func newDigitalPin(n int) DigitalPin {
-	return &digitalPin{n: n}
+	return &digitalPin{n: n, readBuf: make([]byte, 1)}
 }
 
 func (p *digitalPin) N() int {
@@ -107,21 +110,36 @@ func (p *digitalPin) SetDirection(dir Direction) error {
 	return err
 }
 
+func (p *digitalPin) read() (int, error) {
+	if _, err := p.val.ReadAt(p.readBuf, 0); err != nil {
+		return 0, err
+	}
+	if p.readBuf[0] == 49 {
+		return 1, nil
+	}
+	return 0, nil
+}
+
 func (p *digitalPin) Read() (int, error) {
 	if err := p.init(); err != nil {
 		return 0, err
 	}
 
-	buf := make([]byte, 1)
-	if _, err := p.val.Read(buf); err != nil {
-		return 0, err
+	return p.read()
+}
+
+var (
+	lowBytes  = []byte{48}
+	highBytes = []byte{49}
+)
+
+func (p *digitalPin) write(val int) error {
+	bytes := lowBytes
+	if val == High {
+		bytes = highBytes
 	}
-	p.val.Seek(0, 0)
-	var val int
-	if buf[0] == '1' {
-		val = 1
-	}
-	return val, nil
+	_, err := p.val.Write(bytes)
+	return err
 }
 
 func (p *digitalPin) Write(val int) error {
@@ -129,12 +147,58 @@ func (p *digitalPin) Write(val int) error {
 		return err
 	}
 
-	str := "0"
-	if val == High {
-		str = "1"
+	return p.write(val)
+}
+
+func (p *digitalPin) TimePulse(state int) (time.Duration, error) {
+	if err := p.init(); err != nil {
+		return 0, err
 	}
-	_, err := p.val.WriteString(str)
-	return err
+
+	aroundState := Low
+	if state == Low {
+		aroundState = High
+	}
+
+	// Wait for any previous pulse to end
+	for {
+		v, err := p.read()
+		if err != nil {
+			return 0, err
+		}
+
+		if v == aroundState {
+			break
+		}
+	}
+
+	// Wait until ECHO goes high
+	for {
+		v, err := p.read()
+		if err != nil {
+			return 0, err
+		}
+
+		if v == state {
+			break
+		}
+	}
+
+	startTime := time.Now() // Record time when ECHO goes high
+
+	// Wait until ECHO goes low
+	for {
+		v, err := p.read()
+		if err != nil {
+			return 0, err
+		}
+
+		if v == aroundState {
+			break
+		}
+	}
+
+	return time.Since(startTime), nil // Calculate time lapsed for ECHO to transition from high to low
 }
 
 func (p *digitalPin) ActiveLow(b bool) error {

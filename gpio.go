@@ -2,6 +2,8 @@
 
 package embd
 
+import "time"
+
 // The Direction type indicates the direction of a GPIO pin.
 type Direction int
 
@@ -31,6 +33,9 @@ type DigitalPin interface {
 
 	// Read reads the value from the pin.
 	Read() (int, error)
+
+	// TimePulse measures the duration of a pulse on the pin.
+	TimePulse(state int) (time.Duration, error)
 
 	// SetDirection sets the direction of the pin (in/out).
 	SetDirection(dir Direction) error
