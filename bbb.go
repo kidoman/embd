@@ -414,6 +414,10 @@ func (p *bbbPWMPin) SetDuty(ns int) error {
 }
 
 func (p *bbbPWMPin) SetMicroseconds(us int) error {
+	if err := p.init(); err != nil {
+		return err
+	}
+
 	if p.period != 20000000 {
 		glog.Warningf("embd: pwm pin %v has freq %v hz. recommended 50 hz for servo mode", 1000000000/p.period)
 	}
