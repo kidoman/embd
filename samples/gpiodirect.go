@@ -3,12 +3,15 @@
 package main
 
 import (
+	"flag"
 	"time"
 
 	"github.com/kidoman/embd"
 )
 
 func main() {
+	flag.Parse()
+
 	if err := embd.InitGPIO(); err != nil {
 		panic(err)
 	}

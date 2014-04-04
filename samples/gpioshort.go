@@ -2,9 +2,15 @@
 
 package main
 
-import "github.com/kidoman/embd"
+import (
+	"flag"
+
+	"github.com/kidoman/embd"
+)
 
 func main() {
+	flag.Parse()
+
 	embd.InitGPIO()
 	defer embd.CloseGPIO()
 

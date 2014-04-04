@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"os/signal"
 	"time"
@@ -12,6 +13,8 @@ import (
 )
 
 func main() {
+	flag.Parse()
+
 	sb := servoblaster.New()
 	defer sb.Close()
 

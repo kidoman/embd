@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
@@ -13,6 +14,8 @@ import (
 )
 
 func main() {
+	flag.Parse()
+
 	if err := embd.InitI2C(); err != nil {
 		panic(err)
 	}

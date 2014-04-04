@@ -3,12 +3,15 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/kidoman/embd"
 )
 
 func main() {
+	flag.Parse()
+
 	embd.InitGPIO()
 	defer embd.CloseGPIO()
 

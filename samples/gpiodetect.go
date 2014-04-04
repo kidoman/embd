@@ -3,12 +3,15 @@
 package main
 
 import (
+	"flag"
 	"time"
 
 	"github.com/kidoman/embd"
 )
 
 func main() {
+	flag.Parse()
+
 	h, _, err := embd.DetectHost()
 	if err != nil {
 		return

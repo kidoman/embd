@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"time"
 
 	"github.com/golang/glog"
@@ -11,6 +12,8 @@ import (
 )
 
 func main() {
+	flag.Parse()
+
 	if err := embd.InitGPIO(); err != nil {
 		panic(err)
 	}

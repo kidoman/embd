@@ -3,6 +3,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -12,6 +14,8 @@ import (
 )
 
 func main() {
+	flag.Parse()
+
 	embd.InitGPIO()
 	defer embd.CloseGPIO()
 

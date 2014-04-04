@@ -3,7 +3,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/kidoman/embd"
@@ -11,16 +14,19 @@ import (
 )
 
 func main() {
+	flag.Parse()
+
 	if err := embd.InitGPIO(); err != nil {
 		panic(err)
 	}
 	defer embd.CloseGPIO()
 
-	echoPin, err := embd.NewDigitalPin(10)
+	echoPin, err := embd.NewDigitalPin("P9_21")
 	if err != nil {
 		panic(err)
 	}
-	triggerPin, err := embd.NewDigitalPin(9)
+
+	triggerPin, err := embd.NewDigitalPin("P9_22")
 	if err != nil {
 		panic(err)
 	}
@@ -28,13 +34,21 @@ func main() {
 	rf := us020.New(echoPin, triggerPin, nil)
 	defer rf.Close()
 
-	for {
-		distance, err := rf.Distance()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Distance is %v\n", distance)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, os.Kill)
 
-		time.Sleep(500 * time.Millisecond)
+	for {
+		select {
+		default:
+			distance, err := rf.Distance()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("Distance is %v\n", distance)
+
+			time.Sleep(500 * time.Millisecond)
+		case <-quit:
+			return
+		}
 	}
 }
