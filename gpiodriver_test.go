@@ -1,6 +1,9 @@
 package embd
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 type fakeDigitalPin struct {
 	n int
@@ -20,6 +23,10 @@ func (*fakeDigitalPin) Read() (int, error) {
 
 func (*fakeDigitalPin) Write(val int) error {
 	return nil
+}
+
+func (*fakeDigitalPin) TimePulse(state int) (time.Duration, error) {
+	return 0, nil
 }
 
 func (*fakeDigitalPin) ActiveLow(b bool) error {
