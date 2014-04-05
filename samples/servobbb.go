@@ -26,8 +26,8 @@ func main() {
 
 	servo := servo.New(pwm)
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, os.Kill)
 
 	turnTimer := time.Tick(500 * time.Millisecond)
 	left := true
@@ -47,7 +47,7 @@ func main() {
 			case false:
 				servo.SetAngle(110)
 			}
-		case <-c:
+		case <-quit:
 			return
 		}
 	}
