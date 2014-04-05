@@ -43,13 +43,13 @@ func newFakeDigitalPin(n int) DigitalPin {
 }
 
 func TestGpioDriverDigitalPin(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		key interface{}
 		n   int
 	}{
 		{1, 1},
 	}
-	var pinMap = PinMap{
+	pinMap := PinMap{
 		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapDigital, DigitalLogical: 1},
 	}
 	driver := newGPIODriver(pinMap, newFakeDigitalPin, nil, nil)
@@ -90,13 +90,13 @@ func newFakeAnalogPin(n int) AnalogPin {
 }
 
 func TestGpioDriverAnalogPin(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		key interface{}
 		n   int
 	}{
 		{1, 1},
 	}
-	var pinMap = PinMap{
+	pinMap := PinMap{
 		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapAnalog, AnalogLogical: 1},
 	}
 	driver := newGPIODriver(pinMap, nil, newFakeAnalogPin, nil)
@@ -113,7 +113,7 @@ func TestGpioDriverAnalogPin(t *testing.T) {
 }
 
 func TestGpioDriverUnavailablePinType(t *testing.T) {
-	var pinMap = PinMap{
+	pinMap := PinMap{
 		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapDigital, DigitalLogical: 1},
 		&PinDesc{ID: "P1_2", Aliases: []string{"1"}, Caps: CapAnalog, AnalogLogical: 1},
 	}
