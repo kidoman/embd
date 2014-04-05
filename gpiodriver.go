@@ -11,17 +11,21 @@ type pin interface {
 	Close() error
 }
 
+type digitalPinFactory func(n int) DigitalPin
+type analogPinFactory func(n int) AnalogPin
+type pwmPinFactory func(n string) PWMPin
+
 type gpioDriver struct {
 	pinMap PinMap
 
-	dpf func(n int) DigitalPin
-	apf func(n int) AnalogPin
-	ppf func(n string) PWMPin
+	dpf digitalPinFactory
+	apf analogPinFactory
+	ppf pwmPinFactory
 
 	initializedPins map[string]pin
 }
 
-func newGPIODriver(pinMap PinMap, dpf func(n int) DigitalPin, apf func(n int) AnalogPin, ppf func(n string) PWMPin) GPIODriver {
+func newGPIODriver(pinMap PinMap, dpf digitalPinFactory, apf analogPinFactory, ppf pwmPinFactory) GPIODriver {
 	return &gpioDriver{
 		pinMap: pinMap,
 		dpf:    dpf,
