@@ -6,7 +6,10 @@ import (
 )
 
 type fakeDigitalPin struct {
-	n int
+	id string
+	n  int
+
+	drv GPIODriver
 }
 
 func (p *fakeDigitalPin) N() int {
@@ -41,12 +44,12 @@ func (*fakeDigitalPin) PullDown() error {
 	return nil
 }
 
-func (*fakeDigitalPin) Close() error {
-	return nil
+func (p *fakeDigitalPin) Close() error {
+	return p.drv.Unregister(p.id)
 }
 
-func newFakeDigitalPin(n int) DigitalPin {
-	return &fakeDigitalPin{n}
+func newFakeDigitalPin(pd *PinDesc, drv GPIODriver) DigitalPin {
+	return &fakeDigitalPin{id: pd.ID, n: pd.DigitalLogical, drv: drv}
 }
 
 func TestGpioDriverDigitalPin(t *testing.T) {
@@ -73,7 +76,10 @@ func TestGpioDriverDigitalPin(t *testing.T) {
 }
 
 type fakeAnalogPin struct {
-	n int
+	id string
+	n  int
+
+	drv GPIODriver
 }
 
 func (p *fakeAnalogPin) N() int {
@@ -92,8 +98,8 @@ func (*fakeAnalogPin) Close() error {
 	return nil
 }
 
-func newFakeAnalogPin(n int) AnalogPin {
-	return &fakeAnalogPin{n}
+func newFakeAnalogPin(pd *PinDesc, drv GPIODriver) AnalogPin {
+	return &fakeAnalogPin{id: pd.ID, n: pd.AnalogLogical, drv: drv}
 }
 
 func TestGpioDriverAnalogPin(t *testing.T) {
@@ -140,5 +146,34 @@ func TestGpioDriverUnavailablePinType(t *testing.T) {
 	expected = "gpio: analog io not supported on this host"
 	if err.Error() != expected {
 		t.Fatalf("Looking up analog pin 1: got error %q, expected %q", err, expected)
+	}
+}
+
+func TestGpioPinCaching(t *testing.T) {
+	pinMap := PinMap{
+		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapDigital},
+	}
+	driver := newGPIODriver(pinMap, newFakeDigitalPin, nil, nil)
+	pin, err := driver.DigitalPin(1)
+	if err != nil {
+		t.Fatalf("Looking up digital pin 1: got %v", err)
+	}
+	// Lookup the same pin again
+	pin2, err := driver.DigitalPin(1)
+	if err != nil {
+		t.Fatalf("Looking up digital pin 1: got %v", err)
+	}
+	if pin != pin2 {
+		t.Fatalf("Looking up digital pin 1 for the second time: got %v, want %v", &pin2, &pin)
+	}
+	// Looking up a closed pin
+	pin.Close()
+	pin3, err := driver.DigitalPin(1)
+	if err != nil {
+		t.Fatalf("Looking up digital pin 1: got %v", err)
+		return
+	}
+	if pin == pin3 {
+		t.Fatal("Looking up a closed pin, but got the same old instance")
 	}
 }

@@ -14,7 +14,10 @@ import (
 )
 
 type digitalPin struct {
-	n int
+	id string
+	n  int
+
+	drv GPIODriver
 
 	dir       *os.File
 	val       *os.File
@@ -25,8 +28,8 @@ type digitalPin struct {
 	initialized bool
 }
 
-func newDigitalPin(n int) DigitalPin {
-	return &digitalPin{n: n, readBuf: make([]byte, 1)}
+func newDigitalPin(pd *PinDesc, drv GPIODriver) DigitalPin {
+	return &digitalPin{id: pd.ID, n: pd.DigitalLogical, drv: drv, readBuf: make([]byte, 1)}
 }
 
 func (p *digitalPin) N() int {
@@ -223,6 +226,10 @@ func (p *digitalPin) PullDown() error {
 }
 
 func (p *digitalPin) Close() error {
+	if err := p.drv.Unregister(p.id); err != nil {
+		return err
+	}
+
 	if !p.initialized {
 		return nil
 	}

@@ -157,15 +157,18 @@ func bbbEnsureFeatureDisabled(id string) error {
 }
 
 type bbbAnalogPin struct {
-	n int
+	id string
+	n  int
+
+	drv GPIODriver
 
 	val *os.File
 
 	initialized bool
 }
 
-func newBBBAnalogPin(n int) AnalogPin {
-	return &bbbAnalogPin{n: n}
+func newBBBAnalogPin(pd *PinDesc, drv GPIODriver) AnalogPin {
+	return &bbbAnalogPin{id: pd.ID, n: pd.AnalogLogical, drv: drv}
 }
 
 func (p *bbbAnalogPin) N() int {
@@ -227,6 +230,10 @@ func (p *bbbAnalogPin) Read() (int, error) {
 }
 
 func (p *bbbAnalogPin) Close() error {
+	if err := p.drv.Unregister(p.id); err != nil {
+		return err
+	}
+
 	if !p.initialized {
 		return nil
 	}
@@ -257,6 +264,8 @@ const (
 type bbbPWMPin struct {
 	n string
 
+	drv GPIODriver
+
 	period   int
 	polarity Polarity
 
@@ -267,8 +276,8 @@ type bbbPWMPin struct {
 	initialized bool
 }
 
-func newBBBPWMPin(n string) PWMPin {
-	return &bbbPWMPin{n: n}
+func newBBBPWMPin(pd *PinDesc, drv GPIODriver) PWMPin {
+	return &bbbPWMPin{n: pd.ID, drv: drv}
 }
 
 func (p *bbbPWMPin) N() string {
@@ -463,6 +472,10 @@ func (p *bbbPWMPin) reset() error {
 }
 
 func (p *bbbPWMPin) Close() error {
+	if err := p.drv.Unregister(p.n); err != nil {
+		return err
+	}
+
 	if !p.initialized {
 		return nil
 	}

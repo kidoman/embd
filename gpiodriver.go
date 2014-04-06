@@ -11,9 +11,9 @@ type pin interface {
 	Close() error
 }
 
-type digitalPinFactory func(n int) DigitalPin
-type analogPinFactory func(n int) AnalogPin
-type pwmPinFactory func(n string) PWMPin
+type digitalPinFactory func(pd *PinDesc, drv GPIODriver) DigitalPin
+type analogPinFactory func(pd *PinDesc, drv GPIODriver) AnalogPin
+type pwmPinFactory func(pd *PinDesc, drv GPIODriver) PWMPin
 
 type gpioDriver struct {
 	pinMap PinMap
@@ -36,6 +36,15 @@ func newGPIODriver(pinMap PinMap, dpf digitalPinFactory, apf analogPinFactory, p
 	}
 }
 
+func (io *gpioDriver) Unregister(id string) error {
+	if _, ok := io.initializedPins[id]; !ok {
+		return fmt.Errorf("gpio: pin %v is not registered yet, cannot unregister", id)
+	}
+
+	delete(io.initializedPins, id)
+	return nil
+}
+
 func (io *gpioDriver) DigitalPin(key interface{}) (DigitalPin, error) {
 	if io.dpf == nil {
 		return nil, errors.New("gpio: digital io not supported on this host")
@@ -46,7 +55,11 @@ func (io *gpioDriver) DigitalPin(key interface{}) (DigitalPin, error) {
 		return nil, fmt.Errorf("gpio: could not find pin matching %v", key)
 	}
 
-	p := io.dpf(pd.DigitalLogical)
+	if p, ok := io.initializedPins[pd.ID]; ok {
+		return p.(DigitalPin), nil
+	}
+
+	p := io.dpf(pd, io)
 	io.initializedPins[pd.ID] = p
 
 	return p, nil
@@ -62,7 +75,11 @@ func (io *gpioDriver) AnalogPin(key interface{}) (AnalogPin, error) {
 		return nil, fmt.Errorf("gpio: could not find pin matching %v", key)
 	}
 
-	p := io.apf(pd.AnalogLogical)
+	if p, ok := io.initializedPins[pd.ID]; ok {
+		return p.(AnalogPin), nil
+	}
+
+	p := io.apf(pd, io)
 	io.initializedPins[pd.ID] = p
 
 	return p, nil
@@ -78,7 +95,11 @@ func (io *gpioDriver) PWMPin(key interface{}) (PWMPin, error) {
 		return nil, fmt.Errorf("gpio: could not find pin matching %v", key)
 	}
 
-	p := io.ppf(pd.ID)
+	if p, ok := io.initializedPins[pd.ID]; ok {
+		return p.(PWMPin), nil
+	}
+
+	p := io.ppf(pd, io)
 	io.initializedPins[pd.ID] = p
 
 	return p, nil

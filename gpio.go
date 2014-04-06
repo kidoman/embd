@@ -103,6 +103,9 @@ type PWMPin interface {
 
 // GPIODriver implements a generic GPIO driver.
 type GPIODriver interface {
+	// Unregister unregisters the pin from the driver. Should be called when the pin is closed.
+	Unregister(string) error
+
 	// DigitalPin returns a pin capable of doing digital IO.
 	DigitalPin(key interface{}) (DigitalPin, error)
 
