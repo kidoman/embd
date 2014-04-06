@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/kidoman/embd"
+	"github.com/kidoman/embd/host/bbb"
+
+	_ "github.com/kidoman/embd/host/all"
 )
 
 func main() {
@@ -25,7 +28,7 @@ func main() {
 	}
 	defer pwm.Close()
 
-	if err := pwm.SetDuty(embd.BBBPWMDefaultPeriod / 2); err != nil {
+	if err := pwm.SetDuty(bbb.PWMDefaultPeriod / 2); err != nil {
 		panic(err)
 	}
 

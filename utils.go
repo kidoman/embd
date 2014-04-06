@@ -2,8 +2,9 @@ package embd
 
 import "path/filepath"
 
+// FindFirstMatchingFile finds the first glob match in the filesystem.
 // Inspiration: https://github.com/mrmorphic/hwio/blob/master/hwio.go#L451
-func findFirstMatchingFile(glob string) (string, error) {
+func FindFirstMatchingFile(glob string) (string, error) {
 	matches, err := filepath.Glob(glob)
 	if err != nil {
 		return "", err

@@ -2,7 +2,7 @@
 // This driver requires kernel version 3.8+ and should work uniformly
 // across all supported devices.
 
-package embd
+package generic
 
 import (
 	"errors"
@@ -11,13 +11,15 @@ import (
 	"path"
 	"strconv"
 	"time"
+
+	"github.com/kidoman/embd"
 )
 
 type digitalPin struct {
 	id string
 	n  int
 
-	drv GPIODriver
+	drv embd.GPIODriver
 
 	dir       *os.File
 	val       *os.File
@@ -28,7 +30,7 @@ type digitalPin struct {
 	initialized bool
 }
 
-func newDigitalPin(pd *PinDesc, drv GPIODriver) DigitalPin {
+func NewDigitalPin(pd *embd.PinDesc, drv embd.GPIODriver) embd.DigitalPin {
 	return &digitalPin{id: pd.ID, n: pd.DigitalLogical, drv: drv, readBuf: make([]byte, 1)}
 }
 
@@ -100,13 +102,13 @@ func (p *digitalPin) activeLowFile() (*os.File, error) {
 	return p.openFile(path.Join(p.basePath(), "active_low"))
 }
 
-func (p *digitalPin) SetDirection(dir Direction) error {
+func (p *digitalPin) SetDirection(dir embd.Direction) error {
 	if err := p.init(); err != nil {
 		return err
 	}
 
 	str := "in"
-	if dir == Out {
+	if dir == embd.Out {
 		str = "out"
 	}
 	_, err := p.dir.WriteString(str)
@@ -138,7 +140,7 @@ var (
 
 func (p *digitalPin) write(val int) error {
 	bytes := lowBytes
-	if val == High {
+	if val == embd.High {
 		bytes = highBytes
 	}
 	_, err := p.val.Write(bytes)
@@ -158,9 +160,9 @@ func (p *digitalPin) TimePulse(state int) (time.Duration, error) {
 		return 0, err
 	}
 
-	aroundState := Low
-	if state == Low {
-		aroundState = High
+	aroundState := embd.Low
+	if state == embd.Low {
+		aroundState = embd.High
 	}
 
 	// Wait for any previous pulse to end

@@ -10,6 +10,8 @@ import (
 
 	"github.com/kidoman/embd/controller/servoblaster"
 	"github.com/kidoman/embd/motion/servo"
+
+	_ "github.com/kidoman/embd/host/all"
 )
 
 func main() {

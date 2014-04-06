@@ -9,6 +9,8 @@ import (
 
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/bmp085"
+
+	_ "github.com/kidoman/embd/host/all"
 )
 
 func main() {

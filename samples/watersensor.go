@@ -9,6 +9,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/watersensor"
+
+	_ "github.com/kidoman/embd/host/all"
 )
 
 func main() {

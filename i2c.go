@@ -24,6 +24,9 @@ type I2CBus interface {
 	WriteByteToReg(addr, reg, value byte) error
 	// WriteU16ToReg
 	WriteWordToReg(addr, reg byte, value uint16) error
+
+	// Close releases the resources associated with the bus.
+	Close() error
 }
 
 // I2CDriver interface interacts with the host descriptors to allow us
@@ -31,6 +34,7 @@ type I2CBus interface {
 type I2CDriver interface {
 	Bus(l byte) I2CBus
 
+	// Close releases the resources associated with the driver.
 	Close() error
 }
 

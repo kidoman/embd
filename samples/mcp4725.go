@@ -11,6 +11,8 @@ import (
 
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/controller/mcp4725"
+
+	_ "github.com/kidoman/embd/host/all"
 )
 
 func main() {

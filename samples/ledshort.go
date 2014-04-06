@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/kidoman/embd"
+
+	_ "github.com/kidoman/embd/host/all"
 )
 
 func main() {

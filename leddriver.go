@@ -5,24 +5,29 @@ package embd
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"strconv"
-	"strings"
 )
 
 // LEDMap type represents a LED mapping for a host.
 type LEDMap map[string][]string
 
+type ledFactory func(string) LED
+
 type ledDriver struct {
 	ledMap LEDMap
+
+	lf ledFactory
 
 	initializedLEDs map[string]LED
 }
 
-func newLEDDriver(ledMap LEDMap) LEDDriver {
+// NewLEDDriver returns a LEDDriver interface which allows control
+// over the LED subsystem.
+func NewLEDDriver(ledMap LEDMap, lf ledFactory) LEDDriver {
 	return &ledDriver{
-		ledMap:          ledMap,
+		ledMap: ledMap,
+		lf:     lf,
+
 		initializedLEDs: map[string]LED{},
 	}
 }
@@ -57,7 +62,7 @@ func (d *ledDriver) LED(k interface{}) (LED, error) {
 		return nil, err
 	}
 
-	led := newLED(id)
+	led := d.lf(id)
 	d.initializedLEDs[id] = led
 
 	return led, nil
@@ -69,107 +74,6 @@ func (d *ledDriver) Close() error {
 			return err
 		}
 	}
-
-	return nil
-}
-
-type led struct {
-	id string
-
-	brightness *os.File
-
-	initialized bool
-}
-
-func newLED(id string) LED {
-	return &led{id: id}
-}
-
-func (l *led) init() error {
-	if l.initialized {
-		return nil
-	}
-
-	var err error
-	if l.brightness, err = l.brightnessFile(); err != nil {
-		return err
-	}
-
-	l.initialized = true
-
-	return nil
-}
-
-func (l *led) brightnessFilePath() string {
-	return fmt.Sprintf("/sys/class/leds/%v/brightness", l.id)
-}
-
-func (l *led) openFile(path string) (*os.File, error) {
-	return os.OpenFile(path, os.O_RDWR, os.ModeExclusive)
-}
-
-func (l *led) brightnessFile() (*os.File, error) {
-	return l.openFile(l.brightnessFilePath())
-}
-
-func (l *led) On() error {
-	if err := l.init(); err != nil {
-		return err
-	}
-
-	_, err := l.brightness.WriteString("1")
-	return err
-}
-
-func (l *led) Off() error {
-	if err := l.init(); err != nil {
-		return err
-	}
-
-	_, err := l.brightness.WriteString("0")
-	return err
-}
-
-func (l *led) isOn() (bool, error) {
-	l.brightness.Seek(0, 0)
-	bytes, err := ioutil.ReadAll(l.brightness)
-	if err != nil {
-		return false, err
-	}
-	str := string(bytes)
-	str = strings.TrimSpace(str)
-	if str == "1" {
-		return true, nil
-	}
-	return false, nil
-}
-
-func (l *led) Toggle() error {
-	if err := l.init(); err != nil {
-		return err
-	}
-
-	state, err := l.isOn()
-	if err != nil {
-		return err
-	}
-
-	if state {
-		return l.Off()
-	}
-	return l.On()
-}
-
-func (l *led) Close() error {
-	if !l.initialized {
-		return nil
-	}
-
-	if err := l.brightness.Close(); err != nil {
-		return err
-	}
-
-	l.initialized = false
 
 	return nil
 }

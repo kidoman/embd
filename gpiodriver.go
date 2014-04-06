@@ -25,7 +25,9 @@ type gpioDriver struct {
 	initializedPins map[string]pin
 }
 
-func newGPIODriver(pinMap PinMap, dpf digitalPinFactory, apf analogPinFactory, ppf pwmPinFactory) GPIODriver {
+// NewGPIODriver returns a GPIODriver interface which allows control
+// over the GPIO subsystem.
+func NewGPIODriver(pinMap PinMap, dpf digitalPinFactory, apf analogPinFactory, ppf pwmPinFactory) GPIODriver {
 	return &gpioDriver{
 		pinMap: pinMap,
 		dpf:    dpf,

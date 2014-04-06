@@ -1,12 +1,16 @@
-package embd
+package generic
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/kidoman/embd"
+)
 
 func TestDigitalPinClose(t *testing.T) {
-	pinMap := PinMap{
-		&PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: CapDigital},
+	pinMap := embd.PinMap{
+		&embd.PinDesc{ID: "P1_1", Aliases: []string{"1"}, Caps: embd.CapDigital},
 	}
-	driver := newGPIODriver(pinMap, newDigitalPin, nil, nil)
+	driver := embd.NewGPIODriver(pinMap, NewDigitalPin, nil, nil)
 	pin, err := driver.DigitalPin(1)
 	if err != nil {
 		t.Fatalf("Looking up digital pin 1: got %v", err)

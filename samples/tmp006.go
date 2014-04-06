@@ -10,6 +10,8 @@ import (
 
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/tmp006"
+
+	_ "github.com/kidoman/embd/host/all"
 )
 
 func main() {
