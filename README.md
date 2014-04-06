@@ -2,7 +2,7 @@
 
 A superheroic hardware abstraction layer for doing embedded programming on supported platforms like the Raspberry Pi and BeagleBone Black.
 
-Development sponsored by [**ThoughtWorks**](http://www.thoughtworks.com/)
+Development supported and sponsored by [**ThoughtWorks**](http://www.thoughtworks.com/)
 
 ## Platforms supported
 
