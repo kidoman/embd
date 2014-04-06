@@ -13,9 +13,25 @@ Development sponsored by [**ThoughtWorks**](http://www.thoughtworks.com/)
 * [Cubietruck](http://www.cubietruck.com/) **coming soon**
 * Bring Your Own **coming soon**
 
-## How to use
+## The command line tool
 
-Package embd provides a superheroic hardware abstraction layer for doing embedded programming
+	go get github.com/kidoman/embd/embd
+
+will install a command line utility ```embd``` which will allow you to quickly get started with prototyping. The binary should be available in your ```$GOPATH/bin```. However, to be able to run this on a ARM based device, you will need to build it with ```GOOS=linux``` and ```GOARCH=arm``` environment variables set.
+
+But, since I am feeling so generous, a prebuilt/tested version is available for direct download and deployment [here](https://dl.dropboxusercontent.com/u/6727135/Binaries/embd/linux-arm/embd).
+
+For example, if you run ```embd detect``` on a **BeagleBone Black**:
+
+	root@beaglebone:~# embd detect
+
+	detected host BeagleBone Black (rev 0)
+
+Run ```embd``` without any arguments to discover the various commands supported by the utility.
+
+## How to use the framework
+
+Package **embd** provides a hardware abstraction layer for doing embedded programming
 on supported platforms like the Raspberry Pi and BeagleBone Black. Most of the examples below
 will work without change (i.e. the same binary) on all supported platforms. How cool is that?
 
