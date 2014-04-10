@@ -11,6 +11,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 )
 
@@ -58,6 +59,8 @@ func (b *i2cBus) init() error {
 		return err
 	}
 
+	glog.V(2).Infof("i2c: bus %v initialized", b.l)
+
 	b.initialized = true
 
 	return nil
@@ -65,6 +68,7 @@ func (b *i2cBus) init() error {
 
 func (b *i2cBus) setAddress(addr byte) error {
 	if addr != b.addr {
+		glog.V(2).Infof("i2c: setting bus %v address to %#02x", b.l, addr)
 		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), slaveCmd, uintptr(addr)); errno != 0 {
 			return syscall.Errno(errno)
 		}
