@@ -79,6 +79,10 @@ func (b *i2cBus) ReadByte(addr byte) (byte, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	if err := b.init(); err != nil {
+		return 0, err
+	}
+
 	if err := b.setAddress(addr); err != nil {
 		return 0, err
 	}
@@ -97,6 +101,10 @@ func (b *i2cBus) WriteByte(addr, value byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	if err := b.init(); err != nil {
+		return err
+	}
+
 	if err := b.setAddress(addr); err != nil {
 		return err
 	}
@@ -113,6 +121,10 @@ func (b *i2cBus) WriteByte(addr, value byte) error {
 func (b *i2cBus) WriteBytes(addr byte, value []byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	if err := b.init(); err != nil {
+		return err
+	}
 
 	if err := b.setAddress(addr); err != nil {
 		return err
@@ -137,6 +149,10 @@ func (b *i2cBus) WriteBytes(addr byte, value []byte) error {
 func (b *i2cBus) ReadFromReg(addr, reg byte, value []byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	if err := b.init(); err != nil {
+		return err
+	}
 
 	if err := b.setAddress(addr); err != nil {
 		return err
@@ -187,6 +203,10 @@ func (b *i2cBus) WriteToReg(addr, reg byte, value []byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	if err := b.init(); err != nil {
+		return err
+	}
+
 	if err := b.setAddress(addr); err != nil {
 		return err
 	}
@@ -216,6 +236,10 @@ func (b *i2cBus) WriteToReg(addr, reg byte, value []byte) error {
 func (b *i2cBus) WriteByteToReg(addr, reg, value byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	if err := b.init(); err != nil {
+		return err
+	}
 
 	if err := b.setAddress(addr); err != nil {
 		return err
@@ -247,6 +271,10 @@ func (b *i2cBus) WriteByteToReg(addr, reg, value byte) error {
 func (b *i2cBus) WriteWordToReg(addr, reg byte, value uint16) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	if err := b.init(); err != nil {
+		return err
+	}
 
 	if err := b.setAddress(addr); err != nil {
 		return err
