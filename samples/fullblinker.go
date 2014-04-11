@@ -42,7 +42,7 @@ func main() {
 			if err := led.Toggle(); err != nil {
 				panic(err)
 			}
-			fmt.Printf("Toggled\n")
+			fmt.Println("Toggled")
 		case <-quit:
 			return
 		}
