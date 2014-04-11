@@ -10,7 +10,7 @@ import (
 
 	"github.com/kidoman/embd"
 
-	_ "github.com/kidoman/embd/host/all"
+	_ "github.com/kidoman/embd/host/bbb"
 )
 
 func main() {
