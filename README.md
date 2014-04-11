@@ -26,9 +26,8 @@ func main() {
 }
 ```
 
-Then install the EMBD package+dependency (go1.2 and greater is required):
+Then install the EMBD package (go1.2 and greater is required):
 
-	$ go get github.com/golang/glog
 	$ go get github.com/kidoman/embd
 
 Build the binary*:
