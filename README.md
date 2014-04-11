@@ -4,6 +4,10 @@ A superheroic hardware abstraction layer for doing embedded programming on suppo
 
 Development supported and sponsored by [**ThoughtWorks**](http://www.thoughtworks.com/)
 
+## Getting Help
+
+Join the [mailing list](https://groups.google.com/forum/#!forum/go-embd)
+
 ## Platforms supported
 
 * [RaspberryPi](http://www.raspberrypi.org/)
