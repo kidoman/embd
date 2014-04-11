@@ -4,6 +4,7 @@
 
 	GPIO (digital (rw))
 	I²C
+	LED
 */
 package rpi
 
@@ -52,6 +53,10 @@ var rev2Pins = embd.PinMap{
 	&embd.PinDesc{ID: "P1_26", Aliases: []string{"7", "GPIO_7", "CE1", "SPI0_CE1_N"}, Caps: embd.CapDigital | embd.CapSPI, DigitalLogical: 7},
 }
 
+var ledMap = embd.LEDMap{
+	"led0": []string{"0", "led0", "LED0"},
+}
+
 func init() {
 	embd.Register(embd.HostRPi, func(rev int) *embd.Descriptor {
 		var pins = rev1Pins
@@ -65,6 +70,9 @@ func init() {
 			},
 			I2CDriver: func() embd.I2CDriver {
 				return embd.NewI2CDriver(generic.NewI2CBus)
+			},
+			LEDDriver: func() embd.LEDDriver {
+				return embd.NewLEDDriver(ledMap, generic.NewLED)
 			},
 		}
 	})
