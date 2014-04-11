@@ -4,6 +4,57 @@ A superheroic hardware abstraction layer for doing embedded programming on suppo
 
 Development supported and sponsored by [**ThoughtWorks**](http://www.thoughtworks.com/)
 
+## Getting Started
+
+After installing Go* and setting up your [GOPATH](http://golang.org/doc/code.html#GOPATH), create your first .go file. We'll call it ```simpleblinker.go```.
+
+```
+package main
+
+import (
+	"time"
+
+	"github.com/kidoman/embd"
+	_ "github.com/kidoman/embd/host/rpi"
+)
+
+func main() {
+	for {
+		embd.LEDToggle(0)
+		time.Sleep(250 * time.Millisecond)
+	}
+}
+```
+
+Then install the EMBD package+dependency (go1.2 and greater is required):
+
+	$ go get github.com/golang/glog
+	$ go get github.com/kidoman/embd
+
+Build the binary*:
+
+	$ export GOOS=linux
+	$ export GOARCH=arm
+	$ go build simpleblinker.go
+
+Copy the cross-compiled binary to your RaspberryPi*:
+
+	$ scp simpleblinker pi@192.168.2.2:~
+
+Then run the program with ```sudo```*:
+
+	$ sudo ./simpleblinker
+
+You will now see the green LED (next to the always on power LED) blink every 1/4 sec.
+
+**<nowiki>*</nowiki> Notes**
+
+* Please install the cross compilers. Mac users: ```brew install go --cross-compile-common```. [goxc](https://github.com/laher/goxc) can be a big help as well
+* We are instructing the ```go``` compiler to create a binary which will run on the RaspberryPi processor
+* Assuming your RaspberryPi has an IP address of ```192.168.2.2```. Substitute as necessary
+* ```sudo``` (root) permission is required as we are controlling the hardware by writing to special files
+* This sample program is optimized for brevity and does not clean up after itself. Click here to see the [full version](https://github.com/kidoman/embd/blob/master/samples/fullblinker.go)
+
 ## Getting Help
 
 Join the [mailing list](https://groups.google.com/forum/#!forum/go-embd)
