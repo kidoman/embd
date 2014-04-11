@@ -5,6 +5,8 @@ package embd
 import (
 	"errors"
 	"fmt"
+
+	"github.com/golang/glog"
 )
 
 // Descriptor represents a host descriptor.
@@ -31,6 +33,8 @@ func Register(host Host, describer Describer) {
 		panic("embd: describer already registered")
 	}
 	describers[host] = describer
+
+	glog.V(1).Infof("embd: host %v is registered", host)
 }
 
 var hostOverride Host
