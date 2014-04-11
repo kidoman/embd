@@ -38,10 +38,15 @@ type I2CDriver interface {
 	Close() error
 }
 
+var i2cDriverInitialized bool
 var i2cDriverInstance I2CDriver
 
 // InitI2C initializes the I2C driver.
 func InitI2C() error {
+	if i2cDriverInitialized {
+		return nil
+	}
+
 	desc, err := DescribeHost()
 	if err != nil {
 		return err
@@ -52,6 +57,7 @@ func InitI2C() error {
 	}
 
 	i2cDriverInstance = desc.I2CDriver()
+	i2cDriverInitialized = true
 
 	return nil
 }
@@ -63,5 +69,9 @@ func CloseI2C() error {
 
 // NewI2CBus returns a I2CBus.
 func NewI2CBus(l byte) I2CBus {
+	if err := InitI2C(); err != nil {
+		panic(err)
+	}
+
 	return i2cDriverInstance.Bus(l)
 }

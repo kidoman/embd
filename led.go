@@ -25,10 +25,15 @@ type LEDDriver interface {
 	Close() error
 }
 
+var ledDriverInitialized bool
 var ledDriverInstance LEDDriver
 
 // InitLED initializes the LED driver.
 func InitLED() error {
+	if ledDriverInitialized {
+		return nil
+	}
+
 	desc, err := DescribeHost()
 	if err != nil {
 		return err
@@ -39,6 +44,7 @@ func InitLED() error {
 	}
 
 	ledDriverInstance = desc.LEDDriver()
+	ledDriverInitialized = true
 
 	return nil
 }
@@ -50,6 +56,10 @@ func CloseLED() error {
 
 // NewLED returns a LED interface which allows control over the LED.
 func NewLED(key interface{}) (LED, error) {
+	if err := InitLED(); err != nil {
+		return nil, err
+	}
+
 	return ledDriverInstance.LED(key)
 }
 

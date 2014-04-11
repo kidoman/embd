@@ -119,10 +119,15 @@ type GPIODriver interface {
 	Close() error
 }
 
+var gpioDriverInitialized bool
 var gpioDriverInstance GPIODriver
 
 // InitGPIO initializes the GPIO driver.
 func InitGPIO() error {
+	if gpioDriverInitialized {
+		return nil
+	}
+
 	desc, err := DescribeHost()
 	if err != nil {
 		return err
@@ -133,6 +138,7 @@ func InitGPIO() error {
 	}
 
 	gpioDriverInstance = desc.GPIODriver()
+	gpioDriverInitialized = true
 
 	return nil
 }
@@ -145,6 +151,10 @@ func CloseGPIO() error {
 // NewDigitalPin returns a DigitalPin interface which allows control over
 // the digital GPIO pin.
 func NewDigitalPin(key interface{}) (DigitalPin, error) {
+	if err := InitGPIO(); err != nil {
+		return nil, err
+	}
+
 	return gpioDriverInstance.DigitalPin(key)
 }
 
@@ -212,6 +222,10 @@ func PullDown(key interface{}) error {
 // NewAnalogPin returns a AnalogPin interface which allows control over
 // the analog GPIO pin.
 func NewAnalogPin(key interface{}) (AnalogPin, error) {
+	if err := InitGPIO(); err != nil {
+		return nil, err
+	}
+
 	return gpioDriverInstance.AnalogPin(key)
 }
 
@@ -228,5 +242,9 @@ func AnalogRead(key interface{}) (int, error) {
 // NewPWMPin returns a PWMPin interface which allows PWM signal
 // generation over a the PWM pin.
 func NewPWMPin(key interface{}) (PWMPin, error) {
+	if err := InitGPIO(); err != nil {
+		return nil, err
+	}
+
 	return gpioDriverInstance.PWMPin(key)
 }
