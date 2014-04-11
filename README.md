@@ -8,7 +8,7 @@ Development supported and sponsored by [**ThoughtWorks**](http://www.thoughtwork
 
 Join the [mailing list](https://groups.google.com/forum/#!forum/go-embd)
 
-## Platforms supported
+## Platforms Supported
 
 * [RaspberryPi](http://www.raspberrypi.org/)
 * [BeagleBone Black](http://beagleboard.org/Products/BeagleBone%20Black)
@@ -124,7 +124,7 @@ Even find out the heading from the **LSM303** magnetometer:
 The above two examples depend on **I2C** and therefore will work without change on almost all
 platforms.
 
-## Protocols supported
+## Protocols Supported
 
 * **Digital GPIO** [Documentation](http://godoc.org/github.com/kidoman/embd#DigitalPin)
 * **Analog GPIO** [Documentation](http://godoc.org/github.com/kidoman/embd#AnalogPin)
@@ -132,7 +132,7 @@ platforms.
 * **I2C** [Documentation](http://godoc.org/github.com/kidoman/embd#I2CBus)
 * **LED** [Documentation](http://godoc.org/github.com/kidoman/embd#LED)
 
-## Sensors supported
+## Sensors Supported
 
 * **TMP006** Thermopile sensor [Documentation](http://godoc.org/github.com/kidoman/embd/sensor/tmp006), [Datasheet](http://www.adafruit.com/datasheets/tmp006.pdf), [Userguide](http://www.adafruit.com/datasheets/tmp006ug.pdf)
 
