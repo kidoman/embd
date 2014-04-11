@@ -156,6 +156,12 @@ platforms.
 
 * **ServoBlaster** RPi PWM/PCM based PWM controller [Documentation](http://godoc.org/github.com/kidoman/embd/controller/servoblaster), [Product Page](https://github.com/richardghirst/PiBits/tree/master/ServoBlaster)
 
+## Contributing
+
+We look forward to your pull requests, but contributions which abide by the [guidelines](https://github.com/kidoman/embd/blob/master/CONTRIBUTING.md) will get a free beer!
+
+File an [issue](https://github.com/kidoman/embd/issues), open a [pull request](https://github.com/kidoman/embd/pulls). We are waiting.
+
 ## About
 
 EMBD is affectionately designed/developed by Karan Misra ([kidoman](https://github.com/kidoman)), Kunal Powar ([kunalpowar](https://github.com/kunalpowar)) and [FRIENDS](https://github.com/kidoman/embd/blob/master/AUTHORS).
