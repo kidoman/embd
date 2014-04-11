@@ -3,6 +3,7 @@ analogshort
 bh1750fvi
 bmp085
 bmp180
+fullblinker
 gpio
 gpiodetect
 gpiodirect
