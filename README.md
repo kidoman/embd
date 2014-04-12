@@ -99,7 +99,7 @@ Use the **LED** driver to toggle LEDs on the BBB:
 	embd.InitLED()
 	defer embd.CloseLED()
 	...
-	led, err := embd.NewLED("USR3")
+	led, err := embd.NewLED(3)
 	...
 	led.Toggle()
 
@@ -112,7 +112,7 @@ Even shorter while prototyping:
 	...
 	embd.ToggleLED(3)
 
-NB: **3** == **USR3** for all intents and purposes. The driver is smart enough to figure all this out.
+**3** is the same as **USR3** for all intents and purposes. The driver is smart enough to figure all this out.
 
 BBB + **PWM**:
 
