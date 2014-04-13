@@ -2,7 +2,7 @@
 	"build": {
 		"gumbyPath": "bower_components/gumby",
 		"outPath": "js",
-		"modules": ["toggleswitch", "validation"],
+		"modules": ["toggleswitch", "validation", "skiplink"],
         "buildSourceMap": true
 	}
 }
