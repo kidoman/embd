@@ -1348,3 +1348,13 @@ h1.logo {
 h4.signup-subtitle a, h4.signup-subtitle a:hover {
   color: #fff;
 }
+
+.hs-disclaimer {
+  a {
+    color: #fff;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+}
