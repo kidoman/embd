@@ -1,8 +1,12 @@
 # embd [![Build Status](https://travis-ci.org/kidoman/embd.svg?branch=master)](https://travis-ci.org/kidoman/embd) [![GoDoc](http://godoc.org/github.com/kidoman/embd?status.png)](http://godoc.org/github.com/kidoman/embd)
 
-A superheroic hardware abstraction layer for doing embedded programming on supported platforms like the Raspberry Pi and BeagleBone Black.
+**embd** is a hardware abstraction layer (HAL) for embedded systems.
+
+It allows you to start your hardware hack on easily available hobby boards (like the Raspberry Pi, BeagleBone Black, etc.) by giving you staight forward access to the board's capabilities as well as a plethora of **sensors** (like accelerometers, gyroscopes, thermometers, etc.) and **controllers** (PWM generators, digital-to-analog convertors) for which we have written drivers. And when things get serious, you dont have to throw away the code. You carry forward the effort onto more custom designed boards where the HAL abstraction of EMBD will save you precious time.
 
 Development supported and sponsored by [**ThoughtWorks**](http://www.thoughtworks.com/)
+
+Also, you might be interested in: [Why Golang?](https://github.com/kidoman/embd/wiki/Why-Go)
 
 ## Getting Started
 
@@ -15,12 +19,12 @@ import (
 	"time"
 
 	"github.com/kidoman/embd"
-	_ "github.com/kidoman/embd/host/rpi"
+	_ "github.com/kidoman/embd/host/rpi" // This loads the RPi driver
 )
 
 func main() {
 	for {
-		embd.LEDToggle(0)
+		embd.LEDToggle("LED0")
 		time.Sleep(250 * time.Millisecond)
 	}
 }
@@ -44,7 +48,7 @@ Then run the program with ```sudo```*:
 
 	$ sudo ./simpleblinker
 
-You will now see the green LED (next to the always on power LED) blink every 1/4 sec.
+**You will now see the green LED (next to the always on power LED) blink every 1/4 sec.**
 
 **<nowiki>*</nowiki> Notes**
 
@@ -103,7 +107,7 @@ Use the **LED** driver to toggle LEDs on the BBB:
 	...
 	led.Toggle()
 
-Even shorter while prototyping:
+Even shorter when quickly trying things out:
 
 	import "github.com/kidoman/embd"
 	...
