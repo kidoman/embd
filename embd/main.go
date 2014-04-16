@@ -18,7 +18,7 @@ func registerCommand(cmd cli.Command) {
 func main() {
 	app := cli.NewApp()
 	app.Name = "embd"
-	app.Usage = "superheroic embedded utility belt"
+	app.Usage = "embedded utility belt"
 	app.Version = version
 	app.Commands = commands
 

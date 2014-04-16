@@ -1,5 +1,5 @@
 /*
-	Package embd provides a superheroic hardware abstraction layer for doing embedded programming
+	Package embd provides a hardware abstraction layer for doing embedded programming
 	on supported platforms like the Raspberry Pi and BeagleBone Black. Most of the examples below
 	will work without change (i.e. the same binary) on all supported platforms. How cool is that?
 
