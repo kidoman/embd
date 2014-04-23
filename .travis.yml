@@ -1,5 +1,9 @@
 language: go
 
+branches:
+  except:
+    - go-rpi
+
 go:
   - 1.2
   - 1.2.1
