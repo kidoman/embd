@@ -14,7 +14,7 @@ import (
 
 func main() {
 	for {
-		embd.LEDToggle(0)
+		embd.LEDToggle("LED0")
 		time.Sleep(250 * time.Millisecond)
 	}
 }
