@@ -39,11 +39,11 @@ func main() {
 
 	for {
 		select {
-		case <-time.After(500 * time.Millisecond):
+		case <-time.After(250 * time.Millisecond):
 			if err := led.Toggle(); err != nil {
 				panic(err)
 			}
-			fmt.Printf("Toggled\n")
+			fmt.Println("Toggled")
 		case <-quit:
 			return
 		}
