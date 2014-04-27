@@ -94,6 +94,8 @@ var ledMap = embd.LEDMap{
 	"beaglebone:green:usr3": []string{"3", "USR3", "usr3"},
 }
 
+var spiDeviceMinor = byte(1)
+
 func ensureFeatureEnabled(id string) error {
 	pattern := "/sys/devices/bone_capemgr.*/slots"
 	file, err := embd.FindFirstMatchingFile(pattern)
@@ -164,6 +166,9 @@ func init() {
 			},
 			LEDDriver: func() embd.LEDDriver {
 				return embd.NewLEDDriver(ledMap, generic.NewLED)
+			},
+			SPIDriver: func() embd.SPIDriver {
+				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus)
 			},
 		}
 	})
