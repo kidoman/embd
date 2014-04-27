@@ -1,13 +1,13 @@
 package embd
 
 const (
-	spi_cpha = 0x01
-	spi_cpol = 0x02
+	spiCpha = 0x01
+	spiCpol = 0x02
 
-	SPI_MODE_0 = (0 | 0)
-	SPI_MODE_1 = (0 | spi_cpha)
-	SPI_MODE_2 = (spi_cpol | 0)
-	SPI_MODE_3 = (spi_cpol | spi_cpha)
+	SpiMode0 = (0 | 0)
+	SpiMode1 = (0 | spiCpha)
+	SpiMode2 = (spiCpol | 0)
+	SpiMode3 = (spiCpol | spiCpha)
 )
 
 type SPIBus interface {

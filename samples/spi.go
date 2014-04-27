@@ -16,13 +16,10 @@ func main() {
 	}
 	defer embd.CloseSPI()
 
-	spiBus := embd.NewSPIBus(embd.SPI_MODE_0, 0, 1000000, 8, 0)
+	spiBus := embd.NewSPIBus(embd.SpiMode0, 0, 1000000, 8, 0)
 	defer spiBus.Close()
 
-	dataBuf := make([]uint8, 3)
-	dataBuf[0] = uint8(1)
-	dataBuf[1] = uint8(2)
-	dataBuf[2] = uint8(3)
+	dataBuf := []uint8{1, 2, 3}
 
 	err = spiBus.TransferAndRecieveData(dataBuf)
 	if err != nil {

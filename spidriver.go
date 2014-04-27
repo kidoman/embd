@@ -10,13 +10,13 @@ type spiDriver struct {
 	busMap     map[byte]SPIBus
 	busMapLock sync.Mutex
 
-	spf spiBusFactory
+	sbf spiBusFactory
 }
 
 func NewSPIDriver(spiDevMinor byte, sbf spiBusFactory) SPIDriver {
 	return &spiDriver{
 		spiDevMinor: spiDevMinor,
-		spf:         sbf,
+		sbf:         sbf,
 	}
 }
 
@@ -24,7 +24,7 @@ func (s *spiDriver) Bus(mode, channel byte, speed, bpw, delay int) SPIBus {
 	s.busMapLock.Lock()
 	defer s.busMapLock.Unlock()
 
-	b := s.spf(s.spiDevMinor, mode, channel, speed, bpw, delay)
+	b := s.sbf(s.spiDevMinor, mode, channel, speed, bpw, delay)
 	s.busMap[channel] = b
 	return b
 }
