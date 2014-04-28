@@ -30,7 +30,7 @@ func main() {
 
 	for {
 		select {
-		case <-time.After(250 * time.Millisecond):
+		case <-time.After(200 * time.Millisecond):
 			panicIf(led.Toggle())
 		case <-quit:
 			return
