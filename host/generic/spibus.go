@@ -53,24 +53,36 @@ type spiBus struct {
 
 	spiTransferData spiIocTransfer
 	initialized     bool
+
+	shouldInitialize bool
+	initializer      func() error
 }
 
 func spiIocMessageN(n uint32) uint32 {
 	return (spiIocMessage0 + (n * spiIocIncrementor))
 }
 
-func NewSPIBus(spiDevMinor, mode, channel byte, speed, bpw, delay int) embd.SPIBus {
+func NewSPIBus(spiDevMinor, mode, channel byte, speed, bpw, delay int, shouldInitialize bool, i func() error) embd.SPIBus {
 	return &spiBus{
-		spiDevMinor: spiDevMinor,
-		mode:        mode,
-		channel:     channel,
-		speed:       speed,
-		bpw:         bpw,
-		delayms:     delay,
+		spiDevMinor:      spiDevMinor,
+		mode:             mode,
+		channel:          channel,
+		speed:            speed,
+		bpw:              bpw,
+		delayms:          delay,
+		shouldInitialize: shouldInitialize,
+		initializer:      i,
 	}
 }
 
 func (b *spiBus) init() error {
+	if b.shouldInitialize {
+		if err := b.initializer(); err != nil {
+			return err
+		}
+		b.shouldInitialize = false
+	}
+
 	if b.initialized {
 		return nil
 	}

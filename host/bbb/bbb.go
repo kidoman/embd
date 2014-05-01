@@ -155,6 +155,13 @@ func ensureFeatureDisabled(id string) error {
 	return fmt.Errorf("embd: could not disable feature %q", id)
 }
 
+func spiInitializer() error {
+	if err := ensureFeatureEnabled("BB-SPIDEV0"); err != nil {
+		return err
+	}
+	return nil
+}
+
 func init() {
 	embd.Register(embd.HostBBB, func(rev int) *embd.Descriptor {
 		return &embd.Descriptor{
@@ -168,7 +175,7 @@ func init() {
 				return embd.NewLEDDriver(ledMap, generic.NewLED)
 			},
 			SPIDriver: func() embd.SPIDriver {
-				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus)
+				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus, true, spiInitializer)
 			},
 		}
 	})
