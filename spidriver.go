@@ -29,6 +29,7 @@ func (s *spiDriver) Bus(mode, channel byte, speed, bpw, delay int) SPIBus {
 	defer s.busMapLock.Unlock()
 
 	b := s.sbf(s.spiDevMinor, mode, channel, speed, bpw, delay, s.shouldInitialize, s.initializer)
+	s.busMap = make(map[byte]SPIBus)
 	s.busMap[channel] = b
 	return b
 }

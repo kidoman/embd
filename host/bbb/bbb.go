@@ -15,6 +15,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/golang/glog"
+
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/host/generic"
 )
@@ -97,6 +99,7 @@ var ledMap = embd.LEDMap{
 var spiDeviceMinor = byte(1)
 
 func ensureFeatureEnabled(id string) error {
+	glog.V(3).Infof("bbb: enabling feature %v", id)
 	pattern := "/sys/devices/bone_capemgr.*/slots"
 	file, err := embd.FindFirstMatchingFile(pattern)
 	if err != nil {
@@ -108,6 +111,7 @@ func ensureFeatureEnabled(id string) error {
 	}
 	str := string(bytes)
 	if strings.Contains(str, id) {
+		glog.V(3).Infof("bbb: feature %v already enabled", id)
 		return nil
 	}
 	slots, err := os.OpenFile(file, os.O_WRONLY, os.ModeExclusive)
@@ -115,6 +119,7 @@ func ensureFeatureEnabled(id string) error {
 		return err
 	}
 	defer slots.Close()
+	glog.V(3).Infof("bbb: writing %v to slots file", id)
 	_, err = slots.WriteString(id)
 	return err
 }

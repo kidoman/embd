@@ -76,6 +76,10 @@ func NewSPIBus(spiDevMinor, mode, channel byte, speed, bpw, delay int, shouldIni
 }
 
 func (b *spiBus) init() error {
+	if b.initialized {
+		return nil
+	}
+
 	if b.shouldInitialize {
 		if err := b.initializer(); err != nil {
 			return err
@@ -83,14 +87,11 @@ func (b *spiBus) init() error {
 		b.shouldInitialize = false
 	}
 
-	if b.initialized {
-		return nil
-	}
-
 	var err error
 	if b.file, err = os.OpenFile(fmt.Sprintf("/dev/spidev%v.%v", b.spiDevMinor, b.channel), os.O_RDWR, os.ModeExclusive); err != nil {
 		return err
 	}
+	glog.V(3).Infof("spi: sucessfully opened file /dev/spidev%v.%v", b.spiDevMinor, b.channel)
 
 	err = b.setMode()
 	if err != nil {
@@ -112,6 +113,7 @@ func (b *spiBus) init() error {
 	b.setDelay()
 
 	glog.V(2).Infof("spi: bus %v initialized", b.channel)
+	glog.V(3).Infof("spi: bus %v initialized with spiIocTransfer as %v", b.channel, b.spiTransferData)
 
 	b.initialized = true
 	return nil
@@ -187,6 +189,10 @@ func (b *spiBus) setDelay() {
 }
 
 func (b *spiBus) TransferAndRecieveData(dataBuffer []uint8) error {
+	if err := b.init(); err != nil {
+		return err
+	}
+
 	len := len(dataBuffer)
 	dataCarrier := b.spiTransferData
 
@@ -194,16 +200,22 @@ func (b *spiBus) TransferAndRecieveData(dataBuffer []uint8) error {
 	dataCarrier.txBuf = uint64(uintptr(unsafe.Pointer(&dataBuffer[0])))
 	dataCarrier.rxBuf = uint64(uintptr(unsafe.Pointer(&dataBuffer[0])))
 
+	glog.V(3).Infof("spi: sending dataBuffer %v with carrier %v", dataBuffer, dataCarrier)
 	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), uintptr(spiIocMessageN(1)), uintptr(unsafe.Pointer(&dataCarrier)))
 	if errno != 0 {
 		err := syscall.Errno(errno)
 		glog.V(3).Infof("spi: failed to read due to %v", err.Error())
 		return err
 	}
+	glog.V(3).Infof("spi: read into dataBuffer %v", dataBuffer)
 	return nil
 }
 
 func (b *spiBus) ReceiveData(len int) ([]uint8, error) {
+	if err := b.init(); err != nil {
+		return nil, err
+	}
+
 	data := make([]uint8, len)
 	var err error
 	err = b.TransferAndRecieveData(data)
@@ -214,6 +226,10 @@ func (b *spiBus) ReceiveData(len int) ([]uint8, error) {
 }
 
 func (b *spiBus) TransferAndReceiveByte(data byte) (byte, error) {
+	if err := b.init(); err != nil {
+		return 0, err
+	}
+
 	d := make([]uint8, 1)
 	d[0] = uint8(data)
 	err := b.TransferAndRecieveData(d)
@@ -224,6 +240,10 @@ func (b *spiBus) TransferAndReceiveByte(data byte) (byte, error) {
 }
 
 func (b *spiBus) ReceiveByte() (byte, error) {
+	if err := b.init(); err != nil {
+		return 0, err
+	}
+
 	d := make([]uint8, 1)
 	err := b.TransferAndRecieveData(d)
 	if err != nil {
