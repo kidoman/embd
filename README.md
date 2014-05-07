@@ -8,6 +8,8 @@ Development supported and sponsored by [**ThoughtWorks**](http://www.thoughtwork
 
 Also, you might be interested in: [Why Golang?](https://github.com/kidoman/embd/wiki/Why-Go)
 
+Blog post introducing EMBD: https://kidoman.io/framework/embd.html
+
 ## Getting Started
 
 After installing Go* and setting up your [GOPATH](http://golang.org/doc/code.html#GOPATH), create your first .go file. We'll call it ```simpleblinker.go```.
