@@ -18,7 +18,6 @@ func main() {
 	}
 
 	bus := embd.NewSPIBus(embd.SpiMode0, 0, 1000000, 8, 0)
-
 	defer clean(bus)
 
 	for i := 0; i < 30; i++ {

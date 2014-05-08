@@ -8,17 +8,15 @@ import (
 )
 
 type mcp3008 struct {
-	mode int
+	mode byte
 
 	bus embd.SPIBus
 }
 
-const (
-	SingleMode     = int(1)
-	DifferenceMode = int(0)
-)
+var SingleMode byte = 1
+var DifferenceMode byte = 0
 
-func New(mode, spiChan, speed int) (*mcp3008, error) {
+func New(mode byte, spiChan, speed int) (*mcp3008, error) {
 	if err := embd.InitSPI(); err != nil {
 		return nil, err
 	}
@@ -28,7 +26,7 @@ func New(mode, spiChan, speed int) (*mcp3008, error) {
 }
 
 func (m *mcp3008) AnalogValueAt(chanNum int) (int, error) {
-	data := make([]uint8, 3)
+	var data [3]uint8
 	data[0] = 1
 	data[1] = uint8(m.mode)<<7 | uint8(chanNum)<<4
 	data[2] = 0

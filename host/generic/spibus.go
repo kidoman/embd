@@ -12,23 +12,23 @@ import (
 )
 
 const (
-	spiIocWrMode        = 0x40016B01
-	spiIocWrBitsPerWord = 0x40016B03
-	spiIocWrMaxSpeedHz  = 0x40046B04
+	spiIOCWrMode        = 0x40016B01
+	spiIOCWrBitsPerWord = 0x40016B03
+	spiIOCWrMaxSpeedHz  = 0x40046B04
 
-	spiIocRdMode        = 0x80016B01
-	spiIocRdBitsPerWord = 0x80016B03
-	spiIocRdMaxSpeedHz  = 0x80046B04
+	spiIOCRdMode        = 0x80016B01
+	spiIOCRdBitsPerWord = 0x80016B03
+	spiIOCRdMaxSpeedHz  = 0x80046B04
 
-	spiIocMessage0    = 1073769216 //0x40006B00
-	spiIocIncrementor = 2097152    //0x200000
+	spiIOCMessage0    = 1073769216 //0x40006B00
+	spiIOCIncrementor = 2097152    //0x200000
 
 	defaultDelayms  = uint16(0)
-	defaultSpiBpw   = uint8(8)
-	defaultSpiSpeed = uint32(1000000)
+	defaultSPIBPW   = uint8(8)
+	defaultSPISpeed = uint32(1000000)
 )
 
-type spiIocTransfer struct {
+type spiIOCTransfer struct {
 	txBuf uint64
 	rxBuf uint64
 
@@ -51,15 +51,15 @@ type spiBus struct {
 
 	mu sync.Mutex
 
-	spiTransferData spiIocTransfer
+	spiTransferData spiIOCTransfer
 	initialized     bool
 
 	shouldInitialize bool
 	initializer      func() error
 }
 
-func spiIocMessageN(n uint32) uint32 {
-	return (spiIocMessage0 + (n * spiIocIncrementor))
+func spiIOCMessageN(n uint32) uint32 {
+	return (spiIOCMessage0 + (n * spiIOCIncrementor))
 }
 
 func NewSPIBus(spiDevMinor, mode, channel byte, speed, bpw, delay int, shouldInitialize bool, i func() error) embd.SPIBus {
@@ -98,14 +98,14 @@ func (b *spiBus) init() error {
 		return err
 	}
 
-	b.spiTransferData = spiIocTransfer{}
+	b.spiTransferData = spiIOCTransfer{}
 
 	err = b.setSpeed()
 	if err != nil {
 		return err
 	}
 
-	err = b.setBpw()
+	err = b.setBPW()
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (b *spiBus) init() error {
 	b.setDelay()
 
 	glog.V(2).Infof("spi: bus %v initialized", b.channel)
-	glog.V(3).Infof("spi: bus %v initialized with spiIocTransfer as %v", b.channel, b.spiTransferData)
+	glog.V(3).Infof("spi: bus %v initialized with spiIOCTransfer as %v", b.channel, b.spiTransferData)
 
 	b.initialized = true
 	return nil
@@ -124,7 +124,7 @@ func (b *spiBus) setMode() error {
 	var err error
 	glog.V(3).Infof("spi: setting spi mode to %v", mode)
 
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), spiIocWrMode, uintptr(unsafe.Pointer(&mode)))
+	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), spiIOCWrMode, uintptr(unsafe.Pointer(&mode)))
 	if errno != 0 {
 		err = syscall.Errno(errno)
 		glog.V(3).Infof("spi: failed to set mode due to %v", err.Error())
@@ -139,11 +139,11 @@ func (b *spiBus) setSpeed() error {
 	if b.speed > 0 {
 		speed = uint32(b.speed)
 	} else {
-		speed = defaultSpiSpeed
+		speed = defaultSPISpeed
 	}
 
 	glog.V(3).Infof("spi: setting spi speedMax to %v", speed)
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), spiIocWrMaxSpeedHz, uintptr(unsafe.Pointer(&speed)))
+	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), spiIOCWrMaxSpeedHz, uintptr(unsafe.Pointer(&speed)))
 	if errno != 0 {
 		err := syscall.Errno(errno)
 		glog.V(3).Infof("spi: failed to set speedMax due to %v", err.Error())
@@ -155,17 +155,17 @@ func (b *spiBus) setSpeed() error {
 	return nil
 }
 
-func (b *spiBus) setBpw() error {
+func (b *spiBus) setBPW() error {
 	var bpw uint8
 
 	if b.bpw > 0 {
 		bpw = uint8(b.bpw)
 	} else {
-		bpw = defaultSpiBpw
+		bpw = defaultSPIBPW
 	}
 
 	glog.V(3).Infof("spi: setting spi bpw to %v", bpw)
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), spiIocWrBitsPerWord, uintptr(unsafe.Pointer(&bpw)))
+	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), spiIOCWrBitsPerWord, uintptr(unsafe.Pointer(&bpw)))
 	if errno != 0 {
 		err := syscall.Errno(errno)
 		glog.V(3).Infof("spi: failed to set bpw due to %v", err.Error())
@@ -201,7 +201,7 @@ func (b *spiBus) TransferAndRecieveData(dataBuffer []uint8) error {
 	dataCarrier.rxBuf = uint64(uintptr(unsafe.Pointer(&dataBuffer[0])))
 
 	glog.V(3).Infof("spi: sending dataBuffer %v with carrier %v", dataBuffer, dataCarrier)
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), uintptr(spiIocMessageN(1)), uintptr(unsafe.Pointer(&dataCarrier)))
+	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), uintptr(spiIOCMessageN(1)), uintptr(unsafe.Pointer(&dataCarrier)))
 	if errno != 0 {
 		err := syscall.Errno(errno)
 		glog.V(3).Infof("spi: failed to read due to %v", err.Error())
@@ -217,9 +217,7 @@ func (b *spiBus) ReceiveData(len int) ([]uint8, error) {
 	}
 
 	data := make([]uint8, len)
-	var err error
-	err = b.TransferAndRecieveData(data)
-	if err != nil {
+	if err := b.TransferAndRecieveData(data); err != nil {
 		return nil, err
 	}
 	return data, nil

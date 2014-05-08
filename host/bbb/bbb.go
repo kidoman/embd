@@ -96,7 +96,7 @@ var ledMap = embd.LEDMap{
 	"beaglebone:green:usr3": []string{"3", "USR3", "usr3"},
 }
 
-var spiDeviceMinor = byte(1)
+var spiDeviceMinor byte = 1
 
 func ensureFeatureEnabled(id string) error {
 	glog.V(3).Infof("bbb: enabling feature %v", id)

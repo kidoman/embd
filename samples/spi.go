@@ -11,9 +11,7 @@ import (
 )
 
 func main() {
-	var err error
-	err = embd.InitSPI()
-	if err != nil {
+	if err := embd.InitSPI(); err != nil {
 		panic(err)
 	}
 	defer embd.CloseSPI()
@@ -23,30 +21,29 @@ func main() {
 
 	dataBuf := []uint8{1, 2, 3}
 
-	err = spiBus.TransferAndRecieveData(dataBuf)
-	if err != nil {
+	if err := spiBus.TransferAndRecieveData(dataBuf); err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Recived data is: %v", dataBuf)
+	fmt.Println("received data is: %v", dataBuf)
 
 	dataReceived, err := spiBus.ReceiveData(3)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Recived data is: %v", dataReceived)
+	fmt.Println("received data is: %v", dataReceived)
 
 	dataByte := byte(1)
 	receivedByte, err := spiBus.TransferAndReceiveByte(dataByte)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Recived byte is: %v", receivedByte)
+	fmt.Println("received byte is: %v", receivedByte)
 
 	receivedByte, err = spiBus.ReceiveByte()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Recived byte is: %v", receivedByte)
+	fmt.Println("received byte is: %v", receivedByte)
 }
