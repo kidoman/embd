@@ -8,7 +8,7 @@ Development supported and sponsored by [**ThoughtWorks**](http://www.thoughtwork
 
 Also, you might be interested in: [Why Golang?](https://github.com/kidoman/embd/wiki/Why-Go)
 
-Blog post introducing EMBD: https://kidoman.io/framework/embd.html
+Blog post introducing EMBD: http://kidoman.io/framework/embd.html
 
 ## Getting Started
 
