@@ -46,7 +46,8 @@ func nodeName() (string, error) {
 }
 
 func parseVersion(str string) (major, minor, patch int, err error) {
-	parts := strings.Split(str, ".")
+	versionNumber := strings.Split(str, "-")
+	parts := strings.Split(versionNumber[0], ".")
 	len := len(parts)
 
 	if major, err = strconv.Atoi(parts[0]); err != nil {
