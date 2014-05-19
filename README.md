@@ -224,4 +224,4 @@ File an [issue](https://github.com/kidoman/embd/issues), open a [pull request](h
 
 ## About
 
-EMBD is affectionately designed/developed by Karan Misra ([kidoman](https://github.com/kidoman)), Kunal Powar ([kunalpowar](https://github.com/kunalpowar)) and [FRIENDS](https://github.com/kidoman/embd/blob/master/AUTHORS).
+EMBD is affectionately designed/developed by Karan Misra ([kidoman](https://github.com/kidoman)), Kunal Powar ([kunalpowar](https://github.com/kunalpowar)) and [FRIENDS](https://github.com/kidoman/embd/blob/master/AUTHORS). We also have a list of [CONTRIBUTORS](https://github.com/kidoman/embd/blob/master/CONTRIBUTORS).
