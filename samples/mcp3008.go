@@ -13,6 +13,13 @@ import (
 	_ "github.com/kidoman/embd/host/all"
 )
 
+const (
+	channel = 0
+	speed   = 1000000
+	bpw     = 8
+	delay   = 0
+)
+
 func main() {
 	flag.Parse()
 	fmt.Println("this is a sample code for mcp3008 10bit 8 channel ADC")
@@ -22,10 +29,6 @@ func main() {
 	}
 	defer embd.CloseSPI()
 
-	channel := 0
-	speed := 1000000
-	bpw := 8
-	delay := 0
 	spiBus := embd.NewSPIBus(embd.SPIMode0, channel, speed, bpw, delay)
 	defer spiBus.Close()
 

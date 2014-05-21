@@ -11,6 +11,13 @@ import (
 	_ "github.com/kidoman/embd/host/all"
 )
 
+const (
+	channel = 0
+	speed   = 1000000
+	bpw     = 8
+	delay   = 0
+)
+
 func main() {
 	flag.Parse()
 	if err := embd.InitSPI(); err != nil {
@@ -18,10 +25,6 @@ func main() {
 	}
 	defer embd.CloseSPI()
 
-	channel := 0
-	speed := 1000000
-	bpw := 8
-	delay := 0
 	bus := embd.NewSPIBus(embd.SPIMode0, channel, speed, bpw, delay)
 	defer bus.Close()
 
