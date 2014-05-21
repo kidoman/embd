@@ -54,24 +54,22 @@ type spiBus struct {
 	spiTransferData spiIOCTransfer
 	initialized     bool
 
-	shouldInitialize bool
-	initializer      func() error
+	initializer func() error
 }
 
 func spiIOCMessageN(n uint32) uint32 {
 	return (spiIOCMessage0 + (n * spiIOCIncrementor))
 }
 
-func NewSPIBus(spiDevMinor, mode, channel byte, speed, bpw, delay int, shouldInitialize bool, i func() error) embd.SPIBus {
+func NewSPIBus(spiDevMinor, mode, channel byte, speed, bpw, delay int, i func() error) embd.SPIBus {
 	return &spiBus{
-		spiDevMinor:      spiDevMinor,
-		mode:             mode,
-		channel:          channel,
-		speed:            speed,
-		bpw:              bpw,
-		delayms:          delay,
-		shouldInitialize: shouldInitialize,
-		initializer:      i,
+		spiDevMinor: spiDevMinor,
+		mode:        mode,
+		channel:     channel,
+		speed:       speed,
+		bpw:         bpw,
+		delayms:     delay,
+		initializer: i,
 	}
 }
 
@@ -80,11 +78,10 @@ func (b *spiBus) init() error {
 		return nil
 	}
 
-	if b.shouldInitialize {
+	if b.initializer != nil {
 		if err := b.initializer(); err != nil {
 			return err
 		}
-		b.shouldInitialize = false
 	}
 
 	var err error
@@ -93,20 +90,17 @@ func (b *spiBus) init() error {
 	}
 	glog.V(3).Infof("spi: sucessfully opened file /dev/spidev%v.%v", b.spiDevMinor, b.channel)
 
-	err = b.setMode()
-	if err != nil {
+	if err = b.setMode(); err != nil {
 		return err
 	}
 
 	b.spiTransferData = spiIOCTransfer{}
 
-	err = b.setSpeed()
-	if err != nil {
+	if err = b.setSpeed(); err != nil {
 		return err
 	}
 
-	err = b.setBPW()
-	if err != nil {
+	if err = b.setBPW(); err != nil {
 		return err
 	}
 

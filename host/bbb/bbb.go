@@ -180,7 +180,7 @@ func init() {
 				return embd.NewLEDDriver(ledMap, generic.NewLED)
 			},
 			SPIDriver: func() embd.SPIDriver {
-				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus, true, spiInitializer)
+				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus, spiInitializer)
 			},
 		}
 	})

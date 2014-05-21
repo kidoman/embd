@@ -77,7 +77,7 @@ func init() {
 				return embd.NewLEDDriver(ledMap, generic.NewLED)
 			},
 			SPIDriver: func() embd.SPIDriver {
-				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus, false, nil)
+				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus, nil)
 			},
 		}
 	})
