@@ -15,6 +15,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/golang/glog"
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/host/generic"
 )
@@ -94,7 +95,10 @@ var ledMap = embd.LEDMap{
 	"beaglebone:green:usr3": []string{"3", "USR3", "usr3"},
 }
 
+var spiDeviceMinor byte = 1
+
 func ensureFeatureEnabled(id string) error {
+	glog.V(3).Infof("bbb: enabling feature %v", id)
 	pattern := "/sys/devices/bone_capemgr.*/slots"
 	file, err := embd.FindFirstMatchingFile(pattern)
 	if err != nil {
@@ -106,6 +110,7 @@ func ensureFeatureEnabled(id string) error {
 	}
 	str := string(bytes)
 	if strings.Contains(str, id) {
+		glog.V(3).Infof("bbb: feature %v already enabled", id)
 		return nil
 	}
 	slots, err := os.OpenFile(file, os.O_WRONLY, os.ModeExclusive)
@@ -113,6 +118,7 @@ func ensureFeatureEnabled(id string) error {
 		return err
 	}
 	defer slots.Close()
+	glog.V(3).Infof("bbb: writing %v to slots file", id)
 	_, err = slots.WriteString(id)
 	return err
 }
@@ -153,6 +159,13 @@ func ensureFeatureDisabled(id string) error {
 	return fmt.Errorf("embd: could not disable feature %q", id)
 }
 
+func spiInitializer() error {
+	if err := ensureFeatureEnabled("BB-SPIDEV0"); err != nil {
+		return err
+	}
+	return nil
+}
+
 func init() {
 	embd.Register(embd.HostBBB, func(rev int) *embd.Descriptor {
 		return &embd.Descriptor{
@@ -164,6 +177,9 @@ func init() {
 			},
 			LEDDriver: func() embd.LEDDriver {
 				return embd.NewLEDDriver(ledMap, generic.NewLED)
+			},
+			SPIDriver: func() embd.SPIDriver {
+				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus, spiInitializer)
 			},
 		}
 	})

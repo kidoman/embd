@@ -13,6 +13,8 @@ import (
 	"github.com/kidoman/embd/host/generic"
 )
 
+var spiDeviceMinor = byte(0)
+
 var rev1Pins = embd.PinMap{
 	&embd.PinDesc{ID: "P1_3", Aliases: []string{"0", "GPIO_0", "SDA", "I2C0_SDA"}, Caps: embd.CapDigital | embd.CapI2C, DigitalLogical: 0},
 	&embd.PinDesc{ID: "P1_5", Aliases: []string{"1", "GPIO_1", "SCL", "I2C0_SCL"}, Caps: embd.CapDigital | embd.CapI2C, DigitalLogical: 1},
@@ -73,6 +75,9 @@ func init() {
 			},
 			LEDDriver: func() embd.LEDDriver {
 				return embd.NewLEDDriver(ledMap, generic.NewLED)
+			},
+			SPIDriver: func() embd.SPIDriver {
+				return embd.NewSPIDriver(spiDeviceMinor, generic.NewSPIBus, nil)
 			},
 		}
 	})

@@ -23,3 +23,6 @@ tmp006
 universalblinker
 us020
 watersensor
+spi
+mcp3008
+spimcp3008
