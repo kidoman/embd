@@ -23,9 +23,9 @@ const (
 	spiIOCMessage0    = 1073769216 //0x40006B00
 	spiIOCIncrementor = 2097152    //0x200000
 
-	defaultDelayms  = uint16(0)
-	defaultSPIBPW   = uint8(8)
-	defaultSPISpeed = uint32(1000000)
+	defaultDelayms  = 0
+	defaultSPIBPW   = 8
+	defaultSPISpeed = 1000000
 )
 
 type spiIOCTransfer struct {
@@ -115,12 +115,11 @@ func (b *spiBus) init() error {
 
 func (b *spiBus) setMode() error {
 	var mode = uint8(b.mode)
-	var err error
 	glog.V(3).Infof("spi: setting spi mode to %v", mode)
 
 	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, b.file.Fd(), spiIOCWrMode, uintptr(unsafe.Pointer(&mode)))
 	if errno != 0 {
-		err = syscall.Errno(errno)
+		err := syscall.Errno(errno)
 		glog.V(3).Infof("spi: failed to set mode due to %v", err.Error())
 		return err
 	}
@@ -129,7 +128,7 @@ func (b *spiBus) setMode() error {
 }
 
 func (b *spiBus) setSpeed() error {
-	speed := defaultSPISpeed
+	var speed uint32 = defaultSPISpeed
 	if b.speed > 0 {
 		speed = uint32(b.speed)
 	}
@@ -148,7 +147,7 @@ func (b *spiBus) setSpeed() error {
 }
 
 func (b *spiBus) setBPW() error {
-	bpw := defaultSPIBPW
+	var bpw uint8 = defaultSPIBPW
 	if b.bpw > 0 {
 		bpw = uint8(b.bpw)
 	}
@@ -166,7 +165,7 @@ func (b *spiBus) setBPW() error {
 }
 
 func (b *spiBus) setDelay() {
-	delay := defaultDelayms
+	var delay uint16 = defaultDelayms
 	if b.delayms > 0 {
 		delay = uint16(b.delayms)
 	}
