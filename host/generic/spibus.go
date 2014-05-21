@@ -230,8 +230,7 @@ func (b *spiBus) TransferAndReceiveByte(data byte) (byte, error) {
 
 	d := make([]uint8, 1)
 	d[0] = uint8(data)
-	err := b.TransferAndRecieveData(d)
-	if err != nil {
+	if err := b.TransferAndRecieveData(d); err != nil {
 		return 0, err
 	}
 	return d[0], nil
