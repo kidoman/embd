@@ -16,9 +16,10 @@ func main() {
 	if err := embd.InitSPI(); err != nil {
 		panic(err)
 	}
+	defer embd.CloseSPI()
 
 	bus := embd.NewSPIBus(embd.SpiMode0, 0, 1000000, 8, 0)
-	defer clean(bus)
+	defer bus.Close()
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(1 * time.Second)
@@ -26,11 +27,6 @@ func main() {
 		fmt.Printf("value is: %v\n", val)
 	}
 
-}
-
-func clean(bus embd.SPIBus) {
-	bus.Close()
-	embd.CloseSPI()
 }
 
 func getSensorValue(bus embd.SPIBus) (uint16, error) {
