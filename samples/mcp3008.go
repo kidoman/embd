@@ -1,5 +1,6 @@
 // +build ignore
 
+// this sample uses the mcp3008 package to interface with the 8-bit ADC and works without code change on bbb and rpi
 package main
 
 import (
@@ -7,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kidoman/embd/convertors/mcp3008"
-
 	"github.com/kidoman/embd"
+	"github.com/kidoman/embd/convertors/mcp3008"
+	_ "github.com/kidoman/embd/host/all"
 )
 
 func main() {
@@ -21,7 +22,11 @@ func main() {
 	}
 	defer embd.CloseSPI()
 
-	spiBus := embd.NewSPIBus(embd.SpiMode0, 0, 1000000, 8, 0)
+	channel := 0
+	speed := 1000000
+	bpw := 8
+	delay := 0
+	spiBus := embd.NewSPIBus(embd.SPIMode0, channel, speed, bpw, delay)
 	defer spiBus.Close()
 
 	adc := mcp3008.New(mcp3008.SingleMode, spiBus)

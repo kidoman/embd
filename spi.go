@@ -6,17 +6,17 @@ const (
 	spiCpha = 0x01
 	spiCpol = 0x02
 
-	// SpiMode0 represents the mode0 operation (CPOL=0 CPHA=0) of spi.
-	SpiMode0 = (0 | 0)
+	// SPIMode0 represents the mode0 operation (CPOL=0 CPHA=0) of spi.
+	SPIMode0 = (0 | 0)
 
-	// SpiMode0 represents the mode0 operation (CPOL=0 CPHA=1) of spi.
-	SpiMode1 = (0 | spiCpha)
+	// SPIMode1 represents the mode0 operation (CPOL=0 CPHA=1) of spi.
+	SPIMode1 = (0 | spiCpha)
 
-	// SpiMode0 represents the mode0 operation (CPOL=1 CPHA=0) of spi.
-	SpiMode2 = (spiCpol | 0)
+	// SPIMode2 represents the mode0 operation (CPOL=1 CPHA=0) of spi.
+	SPIMode2 = (spiCpol | 0)
 
-	// SpiMode0 represents the mode0 operation (CPOL=1 CPHA=1) of spi.
-	SpiMode3 = (spiCpol | spiCpha)
+	// SPIMode3 represents the mode0 operation (CPOL=1 CPHA=1) of spi.
+	SPIMode3 = (spiCpol | spiCpha)
 )
 
 // SPI interface allows interaction with the SPI bus.

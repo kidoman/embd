@@ -129,11 +129,9 @@ func (b *spiBus) setMode() error {
 }
 
 func (b *spiBus) setSpeed() error {
-	var speed uint32
+	speed := defaultSPISpeed
 	if b.speed > 0 {
 		speed = uint32(b.speed)
-	} else {
-		speed = defaultSPISpeed
 	}
 
 	glog.V(3).Infof("spi: setting spi speedMax to %v", speed)
@@ -150,12 +148,9 @@ func (b *spiBus) setSpeed() error {
 }
 
 func (b *spiBus) setBPW() error {
-	var bpw uint8
-
+	bpw := defaultSPIBPW
 	if b.bpw > 0 {
 		bpw = uint8(b.bpw)
-	} else {
-		bpw = defaultSPIBPW
 	}
 
 	glog.V(3).Infof("spi: setting spi bpw to %v", bpw)
@@ -171,13 +166,11 @@ func (b *spiBus) setBPW() error {
 }
 
 func (b *spiBus) setDelay() {
-	var delay uint16
-
+	delay := defaultDelayms
 	if b.delayms > 0 {
 		delay = uint16(b.delayms)
-	} else {
-		delay = defaultDelayms
 	}
+
 	glog.V(3).Infof("spi: delayms set to %v", delay)
 	b.spiTransferData.delayus = delay
 }
@@ -210,11 +203,11 @@ func (b *spiBus) ReceiveData(len int) ([]uint8, error) {
 		return nil, err
 	}
 
-	data := make([]uint8, len)
-	if err := b.TransferAndRecieveData(data); err != nil {
+	var data [len]uint8
+	if err := b.TransferAndRecieveData(data[:]); err != nil {
 		return nil, err
 	}
-	return data, nil
+	return data[:], nil
 }
 
 func (b *spiBus) TransferAndReceiveByte(data byte) (byte, error) {
@@ -222,9 +215,8 @@ func (b *spiBus) TransferAndReceiveByte(data byte) (byte, error) {
 		return 0, err
 	}
 
-	d := make([]uint8, 1)
-	d[0] = uint8(data)
-	if err := b.TransferAndRecieveData(d); err != nil {
+	d := [1]uint8{uint8(data)}
+	if err := b.TransferAndRecieveData(d[:]); err != nil {
 		return 0, err
 	}
 	return d[0], nil
@@ -235,9 +227,8 @@ func (b *spiBus) ReceiveByte() (byte, error) {
 		return 0, err
 	}
 
-	d := make([]uint8, 1)
-	err := b.TransferAndRecieveData(d)
-	if err != nil {
+	var d [1]uint8
+	if err := b.TransferAndRecieveData(d[:]); err != nil {
 		return 0, err
 	}
 	return byte(d[0]), nil

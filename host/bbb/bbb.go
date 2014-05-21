@@ -16,7 +16,6 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
-
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/host/generic"
 )

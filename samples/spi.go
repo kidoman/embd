@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/kidoman/embd"
-
 	_ "github.com/kidoman/embd/host/all"
 )
 
@@ -16,7 +15,7 @@ func main() {
 	}
 	defer embd.CloseSPI()
 
-	spiBus := embd.NewSPIBus(embd.SpiMode0, 0, 1000000, 8, 0)
+	spiBus := embd.NewSPIBus(embd.SPIMode0, 0, 1000000, 8, 0)
 	defer spiBus.Close()
 
 	dataBuf := []uint8{1, 2, 3}

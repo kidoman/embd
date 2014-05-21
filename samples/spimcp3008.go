@@ -18,12 +18,19 @@ func main() {
 	}
 	defer embd.CloseSPI()
 
-	bus := embd.NewSPIBus(embd.SpiMode0, 0, 1000000, 8, 0)
+	channel := 0
+	speed := 1000000
+	bpw := 8
+	delay := 0
+	bus := embd.NewSPIBus(embd.SPIMode0, channel, speed, bpw, delay)
 	defer bus.Close()
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(1 * time.Second)
-		val, _ := getSensorValue(bus)
+		val, err := getSensorValue(bus)
+		if err != nil {
+			panic(err)
+		}
 		fmt.Printf("value is: %v\n", val)
 	}
 }
