@@ -18,9 +18,9 @@ func main() {
 	spiBus := embd.NewSPIBus(embd.SPIMode0, 0, 1000000, 8, 0)
 	defer spiBus.Close()
 
-	dataBuf := []uint8{1, 2, 3}
+	dataBuf := [3]uint8{1, 2, 3}
 
-	if err := spiBus.TransferAndRecieveData(dataBuf); err != nil {
+	if err := spiBus.TransferAndRecieveData(dataBuf[:]); err != nil {
 		panic(err)
 	}
 

@@ -14,6 +14,8 @@ type spiDriver struct {
 	sbf spiBusFactory
 }
 
+// NewSPIDriver returns a SPIDriver interface which allows control
+// over the SPI bus.
 func NewSPIDriver(spiDevMinor byte, sbf spiBusFactory, i func() error) SPIDriver {
 	return &spiDriver{
 		spiDevMinor: spiDevMinor,
@@ -22,6 +24,7 @@ func NewSPIDriver(spiDevMinor byte, sbf spiBusFactory, i func() error) SPIDriver
 	}
 }
 
+// Bus returns a SPIBus interface which allows us to use spi functionalities
 func (s *spiDriver) Bus(mode, channel byte, speed, bpw, delay int) SPIBus {
 	s.busMapLock.Lock()
 	defer s.busMapLock.Unlock()
@@ -32,6 +35,7 @@ func (s *spiDriver) Bus(mode, channel byte, speed, bpw, delay int) SPIBus {
 	return b
 }
 
+// Close cleans up all the initialized SPIbus
 func (s *spiDriver) Close() error {
 	for _, b := range s.busMap {
 		b.Close()

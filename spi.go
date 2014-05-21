@@ -40,8 +40,10 @@ type SPIBus interface {
 // SPIDriver interface interacts with the host descriptors to allow us
 // control of SPI communication.
 type SPIDriver interface {
+	// Bus returns a SPIBus interface which allows us to use spi functionalities
 	Bus(byte, byte, int, int, int) SPIBus
 
+	// Close cleans up all the initialized SPIbus
 	Close() error
 }
 

@@ -36,12 +36,10 @@ func main() {
 }
 
 func getSensorValue(bus embd.SPIBus) (uint16, error) {
-	data := make([]uint8, 3)
-	data[0] = 1
-	data[1] = 128
-	data[2] = 0
+	data := [3]uint8{1, 128, 0}
+
 	var err error
-	err = bus.TransferAndRecieveData(data)
+	err = bus.TransferAndRecieveData(data[:])
 	if err != nil {
 		return uint16(0), err
 	}
