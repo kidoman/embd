@@ -26,7 +26,6 @@ func main() {
 		val, _ := getSensorValue(bus)
 		fmt.Printf("value is: %v\n", val)
 	}
-
 }
 
 func getSensorValue(bus embd.SPIBus) (uint16, error) {
