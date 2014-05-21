@@ -28,7 +28,7 @@ const (
 	// HostCubieTruck represents the Cubie Truck.
 	HostCubieTruck = "CubieTruck"
 
-	// HostRadxa represents the Cubie Truck.
+	// HostRadxa represents the Radxa board.
 	HostRadxa = "Radxa"
 )
 
