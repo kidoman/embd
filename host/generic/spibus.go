@@ -202,11 +202,11 @@ func (b *spiBus) ReceiveData(len int) ([]uint8, error) {
 		return nil, err
 	}
 
-	var data [len]uint8
-	if err := b.TransferAndRecieveData(data[:]); err != nil {
+	data := make([]uint8, len)
+	if err := b.TransferAndRecieveData(data); err != nil {
 		return nil, err
 	}
-	return data[:], nil
+	return data, nil
 }
 
 func (b *spiBus) TransferAndReceiveByte(data byte) (byte, error) {
