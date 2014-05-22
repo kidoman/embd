@@ -19,7 +19,7 @@ const (
 	SPIMode3 = (spiCpol | spiCpha)
 )
 
-// SPI interface allows interaction with the SPI bus.
+// SPIBus interface allows interaction with the SPI bus.
 type SPIBus interface {
 	// TransferAndRecieveData transmits data in a buffer(slice) and receives into it.
 	TransferAndRecieveData(dataBuffer []uint8) error
