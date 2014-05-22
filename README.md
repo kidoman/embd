@@ -208,6 +208,7 @@ platforms.
 * **PWM** [Documentation](http://godoc.org/github.com/kidoman/embd#PWMPin)
 * **I2C** [Documentation](http://godoc.org/github.com/kidoman/embd#I2CBus)
 * **LED** [Documentation](http://godoc.org/github.com/kidoman/embd#LED)
+* **SPI** [Documentation](http://godoc.org/github.com/kidoman/embd#SPIBus)
 
 ## Sensors Supported
 
@@ -236,6 +237,10 @@ platforms.
 * **MCP4725** 12-bit DAC [Documentation](http://godoc.org/github.com/kidoman/embd/controller/mcp4725), [Datasheet](http://www.adafruit.com/datasheets/mcp4725.pdf), [Product Page](http://www.adafruit.com/products/935)
 
 * **ServoBlaster** RPi PWM/PCM based PWM controller [Documentation](http://godoc.org/github.com/kidoman/embd/controller/servoblaster), [Product Page](https://github.com/richardghirst/PiBits/tree/master/ServoBlaster)
+
+## Convertors
+
+* **MCP3008** 8-channel, 10-bit ADC with SPI protocol, [Datasheet](https://www.adafruit.com/datasheets/MCP3008.pdf)
 
 ## Contributing
 

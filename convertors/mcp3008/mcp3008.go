@@ -1,3 +1,4 @@
+// Package mcp3008 allows interfacing with the mcp3008 8-channel, 10-bit ADC through SPI protocol.
 package mcp3008
 
 import (
