@@ -7,6 +7,9 @@ import "time"
 // The Direction type indicates the direction of a GPIO pin.
 type Direction int
 
+// The Edge trigger for the GPIO Interrupt
+type Edge string
+
 const (
 	// In represents read mode.
 	In Direction = iota
@@ -23,8 +26,27 @@ const (
 	High
 )
 
+const (
+	EdgeNone    Edge = "none"
+	EdgeRising  Edge = "rising"
+	EdgeFalling Edge = "falling"
+	EdgeBoth    Edge = "both"
+)
+
+// InterruptPin implements access to a Interruptable capable GPIO pin.
+type InterruptPin interface {
+
+	// Start watching this pin for interrupt
+	Watch(edge Edge, handler func(DigitalPin)) error
+
+	// Stop watching this pin for interrupt
+	StopWatching() error
+}
+
 // DigitalPin implements access to a digital IO capable GPIO pin.
 type DigitalPin interface {
+	InterruptPin
+
 	// N returns the logical GPIO number.
 	N() int
 
