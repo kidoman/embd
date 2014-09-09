@@ -61,9 +61,9 @@ var ledMap = embd.LEDMap{
 
 func init() {
 	embd.Register(embd.HostRPi, func(rev int) *embd.Descriptor {
-		var pins = rev1Pins
-		if rev > 1 {
-			pins = rev2Pins
+		var pins = rev2Pins
+		if rev < 4 {
+			pins = rev1Pins
 		}
 
 		return &embd.Descriptor{
