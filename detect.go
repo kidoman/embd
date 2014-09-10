@@ -4,6 +4,7 @@ package embd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -76,6 +77,22 @@ func kernelVersion() (major, minor, patch int, err error) {
 	return parseVersion(output)
 }
 
+func getPiRevision() (int, error) {
+	//default return code of a rev2 board
+	cpuinfo, err := ioutil.ReadFile("/proc/cpuinfo")
+	if err != nil {
+		return 4, err
+	}
+	for _, line := range strings.Split(string(cpuinfo), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) > 0 && fields[0] == "Revision" {
+			rev, err := strconv.ParseInt(fields[2], 16, 8)
+			return int(rev), err
+		}
+	}
+	return 4, nil
+}
+
 // DetectHost returns the detected host and its revision number.
 func DetectHost() (Host, int, error) {
 	major, minor, patch, err := kernelVersion()
@@ -98,6 +115,7 @@ func DetectHost() (Host, int, error) {
 	switch node {
 	case "raspberrypi":
 		host = HostRPi
+		rev, _ = getPiRevision()
 	case "beaglebone":
 		host = HostBBB
 	default:
