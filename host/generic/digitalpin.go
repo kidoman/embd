@@ -228,6 +228,10 @@ func (p *digitalPin) PullDown() error {
 }
 
 func (p *digitalPin) Close() error {
+	if err := p.StopWatching(); err != nil {
+		return err
+	}
+
 	if err := p.drv.Unregister(p.id); err != nil {
 		return err
 	}
@@ -252,4 +256,26 @@ func (p *digitalPin) Close() error {
 	p.initialized = false
 
 	return nil
+}
+
+func (p *digitalPin) setEdge(edge embd.Edge) error {
+	file, err := p.openFile(path.Join(p.basePath(), "edge"))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write([]byte(edge))
+	return err
+}
+
+func (p *digitalPin) Watch(edge embd.Edge, handler func(embd.DigitalPin)) error {
+	if err := p.setEdge(edge); err != nil {
+		return err
+	}
+	return registerInterrupt(p, handler)
+}
+
+func (p *digitalPin) StopWatching() error {
+	return unregisterInterrupt(p)
 }

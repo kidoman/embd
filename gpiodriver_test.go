@@ -48,6 +48,14 @@ func (p *fakeDigitalPin) Close() error {
 	return p.drv.Unregister(p.id)
 }
 
+func (p *fakeDigitalPin) Watch(edge Edge, handler func(DigitalPin)) error {
+	return nil
+}
+
+func (p *fakeDigitalPin) StopWatching() error {
+	return nil
+}
+
 func newFakeDigitalPin(pd *PinDesc, drv GPIODriver) DigitalPin {
 	return &fakeDigitalPin{id: pd.ID, n: pd.DigitalLogical, drv: drv}
 }
