@@ -233,6 +233,13 @@ func (b *spiBus) ReceiveByte() (byte, error) {
 	return byte(d[0]), nil
 }
 
+func (b *spiBus) Write(data []byte) (n int, err error) {
+	if err := b.init(); err != nil {
+		return 0, err
+	}
+	return b.file.Write(data)
+}
+
 func (b *spiBus) Close() error {
 	b.mu.Lock()
 	defer b.mu.Unlock()

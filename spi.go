@@ -2,6 +2,10 @@
 
 package embd
 
+import (
+	"io"
+)
+
 const (
 	spiCpha = 0x01
 	spiCpol = 0x02
@@ -21,6 +25,8 @@ const (
 
 // SPIBus interface allows interaction with the SPI bus.
 type SPIBus interface {
+	io.Writer
+
 	// TransferAndRecieveData transmits data in a buffer(slice) and receives into it.
 	TransferAndRecieveData(dataBuffer []uint8) error
 
