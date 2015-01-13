@@ -107,6 +107,10 @@ func (io *gpioDriver) PWMPin(key interface{}) (PWMPin, error) {
 	return p, nil
 }
 
+func (io *gpioDriver) PinMap() PinMap {
+	return io.pinMap
+}
+
 func (io *gpioDriver) Close() error {
 	for _, p := range io.initializedPins {
 		if err := p.Close(); err != nil {
