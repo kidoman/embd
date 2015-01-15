@@ -66,9 +66,9 @@ Join the [mailing list](https://groups.google.com/forum/#!forum/go-embd)
 
 ## Platforms Supported
 
-* [RaspberryPi](http://www.raspberrypi.org/)
+* [RaspberryPi](http://www.raspberrypi.org/) (including [A+](http://www.raspberrypi.org/products/model-a-plus/) and [B+](http://www.raspberrypi.org/products/model-b-plus/))
 * [BeagleBone Black](http://beagleboard.org/Products/BeagleBone%20Black)
-* [Intel Galileo](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) **coming soon**
+* [Intel Edison](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) **coming soon**
 * [Radxa](http://radxa.com/) **coming soon**
 * [Cubietruck](http://www.cubietruck.com/) **coming soon**
 * Bring Your Own **coming soon**

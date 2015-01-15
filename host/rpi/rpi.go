@@ -1,5 +1,5 @@
 /*
-	Package rpi provides Raspberry Pi support.
+	Package rpi provides Raspberry Pi (including A+/B+) support.
 	The following features are supported on Linux kernel 3.8+
 
 	GPIO (digital (rw))
@@ -55,13 +55,29 @@ var rev2Pins = embd.PinMap{
 	&embd.PinDesc{ID: "P1_26", Aliases: []string{"7", "GPIO_7", "CE1", "SPI0_CE1_N"}, Caps: embd.CapDigital | embd.CapSPI, DigitalLogical: 7},
 }
 
+// This is the same as the Rev 2 for the first 26 pins.
+var rev3Pins = append(append(embd.PinMap(nil), rev2Pins...), embd.PinMap{
+	&embd.PinDesc{ID: "P1_29", Aliases: []string{"5", "GPIO_5"}, Caps: embd.CapDigital, DigitalLogical: 5},
+	&embd.PinDesc{ID: "P1_31", Aliases: []string{"6", "GPIO_6"}, Caps: embd.CapDigital, DigitalLogical: 6},
+	&embd.PinDesc{ID: "P1_32", Aliases: []string{"12", "GPIO_12"}, Caps: embd.CapDigital, DigitalLogical: 12},
+	&embd.PinDesc{ID: "P1_33", Aliases: []string{"13", "GPIO_13"}, Caps: embd.CapDigital, DigitalLogical: 13},
+	&embd.PinDesc{ID: "P1_35", Aliases: []string{"19", "GPIO_19"}, Caps: embd.CapDigital, DigitalLogical: 19},
+	&embd.PinDesc{ID: "P1_36", Aliases: []string{"16", "GPIO_16"}, Caps: embd.CapDigital, DigitalLogical: 16},
+	&embd.PinDesc{ID: "P1_37", Aliases: []string{"26", "GPIO_26"}, Caps: embd.CapDigital, DigitalLogical: 26},
+	&embd.PinDesc{ID: "P1_38", Aliases: []string{"20", "GPIO_20"}, Caps: embd.CapDigital, DigitalLogical: 20},
+	&embd.PinDesc{ID: "P1_40", Aliases: []string{"21", "GPIO_21"}, Caps: embd.CapDigital, DigitalLogical: 21},
+}...)
+
 var ledMap = embd.LEDMap{
 	"led0": []string{"0", "led0", "LED0"},
 }
 
 func init() {
 	embd.Register(embd.HostRPi, func(rev int) *embd.Descriptor {
-		var pins = rev2Pins
+		pins := rev3Pins
+		if rev < 16 {
+			pins = rev2Pins
+		}
 		if rev < 4 {
 			pins = rev1Pins
 		}
