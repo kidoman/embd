@@ -14,7 +14,7 @@ func detect(c *cli.Context) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Printf("detected host %v (rev %v)\n", host, rev)
+	fmt.Printf("detected host %v (rev %#x)\n", host, rev)
 }
 
 var detectCmd = cli.Command{
