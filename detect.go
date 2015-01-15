@@ -83,15 +83,17 @@ func cpuInfo() (model, hardware string, revision int, err error) {
 		if len(fields) < 1 {
 			continue
 		}
-		if strings.HasPrefix(fields[0], "Revision") {
-			rev, err := strconv.ParseInt(fields[1], 16, 8)
+		switch {
+		case strings.HasPrefix(fields[0], "Revision"):
+			revs := strings.TrimSpace(fields[1])
+			rev, err := strconv.ParseInt(revs, 16, 8)
 			if err != nil {
 				continue
 			}
 			revision = int(rev)
-		} else if strings.HasPrefix(fields[0], "Hardware") {
+		case strings.HasPrefix(fields[0], "Hardware"):
 			hardware = fields[1]
-		} else if strings.HasPrefix(fields[0], "model name") {
+		case strings.HasPrefix(fields[0], "model name"):
 			model = fields[1]
 		}
 	}
