@@ -74,6 +74,8 @@ var ledMap = embd.LEDMap{
 
 func init() {
 	embd.Register(embd.HostRPi, func(rev int) *embd.Descriptor {
+		// Refer to http://elinux.org/RPi_HardwareHistory#Board_Revision_History
+		// for details.
 		pins := rev3Pins
 		if rev < 16 {
 			pins = rev2Pins
