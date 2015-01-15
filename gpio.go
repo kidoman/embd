@@ -125,7 +125,7 @@ type PWMPin interface {
 
 // GPIODriver implements a generic GPIO driver.
 type GPIODriver interface {
-	// Returns the pinmap for this GPIODriver
+	// PinMap returns the pinmap for this driver.
 	PinMap() PinMap
 
 	// Unregister unregisters the pin from the driver. Should be called when the pin is closed.
