@@ -31,33 +31,33 @@ func (i *interrupt) Signal() {
 	i.handler(i.pin)
 }
 
-type ePollListener struct {
-	epollFd           int
+type epollListener struct {
+	mu                sync.Mutex // Guards the following.
+	fd                int
 	interruptablePins map[int]*interrupt
-	mu                sync.Mutex
 }
 
-var ePollListenerInstance *ePollListener
+var epollListenerInstance *epollListener
 
-func getEPollListenerInstance() *ePollListener {
-	if ePollListenerInstance == nil {
-		ePollListenerInstance = initEPollListener()
+func getEpollListenerInstance() *epollListener {
+	if epollListenerInstance == nil {
+		epollListenerInstance = initEpollListener()
 	}
-	return ePollListenerInstance
+	return epollListenerInstance
 }
 
-func initEPollListener() *ePollListener {
-	epollFd, err := syscall.EpollCreate1(0)
+func initEpollListener() *epollListener {
+	fd, err := syscall.EpollCreate1(0)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to create epoll: %v", err))
 	}
-	listener := &ePollListener{epollFd: epollFd, interruptablePins: make(map[int]*interrupt)}
+	listener := &epollListener{fd: fd, interruptablePins: make(map[int]*interrupt)}
 
 	go func() {
 		var epollEvents [MaxGPIOInterrupt]syscall.EpollEvent
 
 		for {
-			n, err := syscall.EpollWait(listener.epollFd, epollEvents[:], -1)
+			n, err := syscall.EpollWait(listener.fd, epollEvents[:], -1)
 			if err != nil {
 				panic(fmt.Sprintf("EpollWait error: %v", err))
 			}
@@ -72,7 +72,7 @@ func initEPollListener() *ePollListener {
 }
 
 func registerInterrupt(pin *digitalPin, handler func(embd.DigitalPin)) error {
-	l := getEPollListenerInstance()
+	l := getEpollListenerInstance()
 
 	pinFd := int(pin.val.Fd())
 
@@ -92,7 +92,7 @@ func registerInterrupt(pin *digitalPin, handler func(embd.DigitalPin)) error {
 
 	event.Fd = int32(pinFd)
 
-	if err := syscall.EpollCtl(l.epollFd, syscall.EPOLL_CTL_ADD, pinFd, &event); err != nil {
+	if err := syscall.EpollCtl(l.fd, syscall.EPOLL_CTL_ADD, pinFd, &event); err != nil {
 		return err
 	}
 
@@ -102,7 +102,7 @@ func registerInterrupt(pin *digitalPin, handler func(embd.DigitalPin)) error {
 }
 
 func unregisterInterrupt(pin *digitalPin) error {
-	l := getEPollListenerInstance()
+	l := getEpollListenerInstance()
 
 	pinFd := int(pin.val.Fd())
 
@@ -113,7 +113,7 @@ func unregisterInterrupt(pin *digitalPin) error {
 		return nil
 	}
 
-	if err := syscall.EpollCtl(l.epollFd, syscall.EPOLL_CTL_DEL, pinFd, nil); err != nil {
+	if err := syscall.EpollCtl(l.fd, syscall.EPOLL_CTL_DEL, pinFd, nil); err != nil {
 		return err
 	}
 
