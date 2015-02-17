@@ -86,7 +86,7 @@ func cpuInfo() (model, hardware string, revision int, err error) {
 		switch {
 		case strings.HasPrefix(fields[0], "Revision"):
 			revs := strings.TrimSpace(fields[1])
-			rev, err := strconv.ParseInt(revs, 16, 8)
+			rev, err := strconv.ParseInt(revs, 16, 32)
 			if err != nil {
 				continue
 			}
@@ -119,9 +119,9 @@ func DetectHost() (host Host, rev int, err error) {
 	switch {
 	case strings.Contains(model, "ARMv7") && (strings.Contains(hardware, "AM33XX") || strings.Contains(hardware, "AM335X")):
 		return HostBBB, rev, nil
-	case strings.Contains(hardware, "BCM2708"):
+	case strings.Contains(hardware, "BCM2708") || strings.Contains(hardware, "BCM2709"):
 		return HostRPi, rev, nil
 	default:
-		return HostNull, 0, fmt.Errorf("embd: your host \"%v:%v\" is not supported at this moment. request support at https://github.com/kidoman/embd/issues", host, model)
+		return HostNull, 0, fmt.Errorf(`embd: your host "%v:%v" is not supported at this moment. request support at https://github.com/kidoman/embd/issues`, host, model)
 	}
 }
