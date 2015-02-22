@@ -8,6 +8,7 @@ import (
 
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/controller/hd44780"
+	"github.com/kidoman/embd/interface/display/characterdisplay"
 
 	_ "github.com/kidoman/embd/host/all"
 )
@@ -22,7 +23,7 @@ func main() {
 
 	bus := embd.NewI2CBus(1)
 
-	hd, err := hd44780.NewI2C(
+	controller, err := hd44780.NewI2C(
 		bus,
 		0x20,
 		hd44780.PCF8574PinMap,
@@ -33,21 +34,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer hd.Close()
 
-	hd.Clear()
-	message := "Hello, world!"
-	bytes := []byte(message)
-	for _, b := range bytes {
-		hd.WriteChar(b)
-	}
-	hd.SetCursor(0, 1)
+	display := characterdisplay.New(controller, 20, 4)
+	defer display.Close()
 
-	message = "@embd | hd44780"
-	bytes = []byte(message)
-	for _, b := range bytes {
-		hd.WriteChar(b)
-	}
+	display.Clear()
+	display.Message("Hello, world!\n@embd | characterdisplay")
 	time.Sleep(10 * time.Second)
-	hd.BacklightOff()
+	display.BacklightOff()
 }

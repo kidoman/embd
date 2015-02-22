@@ -9,7 +9,13 @@ import (
 	"github.com/kidoman/embd"
 )
 
-const testAddr byte = 0x20
+const (
+	testAddr byte = 0x20
+	cols          = 20
+	rows          = 4
+)
+
+var testRowAddr RowAddress = RowAddress20Col
 
 type mockDigitalPin struct {
 	direction embd.Direction
@@ -60,6 +66,11 @@ type instruction struct {
 	data byte
 }
 
+func (conn *mockGPIOConnection) Write(rs bool, data byte) error { return nil }
+func (conn *mockGPIOConnection) BacklightOff() error            { return nil }
+func (conn *mockGPIOConnection) BacklightOn() error             { return nil }
+func (conn *mockGPIOConnection) Close() error                   { return nil }
+
 func (ins *instruction) printAsBinary() string {
 	return fmt.Sprintf("RS:%d|Byte:%s", ins.rs, printByteAsBinary(ins.data))
 }
@@ -73,7 +84,7 @@ func printInstructionsAsBinary(ins []instruction) string {
 }
 
 func newMockGPIOConnection() *mockGPIOConnection {
-	be := &mockGPIOConnection{
+	conn := &mockGPIOConnection{
 		rs:        newMockDigitalPin(),
 		en:        newMockDigitalPin(),
 		d4:        newMockDigitalPin(),
@@ -87,32 +98,32 @@ func newMockGPIOConnection() *mockGPIOConnection {
 			var b byte = 0x00
 			var rs int = 0
 			// wait for EN low,high,low then read high nibble
-			if <-be.en.values == embd.Low &&
-				<-be.en.values == embd.High &&
-				<-be.en.values == embd.Low {
-				rs = <-be.rs.values
-				b |= byte(<-be.d4.values) << 4
-				b |= byte(<-be.d5.values) << 5
-				b |= byte(<-be.d6.values) << 6
-				b |= byte(<-be.d7.values) << 7
+			if <-conn.en.values == embd.Low &&
+				<-conn.en.values == embd.High &&
+				<-conn.en.values == embd.Low {
+				rs = <-conn.rs.values
+				b |= byte(<-conn.d4.values) << 4
+				b |= byte(<-conn.d5.values) << 5
+				b |= byte(<-conn.d6.values) << 6
+				b |= byte(<-conn.d7.values) << 7
 			}
 			// wait for EN low,high,low then read low nibble
-			if <-be.en.values == embd.Low &&
-				<-be.en.values == embd.High &&
-				<-be.en.values == embd.Low {
-				b |= byte(<-be.d4.values)
-				b |= byte(<-be.d5.values) << 1
-				b |= byte(<-be.d6.values) << 2
-				b |= byte(<-be.d7.values) << 3
-				be.writes = append(be.writes, instruction{rs, b})
+			if <-conn.en.values == embd.Low &&
+				<-conn.en.values == embd.High &&
+				<-conn.en.values == embd.Low {
+				b |= byte(<-conn.d4.values)
+				b |= byte(<-conn.d5.values) << 1
+				b |= byte(<-conn.d6.values) << 2
+				b |= byte(<-conn.d7.values) << 3
+				conn.writes = append(conn.writes, instruction{rs, b})
 			}
 		}
 	}()
-	return be
+	return conn
 }
 
-func (be *mockGPIOConnection) pins() []*mockDigitalPin {
-	return []*mockDigitalPin{be.rs, be.en, be.d4, be.d5, be.d6, be.d7, be.backlight}
+func (conn *mockGPIOConnection) pins() []*mockDigitalPin {
+	return []*mockDigitalPin{conn.rs, conn.en, conn.d4, conn.d5, conn.d6, conn.d7, conn.backlight}
 }
 
 type mockI2CBus struct {
@@ -156,9 +167,9 @@ func printBytesAsBinary(bytes []byte) string {
 }
 
 func TestInitialize4Bit_directionOut(t *testing.T) {
-	be := newMockGPIOConnection()
-	NewGPIO(be.rs, be.en, be.d4, be.d5, be.d6, be.d7, be.backlight, Negative)
-	for idx, pin := range be.pins() {
+	mock := newMockGPIOConnection()
+	NewGPIO(mock.rs, mock.en, mock.d4, mock.d5, mock.d6, mock.d7, mock.backlight, Negative, testRowAddr)
+	for idx, pin := range mock.pins() {
 		if pin.direction != embd.Out {
 			t.Errorf("Pin %d not set to direction Out", idx)
 		}
@@ -166,29 +177,29 @@ func TestInitialize4Bit_directionOut(t *testing.T) {
 }
 
 func TestInitialize4Bit_lcdInit(t *testing.T) {
-	be := newMockGPIOConnection()
-	NewGPIO(be.rs, be.en, be.d4, be.d5, be.d6, be.d7, be.backlight, Negative)
+	mock := newMockGPIOConnection()
+	gpio, _ := NewGPIO(mock.rs, mock.en, mock.d4, mock.d5, mock.d6, mock.d7, mock.backlight, Negative, testRowAddr)
 	instructions := []instruction{
 		instruction{embd.Low, lcdInit},
 		instruction{embd.Low, lcdInit4bit},
-		instruction{embd.Low, byte(lcdSetEntryMode)},
-		instruction{embd.Low, byte(lcdSetDisplayMode)},
-		instruction{embd.Low, byte(lcdSetFunctionMode)},
+		instruction{embd.Low, byte(gpio.eMode | lcdSetEntryMode)},
+		instruction{embd.Low, byte(gpio.dMode | lcdSetDisplayMode)},
+		instruction{embd.Low, byte(gpio.fMode | lcdSetFunctionMode)},
 	}
 
-	if !reflect.DeepEqual(instructions, be.writes) {
+	if !reflect.DeepEqual(instructions, mock.writes) {
 		t.Errorf(
 			"\nExpected\t%s\nActual\t\t%+v",
 			printInstructionsAsBinary(instructions),
-			printInstructionsAsBinary(be.writes))
+			printInstructionsAsBinary(mock.writes))
 	}
 }
 
 func TestGPIOConnectionClose(t *testing.T) {
-	be := newMockGPIOConnection()
-	bus, _ := NewGPIO(be.rs, be.en, be.d4, be.d5, be.d6, be.d7, be.backlight, Negative)
+	mock := newMockGPIOConnection()
+	bus, _ := NewGPIO(mock.rs, mock.en, mock.d4, mock.d5, mock.d6, mock.d7, mock.backlight, Negative, testRowAddr)
 	bus.Close()
-	for idx, pin := range be.pins() {
+	for idx, pin := range mock.pins() {
 		if !pin.closed {
 			t.Errorf("Pin %d was not closed", idx)
 		}
@@ -251,5 +262,57 @@ func TestI2CConnectionClose(t *testing.T) {
 	conn.Close()
 	if !i2c.closed {
 		t.Error("I2C bus was not closed")
+	}
+}
+
+func TestNewGPIO_initPins(t *testing.T) {
+	var pins []*mockDigitalPin
+	for i := 0; i < 7; i++ {
+		pins = append(pins, newMockDigitalPin())
+	}
+	NewGPIO(
+		pins[0],
+		pins[1],
+		pins[2],
+		pins[3],
+		pins[4],
+		pins[5],
+		pins[6],
+		Negative,
+		testRowAddr,
+	)
+	for idx, pin := range pins {
+		if pin.direction != embd.Out {
+			t.Errorf("Pin %d not set to direction Out(%d), set to %d", idx, embd.Out, pin.direction)
+		}
+	}
+}
+
+func TestDefaultModes(t *testing.T) {
+	display, _ := New(newMockGPIOConnection(), testRowAddr)
+
+	if display.EightBitModeEnabled() {
+		t.Error("Expected display to be initialized in 4-bit mode")
+	}
+	if display.TwoLineEnabled() {
+		t.Error("Expected display to be initialized in one-line mode")
+	}
+	if display.Dots5x10Enabled() {
+		t.Error("Expected display to be initialized in 5x8-dots mode")
+	}
+	if !display.EntryIncrementEnabled() {
+		t.Error("Expected display to be initialized in entry increment mode")
+	}
+	if display.EntryShiftEnabled() {
+		t.Error("Expected display to be initialized in entry shift off mode")
+	}
+	if !display.DisplayEnabled() {
+		t.Error("Expected display to be initialized in display on mode")
+	}
+	if display.CursorEnabled() {
+		t.Error("Expected display to be initialized in cursor off mode")
+	}
+	if display.BlinkEnabled() {
+		t.Error("Expected display to be initialized in blink off mode")
 	}
 }

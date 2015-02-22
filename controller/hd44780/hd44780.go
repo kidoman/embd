@@ -3,12 +3,6 @@ Package hd44780 allows controlling an HD44780-compatible character LCD
 controller. Currently the library is write-only and does not support
 reading from the display controller.
 
-Character Display
-
-The CharacterDisplay type provides a convenience layer on top of the basic
-HD44780 library. It includes functions for easier message printing and abstracts
-some of the quirky behaviors of 4-row displays.
-
 Resources
 
 This library is based three other HD44780 libraries:
@@ -25,14 +19,24 @@ import (
 	"github.com/kidoman/embd"
 )
 
-type Polarity bool
 type entryMode byte
 type displayMode byte
 type functionMode byte
 
+// RowAddress defines the DDRAM address of the first column of each row, up to 4 rows.
+type RowAddress [4]byte
+
+var (
+	RowAddress16Col RowAddress = [4]byte{0x00, 0x40, 0x10, 0x50} // row addresses for 16-column displays
+	RowAddress20Col RowAddress = [4]byte{0x00, 0x40, 0x14, 0x54} // row addresses for 20-column displays
+)
+
+// BacklightPolarity defines the polarity of the backlight switch, either positive or negative
+type BacklightPolarity bool
+
 const (
-	Negative Polarity = false
-	Positive Polarity = true
+	Negative BacklightPolarity = false
+	Positive BacklightPolarity = true
 
 	writeDelay = 37 * time.Microsecond
 	pulseDelay = 1 * time.Microsecond
@@ -84,18 +88,38 @@ const (
 // HD44780 represents an HD44780-compatible character LCD controller.
 type HD44780 struct {
 	Connection
-	eMode entryMode
-	dMode displayMode
-	fMode functionMode
+	eMode   entryMode
+	dMode   displayMode
+	fMode   functionMode
+	rowAddr RowAddress
 }
 
 // NewGPIO creates a new HD44780 connected by a 4-bit GPIO bus.
 func NewGPIO(
-	rs, en, d4, d5, d6, d7, backlight embd.DigitalPin,
-	blPolarity Polarity,
+	rs, en, d4, d5, d6, d7, backlight interface{},
+	blPolarity BacklightPolarity,
+	rowAddr RowAddress,
 	modes ...ModeSetter,
 ) (*HD44780, error) {
-	pins := []embd.DigitalPin{rs, en, d4, d5, d6, d7, backlight}
+	pinKeys := []interface{}{rs, en, d4, d5, d6, d7, backlight}
+	pins := [7]embd.DigitalPin{}
+	for idx, key := range pinKeys {
+		if key == nil {
+			continue
+		}
+		var digitalPin embd.DigitalPin
+		if pin, ok := key.(embd.DigitalPin); ok {
+			digitalPin = pin
+		} else {
+			var err error
+			digitalPin, err = embd.NewDigitalPin(key)
+			if err != nil {
+				glog.V(1).Infof("hd44780: error creating digital pin %+v: %s", key, err)
+				return nil, err
+			}
+		}
+		pins[idx] = digitalPin
+	}
 	for _, pin := range pins {
 		if pin == nil {
 			continue
@@ -107,29 +131,45 @@ func NewGPIO(
 		}
 	}
 	return New(
-		NewGPIOConnection(rs, en, d4, d5, d6, d7, backlight, blPolarity),
+		NewGPIOConnection(
+			pins[0],
+			pins[1],
+			pins[2],
+			pins[3],
+			pins[4],
+			pins[5],
+			pins[6],
+			blPolarity),
+		rowAddr,
 		modes...,
 	)
 }
 
 // NewI2C creates a new HD44780 connected by an I²C bus.
-func NewI2C(i2c embd.I2CBus, addr byte, pinMap I2CPinMap, modes ...ModeSetter) (*HD44780, error) {
-	return New(NewI2CConnection(i2c, addr, pinMap), modes...)
+func NewI2C(
+	i2c embd.I2CBus,
+	addr byte,
+	pinMap I2CPinMap,
+	rowAddr RowAddress,
+	modes ...ModeSetter,
+) (*HD44780, error) {
+	return New(NewI2CConnection(i2c, addr, pinMap), rowAddr, modes...)
 }
 
 // New creates a new HD44780 connected by a Connection bus.
-func New(bus Connection, modes ...ModeSetter) (*HD44780, error) {
+func New(bus Connection, rowAddr RowAddress, modes ...ModeSetter) (*HD44780, error) {
 	controller := &HD44780{
 		Connection: bus,
 		eMode:      0x00,
 		dMode:      0x00,
 		fMode:      0x00,
+		rowAddr:    rowAddr,
 	}
 	err := controller.lcdInit()
 	if err != nil {
 		return nil, err
 	}
-	err = controller.SetMode(modes...)
+	err = controller.SetMode(append(DefaultModes, modes...)...)
 	if err != nil {
 		return nil, err
 	}
@@ -144,6 +184,18 @@ func (controller *HD44780) lcdInit() error {
 	}
 	glog.V(2).Info("hd44780: initializing display in 4-bit mode")
 	return controller.WriteInstruction(lcdInit4bit)
+}
+
+// DefaultModes are the default initialization modes for an HD44780.
+var DefaultModes []ModeSetter = []ModeSetter{
+	FourBitMode,
+	OneLine,
+	Dots5x8,
+	EntryIncrement,
+	EntryShiftOff,
+	DisplayOn,
+	CursorOff,
+	BlinkOff,
 }
 
 // ModeSetter defines a function used for setting modes on an HD44780.
@@ -312,12 +364,29 @@ func (hd *HD44780) Home() error {
 // Clear clears the display and mode settings sets the cursor to the home position.
 func (hd *HD44780) Clear() error {
 	err := hd.WriteInstruction(lcdClearDisplay)
+	if err != nil {
+		return err
+	}
 	time.Sleep(clearDelay)
-	return err
+	// have to set mode here because clear also clears some mode settings
+	return hd.SetMode()
 }
 
-// SetCursor sets the input cursor to the given bye.
-func (hd *HD44780) SetCursor(value byte) error {
+// SetCursor sets the input cursor to the given position.
+func (hd *HD44780) SetCursor(col, row int) error {
+	return hd.SetDDRamAddr(byte(col) + hd.lcdRowOffset(row))
+}
+
+func (hd *HD44780) lcdRowOffset(row int) byte {
+	// Offset for up to 4 rows
+	if row > 3 {
+		row = 3
+	}
+	return hd.rowAddr[row]
+}
+
+// SetDDRamAddr sets the input cursor to the given address.
+func (hd *HD44780) SetDDRamAddr(value byte) error {
 	return hd.WriteInstruction(lcdSetDDRamAddr | value)
 }
 
@@ -357,13 +426,13 @@ type GPIOConnection struct {
 	RS, EN         embd.DigitalPin
 	D4, D5, D6, D7 embd.DigitalPin
 	Backlight      embd.DigitalPin
-	BLPolarity     Polarity
+	BLPolarity     BacklightPolarity
 }
 
 // NewGPIOConnection returns a new Connection based on a 4-bit GPIO bus.
 func NewGPIOConnection(
 	rs, en, d4, d5, d6, d7, backlight embd.DigitalPin,
-	blPolarity Polarity,
+	blPolarity BacklightPolarity,
 ) *GPIOConnection {
 	return &GPIOConnection{
 		RS:         rs,
@@ -480,7 +549,7 @@ type I2CPinMap struct {
 	RS, RW, EN     byte
 	D4, D5, D6, D7 byte
 	Backlight      byte
-	BLPolarity     Polarity
+	BLPolarity     BacklightPolarity
 }
 
 var (
