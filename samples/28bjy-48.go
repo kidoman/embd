@@ -49,11 +49,7 @@ func main() {
 		if err := pin.Write(embd.Low); err != nil {
 			panic(err)
 		}
-		defer func() {
-			if err := pin.SetDirection(embd.In); err != nil {
-				panic(err)
-			}
-		}()
+		defer pin.SetDirection(embd.In)
 
 		stepPins[i] = pin
 	}
@@ -69,7 +65,6 @@ func main() {
 		[]int{0, 0, 0, 1},
 		[]int{1, 0, 0, 1},
 	}
-
 	stepCount := len(seq) - 1
 	stepDir := 2 // Set to 1 or 2 for clockwise, -1 or -2 for counter-clockwise
 
@@ -79,6 +74,7 @@ func main() {
 
 	// Start main loop
 	ticker := time.NewTicker(time.Duration(*stepDelay) * time.Millisecond)
+	defer timer.Close()
 
 	var stepCounter int
 	for {
@@ -96,7 +92,6 @@ func main() {
 					if err := pin.Write(embd.Low); err != nil {
 						panic(err)
 					}
-
 				}
 			}
 			stepCounter += stepDir
