@@ -14,15 +14,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/kidoman/embd"
-	_ "github.com/kidoman/embd/host/rpi"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/kidoman/embd"
+	_ "github.com/kidoman/embd/host/rpi"
 )
 
 func main() {
-	stepWait := flag.Int("step-delay", 10, "milliseconds between steps")
+	stepDelay := flag.Int("step-delay", 10, "milliseconds between steps")
 	flag.Parse()
 
 	if err := embd.InitGPIO(); err != nil {
@@ -30,7 +31,7 @@ func main() {
 	}
 	defer embd.CloseGPIO()
 
-	// Physical pins 11,15,16,18
+	// Physical pins 11,15,16,18 on rasp pi
 	// GPIO17,GPIO22,GPIO23,GPIO24
 	stepPinNums := []int{17, 22, 23, 24}
 
@@ -57,8 +58,7 @@ func main() {
 		stepPins[i] = pin
 	}
 
-	// Define advanced sequence
-	// as shown in manufacturers datasheet
+	// Define sequence described in manufacturer's datasheet
 	seq := [][]int{
 		[]int{1, 0, 0, 0},
 		[]int{1, 1, 0, 0},
@@ -73,15 +73,19 @@ func main() {
 	stepCount := len(seq) - 1
 	stepDir := 2 // Set to 1 or 2 for clockwise, -1 or -2 for counter-clockwise
 
-	// Start main loop
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, os.Kill)
 	defer signal.Stop(quit)
 
-	stepCounter := 0
+	// Start main loop
+	ticker := time.NewTicker(time.Duration(*stepDelay) * time.Millisecond)
+
+	var stepCounter int
 	for {
 		select {
-		case <-time.After(time.Duration(*stepWait) * time.Millisecond):
+		case <-ticker.C:
+
+			// set pins to appropriate values for given position in the sequence
 			for i, pin := range stepPins {
 				if seq[stepCounter][i] != 0 {
 					fmt.Printf("Enable pin %d, step %d\n", i, stepCounter)
@@ -103,9 +107,10 @@ func main() {
 			} else if stepCounter < 0 {
 				stepCounter = stepCount
 			}
+
 		case <-quit:
+			ticker.Stop()
 			return
 		}
 	}
-
 }
