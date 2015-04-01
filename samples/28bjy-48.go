@@ -74,6 +74,7 @@ func main() {
 
 	// Start main loop
 	ticker := time.NewTicker(time.Duration(*stepDelay) * time.Millisecond)
+	defer ticker.Stop()
 
 	var stepCounter int
 	for {
@@ -102,7 +103,6 @@ func main() {
 			}
 
 		case <-quit:
-			ticker.Stop()
 			return
 		}
 	}
