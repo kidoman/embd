@@ -74,13 +74,11 @@ func main() {
 
 	// Start main loop
 	ticker := time.NewTicker(time.Duration(*stepDelay) * time.Millisecond)
-	defer timer.Close()
 
 	var stepCounter int
 	for {
 		select {
 		case <-ticker.C:
-
 			// set pins to appropriate values for given position in the sequence
 			for i, pin := range stepPins {
 				if seq[stepCounter][i] != 0 {
