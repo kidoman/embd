@@ -23,19 +23,25 @@ type entryMode byte
 type displayMode byte
 type functionMode byte
 
-// RowAddress defines the DDRAM address of the first column of each row, up to 4 rows.
+// RowAddress defines the cursor (DDRAM) address of the first column of each row, up to 4 rows.
+// You must use the RowAddress value that matches the number of columns on your character display
+// for the SetCursor function to work correctly.
 type RowAddress [4]byte
 
 var (
-	RowAddress16Col RowAddress = [4]byte{0x00, 0x40, 0x10, 0x50} // row addresses for 16-column displays
-	RowAddress20Col RowAddress = [4]byte{0x00, 0x40, 0x14, 0x54} // row addresses for 20-column displays
+	// RowAddress16Col are row addresses for a 16-column display
+	RowAddress16Col RowAddress = [4]byte{0x00, 0x40, 0x10, 0x50}
+	// RowAddress20Col are row addresses for a 20-column display
+	RowAddress20Col RowAddress = [4]byte{0x00, 0x40, 0x14, 0x54}
 )
 
-// BacklightPolarity defines the polarity of the backlight switch, either positive or negative
+// BacklightPolarity is used to set the polarity of the backlight switch, either positive or negative.
 type BacklightPolarity bool
 
 const (
+	// Negative indicates that the backlight is active-low and must have a logical low value to enable.
 	Negative BacklightPolarity = false
+	// Positive indicates that the backlight is active-high and must have a logical high value to enable.
 	Positive BacklightPolarity = true
 
 	writeDelay = 37 * time.Microsecond
@@ -187,6 +193,7 @@ func (controller *HD44780) lcdInit() error {
 }
 
 // DefaultModes are the default initialization modes for an HD44780.
+// ModeSetters passed in to a constructor will override these default values.
 var DefaultModes []ModeSetter = []ModeSetter{
 	FourBitMode,
 	OneLine,
@@ -553,14 +560,14 @@ type I2CPinMap struct {
 }
 
 var (
-	// Standard pin mapping for an MJKDZ-based I²C backpack.
+	// MJKDZPinMap is the standard pin mapping for an MJKDZ-based I²C backpack.
 	MJKDZPinMap I2CPinMap = I2CPinMap{
 		RS: 6, RW: 5, EN: 4,
 		D4: 0, D5: 1, D6: 2, D7: 3,
 		Backlight:  7,
 		BLPolarity: Negative,
 	}
-	// Standard pin mapping for a PCF8574-based I²C backpack.
+	// PCF8574PinMap is the standard pin mapping for a PCF8574-based I²C backpack.
 	PCF8574PinMap I2CPinMap = I2CPinMap{
 		RS: 0, RW: 1, EN: 2,
 		D4: 4, D5: 5, D6: 6, D7: 7,
