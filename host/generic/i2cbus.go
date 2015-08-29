@@ -101,6 +101,28 @@ func (b *i2cBus) ReadByte(addr byte) (byte, error) {
 	return bytes[0], nil
 }
 
+func (b *i2cBus) ReadBytes(addr byte, num int) ([]byte, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if err := b.init(); err != nil {
+		return []byte{0}, err
+	}
+
+	if err := b.setAddress(addr); err != nil {
+		return []byte{0}, err
+	}
+
+	bytes := make([]byte, num)
+	n, _ := b.file.Read(bytes)
+
+	if n != num {
+		return []byte{0}, fmt.Errorf("i2c: Unexpected number (%v) of bytes read", n)
+	}
+
+	return bytes, nil
+}
+
 func (b *i2cBus) WriteByte(addr, value byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
