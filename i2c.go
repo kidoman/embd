@@ -5,9 +5,9 @@ package embd
 // I2CBus interface is used to interact with the I2C bus.
 type I2CBus interface {
 	// ReadByte reads a byte from the given address.
-	ReadBytes(addr byte, num int) (value []byte, err error)
-	// ReadByte reads a slice of bytes from the given address.
 	ReadByte(addr byte) (value byte, err error)
+	// ReadBytes reads a slice of bytes from the given address.
+	ReadBytes(addr byte, num int) (value []byte, err error)
 	// WriteByte writes a byte to the given address.
 	WriteByte(addr, value byte) error
 	// WriteBytes writes a slice bytes to the given address.
