@@ -131,7 +131,7 @@ type mockI2CBus struct {
 	closed bool
 }
 
-func (bus *mockI2CBus) ReadBytes(addr byte) ([]byte, error)      { return []byte{0x00}, nil }
+func (bus *mockI2CBus) ReadBytes(addr byte, num int) ([]byte, error)      { return []byte{0x00}, nil }
 func (bus *mockI2CBus) ReadByte(addr byte) (byte, error)                  { return 0x00, nil }
 func (bus *mockI2CBus) WriteBytes(addr byte, value []byte) error          { return nil }
 func (bus *mockI2CBus) ReadFromReg(addr, reg byte, value []byte) error    { return nil }
