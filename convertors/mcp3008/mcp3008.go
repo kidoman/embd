@@ -38,7 +38,7 @@ func (m *MCP3008) AnalogValueAt(chanNum int) (int, error) {
 	data[2] = 0
 
 	glog.V(2).Infof("mcp3008: sendingdata buffer %v", data)
-	if err := m.Bus.TransferAndRecieveData(data[:]); err != nil {
+	if err := m.Bus.TransferAndReceiveData(data[:]); err != nil {
 		return 0, err
 	}
 

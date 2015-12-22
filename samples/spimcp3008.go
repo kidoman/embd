@@ -42,7 +42,7 @@ func getSensorValue(bus embd.SPIBus) (uint16, error) {
 	data := [3]uint8{1, 128, 0}
 
 	var err error
-	err = bus.TransferAndRecieveData(data[:])
+	err = bus.TransferAndReceiveData(data[:])
 	if err != nil {
 		return uint16(0), err
 	}
