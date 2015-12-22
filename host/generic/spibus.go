@@ -174,7 +174,7 @@ func (b *spiBus) setDelay() {
 	b.spiTransferData.delayus = delay
 }
 
-func (b *spiBus) TransferAndRecieveData(dataBuffer []uint8) error {
+func (b *spiBus) TransferAndReceiveData(dataBuffer []uint8) error {
 	if err := b.init(); err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func (b *spiBus) ReceiveData(len int) ([]uint8, error) {
 	}
 
 	data := make([]uint8, len)
-	if err := b.TransferAndRecieveData(data); err != nil {
+	if err := b.TransferAndReceiveData(data); err != nil {
 		return nil, err
 	}
 	return data, nil
@@ -215,7 +215,7 @@ func (b *spiBus) TransferAndReceiveByte(data byte) (byte, error) {
 	}
 
 	d := [1]uint8{uint8(data)}
-	if err := b.TransferAndRecieveData(d[:]); err != nil {
+	if err := b.TransferAndReceiveData(d[:]); err != nil {
 		return 0, err
 	}
 	return d[0], nil
@@ -227,7 +227,7 @@ func (b *spiBus) ReceiveByte() (byte, error) {
 	}
 
 	var d [1]uint8
-	if err := b.TransferAndRecieveData(d[:]); err != nil {
+	if err := b.TransferAndReceiveData(d[:]); err != nil {
 		return 0, err
 	}
 	return byte(d[0]), nil
