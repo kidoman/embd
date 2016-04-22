@@ -20,7 +20,7 @@ func main() {
 
 	dataBuf := [3]uint8{1, 2, 3}
 
-	if err := spiBus.TransferAndRecieveData(dataBuf[:]); err != nil {
+	if err := spiBus.TransferAndReceiveData(dataBuf[:]); err != nil {
 		panic(err)
 	}
 

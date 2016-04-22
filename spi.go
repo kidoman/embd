@@ -27,8 +27,8 @@ const (
 type SPIBus interface {
 	io.Writer
 
-	// TransferAndRecieveData transmits data in a buffer(slice) and receives into it.
-	TransferAndRecieveData(dataBuffer []uint8) error
+	// TransferAndReceiveData transmits data in a buffer(slice) and receives into it.
+	TransferAndReceiveData(dataBuffer []uint8) error
 
 	// ReceiveData receives data of length len into a slice.
 	ReceiveData(len int) ([]uint8, error)
