@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/kidoman/embd"
@@ -69,6 +70,9 @@ func (p *digitalPin) export() error {
 	}
 	defer exporter.Close()
 	_, err = exporter.WriteString(strconv.Itoa(p.n))
+	if e, ok := err.(*os.PathError); ok && e.Err == syscall.EBUSY {
+		return nil // EBUSY -> the pin has already been exported
+	}
 	return err
 }
 
