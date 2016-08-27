@@ -36,6 +36,8 @@ type spiIOCTransfer struct {
 	speedHz     uint32
 	delayus     uint16
 	bitsPerWord uint8
+	csChange    uint8
+	pad         uint32
 }
 
 type spiBus struct {
