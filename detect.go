@@ -31,6 +31,9 @@ const (
 
 	// HostRadxa represents the Radxa board.
 	HostRadxa = "Radxa"
+
+	// HostCHIP represents the NextThing C.H.I.P.
+	HostCHIP = "CHIP"
 )
 
 func execOutput(name string, arg ...string) (output string, err error) {
@@ -92,7 +95,7 @@ func cpuInfo() (model, hardware string, revision int, err error) {
 			}
 			revision = int(rev)
 		case strings.HasPrefix(fields[0], "Hardware"):
-			hardware = fields[1]
+			hardware = strings.TrimSpace(fields[1])
 		case strings.HasPrefix(fields[0], "model name"):
 			model = fields[1]
 		}
@@ -108,7 +111,9 @@ func DetectHost() (host Host, rev int, err error) {
 	}
 
 	if major < 3 || (major == 3 && minor < 8) {
-		return HostNull, 0, fmt.Errorf("embd: linux kernel versions lower than 3.8 are not supported. you have %v.%v.%v", major, minor, patch)
+		return HostNull, 0, fmt.Errorf(
+			"embd: linux kernel versions lower than 3.8 are not supported, "+
+				"you have %v.%v.%v", major, minor, patch)
 	}
 
 	model, hardware, rev, err := cpuInfo()
@@ -121,6 +126,13 @@ func DetectHost() (host Host, rev int, err error) {
 		return HostBBB, rev, nil
 	case strings.Contains(hardware, "BCM2708") || strings.Contains(hardware, "BCM2709"):
 		return HostRPi, rev, nil
+	case hardware == "Allwinner sun4i/sun5i Families":
+		if major < 4 || (major == 4 && minor < 4) {
+			return HostNull, 0, fmt.Errorf(
+				"embd: linux kernel version 4.4+ required, you have %v.%v",
+				major, minor)
+		}
+		return HostCHIP, rev, nil
 	default:
 		return HostNull, 0, fmt.Errorf(`embd: your host "%v:%v" is not supported at this moment. request support at https://github.com/kidoman/embd/issues`, host, model)
 	}
