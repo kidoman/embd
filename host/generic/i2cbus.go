@@ -245,7 +245,7 @@ func (b *i2cBus) WriteToReg(addr, reg byte, value []byte) error {
 	message.addr = uint16(addr)
 	message.flags = 0
 	message.len = uint16(len(outbuf))
-	message.buf = uintptr(unsafe.Pointer(&hdrp.Data))
+	message.buf = uintptr(unsafe.Pointer(hdrp.Data))
 
 	var packets i2c_rdwr_ioctl_data
 

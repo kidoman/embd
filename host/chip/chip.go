@@ -18,7 +18,7 @@ import (
 	"github.com/kidoman/embd/host/generic"
 )
 
-var spiDeviceMinor = byte(0)
+var spiDeviceMinor = 32766
 
 var chipPins = embd.PinMap{
 	// official GPIO pins (U14 connector) using the pcf8574a

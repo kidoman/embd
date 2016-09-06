@@ -13,7 +13,7 @@ import (
 	"github.com/kidoman/embd/host/generic"
 )
 
-var spiDeviceMinor = byte(0)
+var spiDeviceMinor = 0
 
 var rev1Pins = embd.PinMap{
 	&embd.PinDesc{ID: "P1_3", Aliases: []string{"0", "GPIO_0", "SDA", "I2C0_SDA"}, Caps: embd.CapDigital | embd.CapI2C, DigitalLogical: 0},
