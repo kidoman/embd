@@ -44,7 +44,7 @@ func main() {
 
 Then install the EMBD package (go1.6 or greater is required):
 
-	$ go get github.com/tve/embd
+	$ go get github.com/kidoman/embd
 
 Build the binary*:
 
