@@ -3,8 +3,8 @@
 **embd** is a hardware abstraction layer (HAL) for embedded systems.
 
 It allows you to start your hardware hack on easily available hobby boards
-(like the Raspberry Pi, BeagleBone Black, C.H.I.P., etc.) by giving you staight
-forward access to the board's capabilities as well as a plethora of
+(like the Raspberry Pi, BeagleBone Black, C.H.I.P., etc.) by giving you
+straight-forward access to the board's capabilities as well as a plethora of
 **sensors** (like accelerometers, gyroscopes, thermometers, etc.) and
 **controllers** (PWM generators, digital-to-analog convertors) for
 which we have written drivers. And when things get serious, you dont
@@ -12,7 +12,7 @@ have to throw away the code. You carry forward the effort onto more
 custom designed boards where the HAL abstraction of EMBD will save you
 precious time.
 
-Original development supported and sponsored by [**SoStronk**](https://www.sostronk.com) and
+Development supported and sponsored by [**SoStronk**](https://www.sostronk.com) and
 [**ThoughtWorks**](http://www.thoughtworks.com/).
 
 Also, you might be interested in: [Why Golang?](https://github.com/kidoman/embd/wiki/Why-Go)
