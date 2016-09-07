@@ -1,4 +1,4 @@
-// Copyright 2016 by Thorsten von Eicken
+// Copyright 2016 by Thorsten von Eicken, see LICENSE file
 
 package rfm69
 

@@ -1,4 +1,4 @@
-// Copyright 2016 by Thorsten von Eicken
+// Copyright 2016 by Thorsten von Eicken, see LICENSE file
 
 // The RFM69 package interfaces with a HopeRF RFM69 radio connected to an SPI bus. In addition,
 // an interrupt capable GPIO pin may be used to avoid having to poll the radio.
