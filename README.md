@@ -2,9 +2,18 @@
 
 **embd** is a hardware abstraction layer (HAL) for embedded systems.
 
-It allows you to start your hardware hack on easily available hobby boards (like the Raspberry Pi, BeagleBone Black, etc.) by giving you staight forward access to the board's capabilities as well as a plethora of **sensors** (like accelerometers, gyroscopes, thermometers, etc.) and **controllers** (PWM generators, digital-to-analog convertors) for which we have written drivers. And when things get serious, you dont have to throw away the code. You carry forward the effort onto more custom designed boards where the HAL abstraction of EMBD will save you precious time.
+It allows you to start your hardware hack on easily available hobby boards
+(like the Raspberry Pi, BeagleBone Black, C.H.I.P., etc.) by giving you
+straight-forward access to the board's capabilities as well as a plethora of
+**sensors** (like accelerometers, gyroscopes, thermometers, etc.) and
+**controllers** (PWM generators, digital-to-analog convertors) for
+which we have written drivers. And when things get serious, you dont
+have to throw away the code. You carry forward the effort onto more
+custom designed boards where the HAL abstraction of EMBD will save you
+precious time.
 
-Development supported and sponsored by [**SoStronk**](https://www.sostronk.com) and [**ThoughtWorks**](http://www.thoughtworks.com/) 
+Development supported and sponsored by [**SoStronk**](https://www.sostronk.com) and
+[**ThoughtWorks**](http://www.thoughtworks.com/).
 
 Also, you might be interested in: [Why Golang?](https://github.com/kidoman/embd/wiki/Why-Go)
 
@@ -12,7 +21,8 @@ Also, you might be interested in: [Why Golang?](https://github.com/kidoman/embd/
 
 ## Getting Started
 
-After installing Go* and setting up your [GOPATH](http://golang.org/doc/code.html#GOPATH), create your first .go file. We'll call it ```simpleblinker.go```.
+After installing Go* and setting up your [GOPATH](http://golang.org/doc/code.html#GOPATH),
+create your first .go file. We'll call it ```simpleblinker.go```.
 
 ```go
 package main
@@ -32,7 +42,7 @@ func main() {
 }
 ```
 
-Then install the EMBD package (go1.2 and greater is required):
+Then install the EMBD package (go1.6 or greater is required):
 
 	$ go get github.com/kidoman/embd
 
@@ -54,11 +64,11 @@ Then run the program with ```sudo```*:
 
 **<nowiki>*</nowiki> Notes**
 
-* Please install the cross compilers. Mac users: ```brew install go --cross-compile-common```. [goxc](https://github.com/laher/goxc) can be a big help as well
 * We are instructing the ```go``` compiler to create a binary which will run on the RaspberryPi processor
 * Assuming your RaspberryPi has an IP address of ```192.168.2.2```. Substitute as necessary
 * ```sudo``` (root) permission is required as we are controlling the hardware by writing to special files
-* This sample program is optimized for brevity and does not clean up after itself. Click here to see the [full version](https://github.com/kidoman/embd/blob/master/samples/fullblinker.go)
+* This sample program is optimized for brevity and does not clean up after itself. Click here to
+  see the [full version](https://github.com/kidoman/embd/blob/master/samples/fullblinker.go)
 
 ## Getting Help
 
@@ -68,6 +78,7 @@ Join the [mailing list](https://groups.google.com/forum/#!forum/go-embd)
 
 * [RaspberryPi](http://www.raspberrypi.org/) (including [A+](http://www.raspberrypi.org/products/model-a-plus/) and [B+](http://www.raspberrypi.org/products/model-b-plus/))
 * [RaspberryPi 2](http://www.raspberrypi.org/)
+* [NextThing C.H.I.P](https://www.nextthing.co/pages/chip)
 * [BeagleBone Black](http://beagleboard.org/Products/BeagleBone%20Black)
 * [Intel Edison](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) **coming soon**
 * [Radxa](http://radxa.com/) **coming soon**
