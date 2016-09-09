@@ -11,6 +11,13 @@ which it includes drivers. If you move to custom designed boards
 you have to throw away your code: you carry forward the effort
 where the HAL abstraction of EMBD will save you precious time.
 
+The overall strategy used in embd is to use Linux device drivers to access gpio pins,
+SPI and I2C buses, as well as interrupts. This makes it easy to port from one platform
+to another and it enables kernel code to handle the devices as efficiently as possible.
+What embd then adds is first a Golang library interface on top of the various Linux
+devices and then another layer of user-level drivers for specific sensors and controllers
+that are connected to gpio pins or one of the buses.
+
 Development supported and sponsored by [**SoStronk**](https://www.sostronk.com) and
 [**ThoughtWorks**](http://www.thoughtworks.com/).
 
