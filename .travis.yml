@@ -11,4 +11,4 @@ go:
 script:
   - go test -bench=. -v ./... | grep -v 'no test files' ; test ${PIPESTATUS[0]} -eq 0
   - cd samples; find . -name "*.go" -print0 | xargs -0 -n1 go build
-  - cd embd; go build .
+  - cd ../embd; go build .
