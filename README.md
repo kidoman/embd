@@ -7,10 +7,9 @@ It allows you to start your hardware hack on easily available hobby boards
 straight-forward access to the board's capabilities as well as a plethora of
 **sensors** (like accelerometers, gyroscopes, thermometers, etc.) and
 **controllers** (PWM generators, digital-to-analog convertors) for
-which we have written drivers. And when things get serious, you dont
-have to throw away the code. You carry forward the effort onto more
-custom designed boards where the HAL abstraction of EMBD will save you
-precious time.
+which it includes drivers. If you move to custom designed boards
+you have to throw away your code: you carry forward the effort
+where the HAL abstraction of EMBD will save you precious time.
 
 Development supported and sponsored by [**SoStronk**](https://www.sostronk.com) and
 [**ThoughtWorks**](http://www.thoughtworks.com/).
@@ -21,8 +20,9 @@ Also, you might be interested in: [Why Golang?](https://github.com/kidoman/embd/
 
 ## Getting Started
 
-After installing Go* and setting up your [GOPATH](http://golang.org/doc/code.html#GOPATH),
-create your first .go file. We'll call it ```simpleblinker.go```.
+Install Go version 1.6 or later to make compiling for ARM easy.
+The set up your [GOPATH](http://golang.org/doc/code.html#GOPATH),
+and create your first .go file. We'll call it `simpleblinker.go`.
 
 ```go
 package main
@@ -42,11 +42,11 @@ func main() {
 }
 ```
 
-Then install the EMBD package (go1.6 or greater is required):
+Then install the EMBD package:
 
 	$ go get github.com/kidoman/embd
 
-Build the binary*:
+Build the binary for linux/ARM:
 
 	$ export GOOS=linux
 	$ export GOARCH=arm
@@ -56,7 +56,7 @@ Copy the cross-compiled binary to your RaspberryPi*:
 
 	$ scp simpleblinker pi@192.168.2.2:~
 
-Then run the program with ```sudo```*:
+Then on the rPi run the program with ```sudo```*:
 
 	$ sudo ./simpleblinker
 
@@ -64,15 +64,14 @@ Then run the program with ```sudo```*:
 
 **<nowiki>*</nowiki> Notes**
 
-* We are instructing the ```go``` compiler to create a binary which will run on the RaspberryPi processor
 * Assuming your RaspberryPi has an IP address of ```192.168.2.2```. Substitute as necessary
-* ```sudo``` (root) permission is required as we are controlling the hardware by writing to special files
+* `sudo` (root) permission is required as we are controlling the hardware by writing to special files
 * This sample program is optimized for brevity and does not clean up after itself. Click here to
   see the [full version](https://github.com/kidoman/embd/blob/master/samples/fullblinker.go)
 
 ## Getting Help
 
-Join the [mailing list](https://groups.google.com/forum/#!forum/go-embd)
+Join the [slack channel](https://gophers.slack.com/archives/embd)
 
 ## Platforms Supported
 
@@ -80,18 +79,12 @@ Join the [mailing list](https://groups.google.com/forum/#!forum/go-embd)
 * [RaspberryPi 2](http://www.raspberrypi.org/)
 * [NextThing C.H.I.P](https://www.nextthing.co/pages/chip)
 * [BeagleBone Black](http://beagleboard.org/Products/BeagleBone%20Black)
-* [Intel Edison](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) **coming soon**
-* [Radxa](http://radxa.com/) **coming soon**
-* [Cubietruck](http://www.cubietruck.com/) **coming soon**
-* Bring Your Own **coming soon**
 
 ## The command line tool
 
 	go get github.com/kidoman/embd/embd
 
 will install a command line utility ```embd``` which will allow you to quickly get started with prototyping. The binary should be available in your ```$GOPATH/bin```. However, to be able to run this on a ARM based device, you will need to build it with ```GOOS=linux``` and ```GOARCH=arm``` environment variables set.
-
-But, since I am feeling so generous, a prebuilt/tested version is available for direct download and deployment [here](https://dl.dropboxusercontent.com/u/6727135/Binaries/embd/linux-arm/embd).
 
 For example, if you run ```embd detect``` on a **BeagleBone Black**:
 
@@ -225,17 +218,11 @@ platforms.
 ## Sensors Supported
 
 * **TMP006** Thermopile sensor [Documentation](http://godoc.org/github.com/kidoman/embd/sensor/tmp006), [Datasheet](http://www.adafruit.com/datasheets/tmp006.pdf), [Userguide](http://www.adafruit.com/datasheets/tmp006ug.pdf)
-
 * **BMP085** Barometric pressure sensor [Documentation](http://godoc.org/github.com/kidoman/embd/sensor/bmp085), [Datasheet](https://www.sparkfun.com/datasheets/Components/General/BST-BMP085-DS000-05.pdf)
-
 * **BMP180** Barometric pressure sensor [Documentation](http://godoc.org/github.com/kidoman/embd/sensor/bmp180), [Datasheet](http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf)
-
 * **LSM303** Accelerometer and magnetometer [Documentation](http://godoc.org/github.com/kidoman/embd/sensor/lsm303), [Datasheet](https://www.sparkfun.com/datasheets/Sensors/Magneto/LSM303%20Datasheet.pdf)
-
 * **L3GD20** Gyroscope [Documentation](http://godoc.org/github.com/kidoman/embd/sensor/l3gd20), [Datasheet](http://www.adafruit.com/datasheets/L3GD20.pdf)
-
 * **US020** Ultrasonic proximity sensor [Documentation](http://godoc.org/github.com/kidoman/embd/sensor/us020), [Product Page](http://www.digibay.in/sensor/object-detection-and-proximity?product_id=239)
-
 * **BH1750FVI** Luminosity sensor [Documentation](http://godoc.org/github.com/kidoman/embd/sensor/bh1750fvi), [Datasheet](http://www.elechouse.com/elechouse/images/product/Digital%20light%20Sensor/bh1750fvi-e.pdf)
 
 ## Interfaces
@@ -245,9 +232,7 @@ platforms.
 ## Controllers
 
 * **PCA9685** 16-channel, 12-bit PWM Controller with I2C protocol [Documentation](http://godoc.org/github.com/kidoman/embd/controller/pca9685), [Datasheet](http://www.adafruit.com/datasheets/PCA9685.pdf), [Product Page](http://www.adafruit.com/products/815)
-
 * **MCP4725** 12-bit DAC [Documentation](http://godoc.org/github.com/kidoman/embd/controller/mcp4725), [Datasheet](http://www.adafruit.com/datasheets/mcp4725.pdf), [Product Page](http://www.adafruit.com/products/935)
-
 * **ServoBlaster** RPi PWM/PCM based PWM controller [Documentation](http://godoc.org/github.com/kidoman/embd/controller/servoblaster), [Product Page](https://github.com/richardghirst/PiBits/tree/master/ServoBlaster)
 
 ## Convertors
@@ -256,9 +241,11 @@ platforms.
 
 ## Contributing
 
-We look forward to your pull requests, but contributions which abide by the [guidelines](https://github.com/kidoman/embd/blob/master/CONTRIBUTING.md) will get a free beer!
-
-File an [issue](https://github.com/kidoman/embd/issues), open a [pull request](https://github.com/kidoman/embd/pulls). We are waiting.
+[Pull requests](https://github.com/kidoman/embd/pulls) that follow the
+[guidelines](https://github.com/kidoman/embd/blob/master/CONTRIBUTING.md) are very appreciated.
+If you find a problem but are not up to coding a fix please file an
+[issue](https://github.com/kidoman/embd/issues).
+Thank you!
 
 ## About
 
