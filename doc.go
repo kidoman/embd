@@ -1,9 +1,40 @@
-/* doc
+/*
 Package embd provides a hardware abstraction layer for doing embedded programming
-on supported platforms like the Raspberry Pi and BeagleBone Black. Most of the examples below
-will work without change (i.e. the same binary) on all supported platforms. How cool is that?
+on supported platforms like the Raspberry Pi, BeagleBone Black and CHIP. Most of the examples below
+will work without change (i.e. the same binary) on all supported platforms.
 
-Although samples are all present in the samples folder, we will show a few choice examples here.
+== Overall structure
+
+It's best to think of the top-level embd package as a switchboard that doesn't implement anything
+on its own but rather relies on sub-packages for hosts drivers and devices and stitches them
+together. The exports in the top-level package serve a number of different purposes,
+which can be confusing at first:
+- it defines a number of driver interfaces, such as the GPIODriver, this is the interface that
+the driver for each specific platform must implement and is not something of concern to the
+typical user.
+- it defines the main low-level hardware interface types: analog pins, digital pins,
+interrupt pins, I2Cbuses, SPI buses, PWM pins and LEDs. Each type has a New function to
+instantiate one of these pins or buses.
+- it defines a number of InitXXX functions that initialize the various drivers, however, these
+are called by the coresponding NewXXX functions, so can be ignored.
+- it defines a number of top-level convenience functions, such as DigitalWrite, that can be
+called as 1-liners instead of first instantiating a DigitalPin and then writing to it
+
+To get started a host driver needs to be registered with the top-level embd package. This is
+most easily accomplished by doing an "underscore import" on of the sub-packages of embd/host,
+e.g., `import _ "github.com/kidoman/embd/host/chip"`. An `Init()` function in the host driver
+registers all the individual drivers with embd.
+
+After getting the host driver the next step might be to instantiate a GPIO pin using
+`NewDigitalPin` or an I2CBus using `NewI2CBus`. Such a pin or bus can be used directly but
+often it is passed into the initializer of a sensor, controller or other user-level driver
+which provides a high-level interface to some device. For example, the New function
+for the BMP180 type in the `embd/sensor/bmp180` package takes an I2CBus as argument, which
+it will use to reach the sensor.
+
+== Samples
+
+This section shows a few choice samples, more are available in the samples folder.
 
 Use the LED driver to toggle LEDs on the BBB:
 
