@@ -61,11 +61,13 @@ func initEpollListener() *epollListener {
 			if err != nil {
 				panic(fmt.Sprintf("EpollWait error: %v", err))
 			}
+			listener.mu.Lock()
 			for i := 0; i < n; i++ {
 				if irq, ok := listener.interruptablePins[int(epollEvents[i].Fd)]; ok {
 					irq.Signal()
 				}
 			}
+			listener.mu.Unlock()
 		}
 	}()
 	return listener

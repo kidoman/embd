@@ -33,7 +33,11 @@ const (
 	EdgeBoth    Edge = "both"
 )
 
-// InterruptPin implements access to a Interruptable capable GPIO pin.
+// InterruptPin implements access to an interrupt capable GPIO pin.
+// The basic capability provided is to watch for a transition on the pin and
+// generate a callback to a handler when a transition occurs.
+// On Linux the underlying implementation generally uses epoll to receive the
+// interrupts at user-level.
 type InterruptPin interface {
 
 	// Start watching this pin for interrupt

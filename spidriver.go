@@ -2,10 +2,10 @@ package embd
 
 import "sync"
 
-type spiBusFactory func(byte, byte, byte, int, int, int, func() error) SPIBus
+type spiBusFactory func(int, byte, byte, int, int, int, func() error) SPIBus
 
 type spiDriver struct {
-	spiDevMinor byte
+	spiDevMinor int
 	initializer func() error
 
 	busMap     map[byte]SPIBus
@@ -16,7 +16,7 @@ type spiDriver struct {
 
 // NewSPIDriver returns a SPIDriver interface which allows control
 // over the SPI bus.
-func NewSPIDriver(spiDevMinor byte, sbf spiBusFactory, i func() error) SPIDriver {
+func NewSPIDriver(spiDevMinor int, sbf spiBusFactory, i func() error) SPIDriver {
 	return &spiDriver{
 		spiDevMinor: spiDevMinor,
 		sbf:         sbf,

@@ -36,12 +36,14 @@ type spiIOCTransfer struct {
 	speedHz     uint32
 	delayus     uint16
 	bitsPerWord uint8
+	csChange    uint8
+	pad         uint32
 }
 
 type spiBus struct {
 	file *os.File
 
-	spiDevMinor byte
+	spiDevMinor int
 
 	channel byte
 	mode    byte
@@ -61,7 +63,7 @@ func spiIOCMessageN(n uint32) uint32 {
 	return (spiIOCMessage0 + (n * spiIOCIncrementor))
 }
 
-func NewSPIBus(spiDevMinor, mode, channel byte, speed, bpw, delay int, i func() error) embd.SPIBus {
+func NewSPIBus(spiDevMinor int, mode, channel byte, speed, bpw, delay int, i func() error) embd.SPIBus {
 	return &spiBus{
 		spiDevMinor: spiDevMinor,
 		mode:        mode,
